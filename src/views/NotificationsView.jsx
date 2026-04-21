@@ -55,11 +55,16 @@ const NotificationsView = () => {
             notifications.map((notif, idx) => (
               <motion.div
                 key={notif.id}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: idx * 0.05 }}
-                className={`p-5 rounded-2xl flex items-start gap-5 transition-all group cursor-pointer ${
-                  notif.unread ? 'bg-brand-indigo/5 border border-brand-indigo/20 shadow-xl' : 'hover:bg-white/5 border border-transparent'
+                initial={{ y: 30, opacity: 0, rotateX: -10, scale: 0.95 }}
+                animate={{ y: 0, opacity: 1, rotateX: 0, scale: 1 }}
+                transition={{ 
+                  delay: idx * 0.08,
+                  type: "spring",
+                  stiffness: 260,
+                  damping: 24
+                }}
+                className={`p-6 rounded-[24px] flex items-start gap-6 transition-all group cursor-pointer relative overflow-hidden ${
+                  notif.unread ? 'glass border-brand-indigo/30 shadow-[0_20px_50px_rgba(88,101,242,0.1)]' : 'hover:bg-white/[0.03] border border-transparent'
                 }`}
               >
                 <div className="relative shrink-0">

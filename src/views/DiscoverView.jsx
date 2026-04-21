@@ -34,42 +34,65 @@ const DiscoverView = () => {
         <span className="text-white font-black text-xs uppercase tracking-[0.2em] absolute left-1/2 -translate-x-1/2 font-display opacity-90">Discover</span>
       </header>
 
-      {/* Animated Hero Banner - High Fidelity */}
-      <div className="h-[380px] w-full relative flex flex-col items-center justify-center overflow-hidden">
-        {/* The Generated Hero Asset */}
-        <div className="absolute inset-0 bg-[#0A0B0E]">
-          <img 
-            src="/Users/sakhi/.gemini/antigravity/brain/3a9d93cf-aa3a-4ea4-96cb-65c6ed86c6ad/campus_discover_hero_1776747519333.png" 
-            alt="Campus Network Illustration" 
-            className="w-full h-full object-cover opacity-60 mix-blend-screen"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-transparent to-black/40" />
-          <div className="absolute inset-0 bg-gradient-to-r from-bg-primary/80 via-transparent to-bg-primary/80" />
+      {/* Mindblowing Portal Hero - High Fidelity 3D Parallax */}
+      <div className="h-[480px] w-full relative flex flex-col items-center justify-center overflow-hidden perspective-[1500px]">
+        {/* Multilayered Atmospheric Backdrop */}
+        <div className="absolute inset-0 bg-[#050505]">
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.1, 1],
+              rotate: [0, 2, -2, 0]
+            }}
+            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-0 opacity-40 mix-blend-screen"
+          >
+            <img 
+              src="/Users/sakhi/.gemini/antigravity/brain/3a9d93cf-aa3a-4ea4-96cb-65c6ed86c6ad/campus_discover_hero_1776747519333.png" 
+              alt="Campus Network" 
+              className="w-full h-full object-cover blur-[2px]"
+            />
+          </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-black/60" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-transparent to-[#050505]" />
+          
+          {/* Bioluminescent Glows */}
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-indigo/20 blur-[150px] rounded-full animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-crimson/10 blur-[150px] rounded-full animate-pulse" />
         </div>
         
-        <div className="relative z-10 text-center max-w-[800px] px-6">
+        <div className="relative z-10 text-center max-w-[900px] px-6">
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1 }}
+            initial={{ scale: 0.8, opacity: 0, rotateX: 20 }}
+            animate={{ scale: 1, opacity: 1, rotateX: 0 }}
+            transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
+            className="mb-10"
           >
-            <h1 className="text-white text-4xl md:text-6xl font-black mb-4 uppercase tracking-tighter drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)] font-display leading-tight">
-              Universe for <br/> <span className="text-brand-indigo">Students</span>
+            <h1 className="text-white text-6xl md:text-8xl font-black mb-4 uppercase tracking-tighter drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] font-display leading-[0.85] text-glow select-none">
+              The Student <br/> <span className="text-brand-indigo opacity-90">Universe</span>
             </h1>
+            <p className="text-text-muted text-lg sm:text-xl font-bold tracking-wide opacity-60 uppercase mt-4 max-w-[600px] mx-auto leading-relaxed">
+              Experience the next generation of campus life and global community.
+            </p>
           </motion.div>
           
+          {/* Elite Magnetic Search HUD */}
           <motion.div 
-            initial={{ y: 0, opacity: 1 }}
-            className="relative w-full max-w-[540px] mx-auto group mt-8"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="relative w-full max-w-[600px] mx-auto group"
           >
-            <div className="glass p-1 rounded-2xl shadow-2xl transition-all focus-premium">
-              <div className="flex items-center h-12 px-4 gap-3">
-                <Search size={22} className="text-text-muted group-focus-within:text-white transition-colors" />
+            <div className="glass p-1.5 rounded-[24px] shadow-[0_30px_60px_rgba(0,0,0,0.5)] border-white/10 group-focus-within:border-brand-indigo/50 transition-all duration-500 scale-100 group-focus-within:scale-[1.02]">
+              <div className="flex items-center h-14 px-6 gap-4">
+                <Search size={24} className="text-brand-indigo group-focus-within:scale-110 transition-transform" />
                 <input 
                   type="text" 
-                  placeholder="Find your tribe, labs, or circles..." 
-                  className="bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-[15px] text-white w-full placeholder:text-text-muted font-medium" 
+                  placeholder="Seach through the student network..." 
+                  className="bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-[17px] text-white w-full placeholder:text-text-muted/50 font-bold" 
                 />
+                <div className="bg-white/5 px-3 py-1 rounded-lg text-[10px] font-black text-white/30 uppercase tracking-widest hidden sm:block border border-white/5">
+                  Press Enter
+                </div>
               </div>
             </div>
           </motion.div>

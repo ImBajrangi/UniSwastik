@@ -23,7 +23,7 @@ const ChannelSidebar = () => {
   const isHome = activeServer?.isHome;
 
   return (
-    <nav className="w-[240px] bg-bg-secondary flex flex-col h-full overflow-hidden border-r border-black/10 shrink-0" aria-label="Channels">
+    <nav className="w-[240px] bg-bg-secondary/80 glass-thin flex flex-col h-full overflow-hidden border-r border-white/10 shrink-0 relative z-[200] transform-gpu" aria-label="Channels">
       {/* Sidebar Header with Banner Expansion - Stable Container */}
       {!isHome && (
         <div className="relative w-full h-[80px] bg-bg-tertiary overflow-hidden shadow-inner">
@@ -204,7 +204,7 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-6", classNam
         onClick={() => setIsExpanded(!isExpanded)}
         className="mb-2 px-0.5 flex items-center justify-between group cursor-pointer text-[#949BA4] hover:text-white transition-colors"
       >
-        <div className="flex-1 flex items-center gap-1.5">
+        <div className="flex-1 flex items-center gap-2 pl-2.5">
           <motion.div 
             animate={{ rotate: isExpanded ? 0 : -90 }}
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -214,7 +214,7 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-6", classNam
               <path d="M2.1 6.5l10.4 10.4L22.9 6.5z" />
             </svg>
           </motion.div>
-          <span className="text-[11px] font-bold uppercase tracking-[0.1em] select-none opacity-60 group-hover:opacity-100 transition-opacity">{label}</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.15em] select-none opacity-50 group-hover:opacity-100 transition-opacity whitespace-nowrap">{label}</span>
         </div>
         {onAdd && (
           <Tooltip content={label === 'Direct Messages' ? "Start DM" : "Create Channel"}>
@@ -267,8 +267,8 @@ const ChannelItem = ({ icon, label, active, onClick, accentColor, index, onRemov
     transition={{ type: "spring", stiffness: 400, damping: 25, delay: index * 0.03 }}
     onClick={() => { onClick(); playClick(); }}
     whileHover={{ backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
-    className={`py-2 px-2.5 rounded-md flex items-center gap-3 cursor-pointer transition-all group mb-0.5 ${
-      active ? 'bg-[#35373c] text-white' : 'text-[#949BA4] hover:bg-[#35373c]/50 hover:text-[#DBDEE1]'
+    className={`py-1.5 px-3 rounded-md flex items-center gap-3 cursor-pointer transition-all group mb-0.5 relative ${
+      active ? 'bg-white/10 text-white shadow-sm' : 'text-[#949BA4] hover:bg-white/5 hover:text-[#DBDEE1]'
     }`}
   >
     <span className={`transition-colors shrink-0 ${active ? 'text-white' : 'text-[#80848E] group-hover:text-[#DBDEE1]'}`}>

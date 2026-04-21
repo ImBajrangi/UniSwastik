@@ -36,16 +36,21 @@ const ThreadsIcon = ({ size = 20 }) => (
 
 const Message = ({ user, time, content, isMe, hideGutter }) => (
   <motion.div
-    initial={{ opacity: 0, x: -10 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-    className={`flex gap-4 group hover:bg-black/10 -mx-4 px-4 ${hideGutter ? 'py-0.5' : 'py-2 mt-4'} transition-colors relative border-l-2 border-transparent hover:border-brand-indigo/30`}
+    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+    animate={{ opacity: 1, scale: 1, y: 0 }}
+    transition={{ 
+      type: "spring", 
+      stiffness: 400, 
+      damping: 25,
+      mass: 0.8
+    }}
+    className={`flex gap-4 group hover:bg-white/[0.03] -mx-4 px-4 ${hideGutter ? 'py-0.5' : 'py-2 mt-4'} transition-colors relative border-l-2 border-transparent hover:border-brand-indigo/30`}
   >
     <div className="w-10 shrink-0">
       {!hideGutter ? (
         <div className="relative cursor-pointer transition-transform hover:scale-105 active:scale-95">
           <Avatar name={user} size={40} />
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#313338] bg-status-online shadow-sm" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#121214] bg-status-online shadow-sm" />
         </div>
       ) : (
         <div className="opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-[#949BA4] mt-1 select-none font-bold">
@@ -56,13 +61,13 @@ const Message = ({ user, time, content, isMe, hideGutter }) => (
     <div className="flex flex-col min-w-0 flex-1">
       {!hideGutter && (
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="font-bold text-[16px] hover:underline cursor-pointer leading-tight text-white font-display">{user}</span>
+          <span className="font-bold text-[16px] hover:underline cursor-pointer leading-tight text-white font-display tracking-tight">{user}</span>
           {user.toLowerCase().includes('bot') || user.toLowerCase().includes('ai') ? (
-            <span className="bg-[#5865F2] text-white text-[10px] px-1 py-0.5 rounded-[4px] font-black flex items-center gap-0.5 select-none -translate-y-0.5">
-              <Check size={8} strokeWidth={4} /> APP
+            <span className="bg-[#5865F2] text-white text-[10px] px-1 py-0.5 rounded-[4px] font-black flex items-center gap-0.5 select-none -translate-y-0.5 shadow-[0_0_10px_rgba(88,101,242,0.4)]">
+              APP
             </span>
           ) : null}
-          <span className="text-[#949BA4] text-[11px] font-bold select-none opacity-80">{time}</span>
+          <span className="text-[#949BA4] text-[11px] font-bold select-none opacity-50">{time}</span>
         </div>
       )}
       <p className="text-[#DBDEE1] text-[15px] whitespace-pre-wrap leading-[22px] tracking-tight font-medium">
