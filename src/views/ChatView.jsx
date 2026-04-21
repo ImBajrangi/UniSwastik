@@ -9,6 +9,11 @@ import { usePlatform } from '../context/PlatformContext';
 import Avatar from '../components/Avatar';
 import Tooltip from '../components/Tooltip';
 import HeaderIcon from '../components/HeaderIcon';
+import PinsPopover from '../components/PinsPopover';
+import InboxPopover from '../components/InboxPopover';
+import HelpModal from '../components/HelpModal';
+import ThreadsSidebar from '../components/ThreadsSidebar';
+import { BellOff } from 'lucide-react';
 
 const HeroActionCard = ({ icon, label, onClick, index }) => (
   <motion.div
@@ -104,18 +109,22 @@ const ChatView = ({ targetId }) => {
     activeServerId, channels, dmList,
     messageHistory, sendMessage, updateChannel,
     currentUser, showMemberList, setShowMemberList,
-    setIsMobileMenuOpen
+    setIsMobileMenuOpen, showThreadsSidebar, setShowThreadsSidebar,
+    mutedChannels, toggleMute, pinnedMessages, togglePinMessage,
+    showInbox, setShowInbox, showPins, setShowPins, notifications
   } = usePlatform();
 
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
+  const [showHelp, setShowHelp] = useState(false);
   const messagesEndRef = useRef(null);
 
   const channel = channels[activeServerId]?.find(c => c.id === targetId);
   const dm = dmList.find(d => d.id === targetId);
   const title = channel?.name || dm?.name || 'chat';
+  const isMuted = mutedChannels.includes(targetId);
 
   const messages = (messageHistory[targetId] || []).filter(msg =>
     msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -154,9 +163,40 @@ const ChatView = ({ targetId }) => {
     scrollToBottom('auto');
   }, [targetId]);
 
+  // Exclusive Sidebar Toggles
+  const toggleMemberList = () => {
+    setShowMemberList(!showMemberList);
+    if (!showMemberList) setShowThreadsSidebar(false);
+  };
+
+  const toggleThreadsSidebar = () => {
+    setShowThreadsSidebar(!showThreadsSidebar);
+    if (!showThreadsSidebar) setShowMemberList(false);
+  };
+
   // FORCE SCROLL RECOVERY SYSTEM
   return (
     <div className="flex-1 flex min-h-0 h-full bg-bg-primary relative overflow-hidden mesh-silk animate-mesh">
+      <AnimatePresence>
+         {showPins && (
+           <PinsPopover 
+            channelName={title} 
+            pins={pinnedMessages[targetId] || []} 
+            onClose={() => setShowPins(false)}
+            onUnpin={(msg) => togglePinMessage(targetId, msg)}
+           />
+         )}
+         {showInbox && (
+           <InboxPopover 
+            notifications={notifications} 
+            onClose={() => setShowInbox(false)} 
+           />
+         )}
+         {showHelp && (
+           <HelpModal onClose={() => setShowHelp(false)} />
+         )}
+      </AnimatePresence>
+
       {/* Main Chat Area - STABLIZED FLEX HIERARCHY */}
       <div
         className="flex-1 flex flex-col min-w-0 h-full relative bg-transparent"
@@ -198,14 +238,29 @@ const ChatView = ({ targetId }) => {
           </div>
 
           <div className="flex items-center gap-1.5 p-1">
-            <HeaderIcon icon={<Bell size={20} />} label="Mute" />
-            <HeaderIcon icon={<Pin size={20} />} label="Pins" />
-            <HeaderIcon icon={<ThreadsIcon />} label="Threads" />
+            <HeaderIcon 
+              icon={isMuted ? <BellOff size={20} className="text-[#f23f42]" /> : <Bell size={20} />} 
+              label={isMuted ? "Unmute" : "Mute"} 
+              active={isMuted}
+              onClick={() => toggleMute(targetId)}
+            />
+            <HeaderIcon 
+              icon={<Pin size={20} />} 
+              label="Pins" 
+              active={showPins}
+              onClick={() => setShowPins(!showPins)}
+            />
+            <HeaderIcon 
+              icon={<ThreadsIcon />} 
+              label="Threads" 
+              active={showThreadsSidebar}
+              onClick={toggleThreadsSidebar}
+            />
             <HeaderIcon
               icon={<Users size={20} />}
               label={showMemberList ? "Hide Member List" : "Show Member List"}
               active={showMemberList}
-              onClick={() => setShowMemberList(!showMemberList)}
+              onClick={toggleMemberList}
             />
 
             <div className="hidden sm:flex relative group ml-1 mr-1">
@@ -222,8 +277,17 @@ const ChatView = ({ targetId }) => {
             </div>
 
             <div className="hidden sm:flex items-center gap-1">
-              <HeaderIcon icon={<Inbox size={20} />} label="Inbox" />
-              <HeaderIcon icon={<HelpCircle size={20} />} label="Help" />
+              <HeaderIcon 
+                icon={<Inbox size={20} />} 
+                label="Inbox" 
+                active={showInbox}
+                onClick={() => setShowInbox(!showInbox)}
+              />
+              <HeaderIcon 
+                icon={<HelpCircle size={20} />} 
+                label="Help" 
+                onClick={() => setShowHelp(true)}
+              />
             </div>
           </div>
         </header>
@@ -343,11 +407,11 @@ const ChatView = ({ targetId }) => {
         </div>
       </div>
 
-      {/* Member Sidebar - Premium Flex Drawer */}
-      <div className="lg:static relative">
-        <AnimatePresence>
-          {showMemberList && (
-            <>
+      {/* Right Utility Sidebars (Members/Threads) - Premium Flex Drawer */}
+      <div className="lg:static relative h-full flex flex-col shrink-0">
+        <AnimatePresence mode="wait">
+          {showMemberList && !showThreadsSidebar && (
+            <React.Fragment key="members">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -359,8 +423,8 @@ const ChatView = ({ targetId }) => {
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: 280, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
-                transition={{ type: "spring", damping: 40, stiffness: 500, mass: 1 }}
-                className="fixed lg:static inset-y-0 right-0 bg-bg-secondary flex flex-col z-[251] lg:z-auto border-l border-black/20 overflow-hidden shadow-2xl shrink-0"
+                transition={{ type: "spring", damping: 40, stiffness: 500 }}
+                className="fixed lg:static inset-y-0 right-0 bg-bg-secondary flex flex-col z-[251] lg:z-auto border-l border-black/20 overflow-hidden shadow-2xl h-full shrink-0"
               >
                 <div className="px-5 h-14 flex items-center justify-between font-bold text-white border-b border-black/10 shrink-0 font-display transition-all">
                   <span className="text-[15px] tracking-tight">Members</span>
@@ -380,7 +444,11 @@ const ChatView = ({ targetId }) => {
                   />
                 </div>
               </motion.aside>
-            </>
+            </React.Fragment>
+          )}
+
+          {showThreadsSidebar && (
+            <ThreadsSidebar key="threads" onClose={() => setShowThreadsSidebar(false)} />
           )}
         </AnimatePresence>
       </div>

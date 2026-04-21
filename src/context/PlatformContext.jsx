@@ -24,7 +24,20 @@ export const PlatformProvider = ({ children }) => {
   const [dmList, setDmList] = useState(initialDmList);
   const [messageHistory, setMessageHistory] = useState({});
   const [showMemberList, setShowMemberList] = useState(true);
+  const [showThreadsSidebar, setShowThreadsSidebar] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
+  const [mutedChannels, setMutedChannels] = useState([]);
+const [pinnedMessages, setPinnedMessages] = useState({
+  'welcome': [
+    { id: 'pin-1', user: 'Prof. Dev', time: 'Oct 24', content: 'Welcome to Swastik University! Please read the rules in this channel before proceeding.' },
+    { id: 'pin-2', user: 'Alex Verified', time: 'Oct 25', content: 'The Hackathon registration link is now live!' }
+  ],
+  'general': [
+    { id: 'pin-3', user: 'Priya Sharma', time: 'Today', content: 'Remember to pick up your campus ID cards at the registrar office!' }
+  ]
+});
+  const [showInbox, setShowInbox] = useState(false);
+  const [showPins, setShowPins] = useState(false);
 
   // Hybrid Hydration - Market Ready Cache System
   useEffect(() => {
@@ -34,11 +47,15 @@ export const PlatformProvider = ({ children }) => {
         const savedDms = localStorage.getItem('swastik_dms');
         const savedMessages = localStorage.getItem('swastik_messages');
         const savedShowMembers = localStorage.getItem('swastik_show_members');
+        const savedMuted = localStorage.getItem('swastik_muted_channels');
+        const savedPins = localStorage.getItem('swastik_pins');
 
         if (savedChannels) setChannels(JSON.parse(savedChannels));
         if (savedDms) setDmList(JSON.parse(savedDms));
         if (savedMessages) setMessageHistory(JSON.parse(savedMessages));
         if (savedShowMembers !== null) setShowMemberList(JSON.parse(savedShowMembers));
+        if (savedMuted) setMutedChannels(JSON.parse(savedMuted));
+        if (savedPins) setPinnedMessages(JSON.parse(savedPins));
       } catch (e) {
         console.error("Cache Hydration Error:", e);
       } finally {
@@ -56,7 +73,9 @@ export const PlatformProvider = ({ children }) => {
     localStorage.setItem('swastik_channels', JSON.stringify(channels));
     localStorage.setItem('swastik_dms', JSON.stringify(dmList));
     localStorage.setItem('swastik_messages', JSON.stringify(messageHistory));
-  }, [showMemberList, channels, dmList, messageHistory, isHydrated]);
+    localStorage.setItem('swastik_muted_channels', JSON.stringify(mutedChannels));
+    localStorage.setItem('swastik_pins', JSON.stringify(pinnedMessages));
+  }, [showMemberList, channels, dmList, messageHistory, mutedChannels, pinnedMessages, isHydrated]);
 
   const selectServer = (serverId) => {
     setActiveServerId(serverId);
@@ -100,6 +119,27 @@ export const PlatformProvider = ({ children }) => {
       ...prev,
       [targetId]: [...(prev[targetId] || []), newMessage]
     }));
+  };
+
+  const toggleMute = (channelId) => {
+    setMutedChannels(prev => 
+      prev.includes(channelId) 
+        ? prev.filter(id => id !== channelId) 
+        : [...prev, channelId]
+    );
+  };
+
+  const togglePinMessage = (channelId, message) => {
+    setPinnedMessages(prev => {
+      const channelPins = prev[channelId] || [];
+      const isPinned = channelPins.some(p => p.id === message.id);
+      
+      if (isPinned) {
+        return { ...prev, [channelId]: channelPins.filter(p => p.id !== message.id) };
+      } else {
+        return { ...prev, [channelId]: [...channelPins, message] };
+      }
+    });
   };
 
   // MUTATIONS: Manage Chats and Channels
@@ -161,6 +201,8 @@ export const PlatformProvider = ({ children }) => {
     dmList,
     showMemberList,
     setShowMemberList,
+    showThreadsSidebar,
+    setShowThreadsSidebar,
     addChannel,
     updateChannel,
     removeChannel,
@@ -170,7 +212,15 @@ export const PlatformProvider = ({ children }) => {
     setIsMobileMenuOpen,
     setView,
     notifications,
-    setNotifications
+    setNotifications,
+    mutedChannels,
+    toggleMute,
+    pinnedMessages,
+    togglePinMessage,
+    showInbox,
+    setShowInbox,
+    showPins,
+    setShowPins
   };
 
   return (
