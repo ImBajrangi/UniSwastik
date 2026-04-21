@@ -10,6 +10,7 @@ export const PlatformProvider = ({ children }) => {
   const [activeChannelId, setActiveChannelId] = useState(null);
   const [activeDMId, setActiveDMId] = useState(null);
   const [view, setView] = useState('friends'); // 'friends', 'chat', 'discover'
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Stateful Channels and DMs with persistence
   const [channels, setChannels] = useState(() => {
@@ -51,6 +52,7 @@ export const PlatformProvider = ({ children }) => {
 
   const selectServer = (serverId) => {
     setActiveServerId(serverId);
+    setIsMobileMenuOpen(false);
     if (serverId === 'home') {
       setView('friends');
       setActiveChannelId(null);
@@ -64,12 +66,14 @@ export const PlatformProvider = ({ children }) => {
 
   const selectChannel = (channelId) => {
     setActiveChannelId(channelId);
+    setIsMobileMenuOpen(false);
     setView('chat');
     setActiveDMId(null);
   };
 
   const selectDM = (dmId) => {
     setActiveDMId(dmId);
+    setIsMobileMenuOpen(false);
     setActiveServerId('home');
     setView('chat');
     setActiveChannelId(null);
@@ -153,7 +157,9 @@ export const PlatformProvider = ({ children }) => {
     updateChannel,
     removeChannel,
     addDM,
-    removeDM
+    removeDM,
+    isMobileMenuOpen,
+    setIsMobileMenuOpen
   };
 
   return (
