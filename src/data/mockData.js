@@ -181,3 +181,42 @@ export const currentUser = {
   avatar: '',
   university: 'Swastik University',
 };
+
+export const notifications = [
+  {
+    id: 'notif-1',
+    user: 'Alex Verified',
+    avatar: '',
+    content: 'mentioned you in #general-chat',
+    time: '2m ago',
+    type: 'mention',
+    unread: true
+  },
+  {
+    id: 'notif-2',
+    user: 'Priya Sharma',
+    avatar: '',
+    content: 'sent you a star for your "AI Lab" response.',
+    time: '45m ago',
+    type: 'reaction',
+    unread: false
+  },
+  {
+    id: 'notif-3',
+    user: 'Prof. Dev',
+    avatar: '',
+    content: 'accepted your friend request.',
+    time: '2h ago',
+    type: 'request',
+    unread: false
+  },
+  {
+    id: 'notif-4',
+    user: 'Campus Hub',
+    avatar: '',
+    content: 'The "Hackathon 2026" registration is now open!',
+    time: '1d ago',
+    type: 'system',
+    unread: false
+  }
+];

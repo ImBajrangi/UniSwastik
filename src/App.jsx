@@ -6,6 +6,8 @@ import ChannelSidebar from './components/ChannelSidebar';
 import FriendsView from './views/FriendsView';
 import ChatView from './views/ChatView';
 import DiscoverView from './views/DiscoverView';
+import NotificationsView from './views/NotificationsView';
+import ProfileView from './views/ProfileView';
 import { 
   MessageSquare, Bell, Compass, Users, User, Menu
 } from 'lucide-react';
@@ -16,16 +18,17 @@ const BottomNav = () => {
 
   const tabs = [
     { id: 'servers', label: 'Home', icon: <MessageSquare size={24} />, action: () => { setView('chat'); } },
-    { id: 'notifications', label: 'Notifications', icon: <Bell size={24} />, action: () => { console.log('Notifications'); } },
-    { id: 'profile', label: 'You', icon: <Avatar name={currentUser.name} size={24} />, action: () => { console.log('Profile'); } },
+    { id: 'notifications', label: 'Notifications', icon: <Bell size={24} />, action: () => { setView('notifications'); } },
+    { id: 'profile', label: 'You', icon: <Avatar name={currentUser.name} size={24} />, action: () => { setView('profile'); } },
   ];
 
   return (
     <div className="lg:hidden relative h-[70px] bg-[#111214] border-t border-white/5 flex items-center justify-around px-2 z-[400] pb-safe shadow-[0_-8px_24px_rgba(0,0,0,0.3)] shrink-0">
       {tabs.map((tab) => {
-        const isActive = (tab.id === 'friends' && view === 'friends') || 
-                        (tab.id === 'discover' && view === 'discover') ||
-                        (tab.id === 'servers' && view === 'chat');
+        const isActive = (tab.id === 'servers' && view === 'chat') || 
+                        (tab.id === 'servers' && view === 'friends') ||
+                        (tab.id === 'notifications' && view === 'notifications') ||
+                        (tab.id === 'profile' && view === 'profile');
         
         return (
           <button
@@ -98,6 +101,8 @@ const AppContent = () => {
           {view === 'friends' && <FriendsView />}
           {view === 'chat' && <ChatView targetId={targetId} />}
           {view === 'discover' && <DiscoverView />}
+          {view === 'notifications' && <NotificationsView />}
+          {view === 'profile' && <ProfileView />}
         </motion.div>
       </AnimatePresence>
     );

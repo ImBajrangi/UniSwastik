@@ -39,18 +39,18 @@ const FriendsView = () => {
           <span className="text-white font-black text-base tracking-tighter truncate font-display">Friends</span>
         </div>
         
-        <nav className="flex items-center justify-center gap-1 flex-1 px-4 overflow-x-auto no-scrollbar" role="tablist">
+        <nav className="flex items-center justify-center gap-3 flex-1 px-4 overflow-x-auto no-scrollbar" role="tablist">
           <HeaderTab label="Online" active={activeTab === 'online'} onClick={() => setActiveTab('online')} />
           <HeaderTab label="All" active={activeTab === 'all'} onClick={() => setActiveTab('all')} />
           <HeaderTab label="Pending" active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
           <HeaderTab label="Blocked" active={activeTab === 'blocked'} onClick={() => setActiveTab('blocked')} />
           
-          <div className="w-px h-6 bg-white/5 mx-2 hidden sm:block" />
+          <div className="w-px h-6 bg-white/10 mx-4 hidden sm:block" />
           
           <motion.button 
             whileHover={{ scale: 1.02, backgroundColor: '#248046' }}
             whileTap={{ scale: 0.98 }}
-            className="bg-status-online text-white px-4 py-1.5 rounded-lg text-[12px] font-black shadow-lg transition-all tracking-wider uppercase font-display whitespace-nowrap ml-2"
+            className="bg-status-online text-white px-6 py-2 rounded-lg text-[12px] font-black shadow-lg transition-all tracking-widest uppercase font-display whitespace-nowrap ml-4"
           >
             Add Friend
           </motion.button>
@@ -154,9 +154,9 @@ const HeaderTab = ({ label, active, onClick }) => (
     role="tab"
     aria-selected={active}
     onClick={onClick}
-    className="relative px-3 py-1.5 group outline-none"
+    className="relative px-4 py-2 group outline-none"
   >
-    <span className={`relative z-10 text-[14px] font-bold transition-all duration-300 uppercase tracking-tighter font-display ${
+    <span className={`relative z-10 text-[14px] font-bold transition-all duration-300 uppercase tracking-wide font-display ${
       active ? 'text-white' : 'text-text-muted hover:text-[#DBDEE1]'
     }`}>
       {label}

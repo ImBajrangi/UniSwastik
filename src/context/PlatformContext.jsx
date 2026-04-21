@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { servers, channels as initialChannels, dmList as initialDmList, currentUser } from '../data/mockData';
+import { 
+  servers, 
+  channels as initialChannels, 
+  dmList as initialDmList, 
+  currentUser,
+  notifications as initialNotifications
+} from '../data/mockData';
 
 const PlatformContext = createContext();
 
@@ -18,6 +24,7 @@ export const PlatformProvider = ({ children }) => {
   const [dmList, setDmList] = useState(initialDmList);
   const [messageHistory, setMessageHistory] = useState({});
   const [showMemberList, setShowMemberList] = useState(true);
+  const [notifications, setNotifications] = useState(initialNotifications);
 
   // Hybrid Hydration - Market Ready Cache System
   useEffect(() => {
@@ -161,7 +168,9 @@ export const PlatformProvider = ({ children }) => {
     removeDM,
     isMobileMenuOpen,
     setIsMobileMenuOpen,
-    setView
+    setView,
+    notifications,
+    setNotifications
   };
 
   return (
