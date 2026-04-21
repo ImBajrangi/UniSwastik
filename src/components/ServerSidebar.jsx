@@ -41,55 +41,85 @@ const ServerSidebar = () => {
 
 const ServerIcon = ({ server, isActive, onClick }) => {
   const IconComponent = iconMap[server.iconName];
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  // Professional spring transition
+  const springTransition = {
+    type: "spring",
+    stiffness: 500,
+    damping: 30,
+    mass: 1
+  };
 
   return (
     <div 
       className="relative group cursor-pointer"
       onClick={() => { onClick(); playClick(); }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       role="button"
       aria-label={server.name}
       aria-pressed={isActive}
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
     >
-      {/* Active indicator pill */}
+      {/* Active indicator pill - Stable Spring Logic */}
       <motion.div 
         initial={false}
         animate={{ 
-          height: isActive ? 40 : 8,
-          opacity: isActive ? 1 : 0,
-          scaleY: isActive ? 1 : 0.5
+          height: isActive ? 40 : (isHovered ? 20 : 0),
+          opacity: (isActive || isHovered) ? 1 : 0,
         }}
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 bg-white rounded-r-full group-hover:opacity-100 group-hover:h-5 transition-all"
-        style={{ originY: 0.5 }}
+        transition={springTransition}
+        className="absolute left-0 top-1/2 -translate-y-1/2 w-[4px] bg-white rounded-r-full z-20"
+        style={{ originY: "50%" }}
       />
       
+      {/* Icon Container with layout transition */}
       <motion.div 
-        whileHover={{ borderRadius: "16px", backgroundColor: server.brandingColor || "#5865f2", color: "white" }}
-        whileTap={{ scale: 0.95 }}
+        layout
+        whileTap={{ scale: 0.90 }}
         animate={{ 
           borderRadius: isActive ? "16px" : "24px",
           backgroundColor: isActive ? (server.brandingColor || "var(--color-bg-accent)") : "var(--color-bg-primary)",
           color: isActive ? "white" : "var(--color-text-normal)"
         }}
-        className={`w-12 h-12 flex items-center justify-center transition-all shadow-sm overflow-hidden border border-white/5 active:scale-90 ${
-          isActive ? 'shadow-[0_0_15px_rgba(88,101,242,0.4)]' : ''
+        transition={springTransition}
+        className={`w-12 h-12 flex items-center justify-center shadow-sm border border-white/5 relative ${
+          isActive ? 'shadow-[0_0_20px_rgba(88,101,242,0.4)]' : ''
         }`}
       >
-        {IconComponent ? (
-          <IconComponent 
-            size={28} 
-            strokeWidth={2.5} 
-            className="group-hover:scale-110 transition-transform duration-300"
-          />
-        ) : (
-          <span className="text-sm font-semibold">{server.acronym}</span>
-        )}
-        
+        <motion.div 
+          className="w-full h-full flex items-center justify-center overflow-hidden rounded-[inherit]"
+        >
+          {IconComponent ? (
+            <motion.div 
+              transition={springTransition}
+              animate={{ scale: isHovered ? 1.15 : 1 }}
+            >
+              <IconComponent 
+                size={28} 
+                strokeWidth={2.5} 
+              />
+            </motion.div>
+          ) : (
+            <span className="text-sm font-semibold">{server.acronym}</span>
+          )}
+        </motion.div>
+
+        {/* NOTIFICATION BADGE - Fixed Circular Shape */}
         {server.notificationCount > 0 && (
-          <div className="absolute -bottom-1 -right-1 bg-status-dnd text-white text-[10px] font-bold px-1 rounded-full border-4 border-bg-tertiary shadow-lg">
+          <motion.div 
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ ...springTransition, delay: 0.1 }}
+            className="absolute -bottom-1.5 -right-1.5 bg-status-dnd text-white text-[11px] font-bold h-[20px] min-w-[20px] px-1.5 flex items-center justify-center rounded-full border-[3px] border-bg-tertiary shadow-lg z-30 pointer-events-none"
+            style={{ 
+              boxSizing: 'border-box'
+            }}
+          >
             {server.notificationCount}
-          </div>
+          </motion.div>
         )}
       </motion.div>
       
@@ -102,24 +132,36 @@ const ServerIcon = ({ server, isActive, onClick }) => {
   );
 };
 
-const ServerActionIcon = ({ icon, label, color }) => (
+const ServerActionIcon = ({ icon, label, color }) => {
+  const springTransition = {
+    type: "spring",
+    stiffness: 500,
+    damping: 30
+  };
+
+  return (
     <div className="relative group cursor-pointer mb-2" role="button" aria-label={label} tabIndex={0} onClick={playClick}>
-    <motion.div 
-      whileHover={{ 
-        borderRadius: "16px", 
-        backgroundColor: color === 'green' ? "var(--color-status-online)" : "var(--color-bg-accent)",
-        color: "white" 
-      }}
-      whileTap={{ scale: 0.92 }}
-      className={`w-12 h-12 rounded-[24px] bg-bg-primary flex items-center justify-center transition-all text-status-online border border-white/5`}
-    >
-      {icon}
-    </motion.div>
-    <div className="absolute left-[80px] top-1/2 -translate-y-1/2 glass text-white text-xs px-3 py-2 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 font-bold shadow-2xl tracking-tight">
-      {label}
-      <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-[#1e1f22] rotate-45 border-l border-b border-white/5" />
+      <motion.div 
+        layout
+        whileHover={{ 
+          borderRadius: "16px", 
+          backgroundColor: color === 'green' ? "var(--color-status-online)" : "var(--color-bg-accent)",
+          color: "white" 
+        }}
+        whileTap={{ scale: 0.88 }}
+        transition={springTransition}
+        className={`w-12 h-12 rounded-[24px] bg-bg-primary flex items-center justify-center hover:shadow-lg text-status-online border border-white/5`}
+      >
+        <motion.div transition={springTransition} whileHover={{ scale: 1.2 }}>
+          {icon}
+        </motion.div>
+      </motion.div>
+      <div className="absolute left-[80px] top-1/2 -translate-y-1/2 glass text-white text-xs px-3 py-2 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 font-bold shadow-2xl tracking-tight">
+        {label}
+        <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-[#1e1f22] rotate-45 border-l border-b border-white/5" />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default ServerSidebar;

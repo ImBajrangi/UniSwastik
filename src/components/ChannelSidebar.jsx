@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Hash, Volume2, Plus, Users, ShoppingBag, 
-  Joystick, LayoutDashboard, Megaphone, 
-  BookOpen, Lock, Settings, ChevronDown 
+import {
+  Hash, Volume2, Plus, Users, ShoppingBag,
+  Joystick, LayoutDashboard, Megaphone,
+  BookOpen, Lock, Settings, ChevronDown
 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import UserPanel from './UserPanel';
@@ -11,10 +11,10 @@ import Avatar from './Avatar';
 import { playClick } from '../utils/sounds';
 
 const ChannelSidebar = () => {
-  const { 
-    activeServerId, activeChannelId, activeDMId, 
-    servers, channels, dmList, 
-    selectServer, selectChannel, selectDM 
+  const {
+    activeServerId, activeChannelId, activeDMId,
+    servers, channels, dmList,
+    selectServer, selectChannel, selectDM
   } = usePlatform();
 
   const activeServer = servers.find(s => s.id === activeServerId);
@@ -27,7 +27,7 @@ const ChannelSidebar = () => {
         <div className="relative w-full h-[120px] bg-bg-tertiary overflow-hidden">
           <AnimatePresence mode="wait">
             {activeServer?.banner ? (
-              <motion.div 
+              <motion.div
                 key={activeServerId + "-banner"}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -37,9 +37,9 @@ const ChannelSidebar = () => {
               >
                 <img src={activeServer.banner} className="w-full h-full object-cover" alt="" />
                 <div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-black/30" />
-                
+
                 {/* Large Floating Symbol */}
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.1 }}
@@ -77,10 +77,10 @@ const ChannelSidebar = () => {
         {isHome ? (
           <HomeNavigation dmList={dmList} activeDMId={activeDMId} selectDM={selectDM} />
         ) : (
-          <ServerNavigation 
-            serverId={activeServerId} 
-            activeChannelId={activeChannelId} 
-            selectChannel={selectChannel} 
+          <ServerNavigation
+            serverId={activeServerId}
+            activeChannelId={activeChannelId}
+            selectChannel={selectChannel}
             brandingColor={activeServer?.brandingColor}
           />
         )}
@@ -91,37 +91,49 @@ const ChannelSidebar = () => {
   );
 };
 
-const HomeNavigation = ({ dmList, activeDMId, selectDM }) => (
-  <div className="flex flex-col gap-[1px] px-2 pt-2" role="list">
-    <HomeItem icon={<Users size={20} />} label="Friends" active={!activeDMId} />
-    <HomeItem icon={<LayoutDashboard size={20} />} label="Campus Feed" />
-    <HomeItem icon={<ShoppingBag size={20} />} label="Academic Resources" />
-    <HomeItem icon={<Joystick size={20} />} label="Quests & Polls" />
-    
-    <div className="mt-4 mb-2 px-2 flex items-center justify-between group">
-      <span className="text-[11px] font-bold text-text-muted uppercase tracking-[0.1em]">Direct Messages</span>
-      <Plus size={14} className="text-text-muted cursor-pointer hover:text-white transition-colors" />
-    </div>
+const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
+  const springTransition = { type: "spring", stiffness: 400, damping: 25 };
 
-    {dmList.map((dm) => (
-      <div 
-        key={dm.id}
-        onClick={() => { selectDM(dm.id); playClick(); }}
-        className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-all ${
-          activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-bg-modifier-hover'
-        }`}
+  return (
+    <div className="flex flex-col gap-2 px-2 pt-2" role="list">
+      <HomeItem icon={<Users size={20} />} label="Friends" active={!activeDMId} />
+      <HomeItem icon={<LayoutDashboard size={20} />} label="Campus Feed" />
+      <HomeItem icon={<ShoppingBag size={20} />} label="Academic Resources" />
+      <HomeItem icon={<Joystick size={20} />} label="Quests & Polls" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mt-4 mb-2 px-2 flex items-center justify-between group"
       >
-        <Avatar src={dm.avatar} name={dm.name} status={dm.status} size={32} />
-        <div className="flex flex-col min-w-0 flex-1">
-          <span className={`text-[15px] font-bold truncate tracking-tight ${
-            activeDMId === dm.id ? 'text-white' : 'text-text-muted group-hover:text-interactive-hover'
-          }`}>{dm.name}</span>
-          <span className="text-text-muted text-[11px] truncate font-medium opacity-70">{dm.subText}</span>
-        </div>
-      </div>
-    ))}
-  </div>
-);
+        <span className="text-[11px] font-bold text-text-muted uppercase tracking-[0.1em]">Direct Messages</span>
+        <Plus size={14} className="text-text-muted cursor-pointer hover:text-white transition-colors" />
+      </motion.div>
+
+      {dmList.map((dm, index) => (
+        <motion.div
+          key={dm.id}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ ...springTransition, delay: 0.3 + index * 0.05 }}
+          onClick={() => { selectDM(dm.id); playClick(); }}
+          whileHover={{ x: 4 }}
+          whileTap={{ scale: 0.98 }}
+          className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors ${activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-bg-modifier-hover'
+            }`}
+        >
+          <Avatar src={dm.avatar} name={dm.name} status={dm.status} size={32} />
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className={`text-[15px] font-bold truncate tracking-tight ${activeDMId === dm.id ? 'text-white' : 'text-text-muted group-hover:text-interactive-hover'
+              }`}>{dm.name}</span>
+            <span className="text-text-muted text-[11px] truncate font-medium opacity-70">{dm.subText}</span>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+};
 
 const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingColor }) => {
   const { channels } = usePlatform();
@@ -133,15 +145,16 @@ const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingCo
     if (name.includes('rules') || name.includes('academic')) return <BookOpen size={18} />;
     return <Hash size={18} />;
   };
-  
+
   return (
-    <div className="flex flex-col gap-[1px] px-2" role="list">
+    <div className="flex flex-col gap-1.5 px-2" role="list">
       <SectionHeader label="Text Channels" />
-      {serverChannels.filter(c => c.type !== 'voice').map((channel) => (
-        <ChannelItem 
-          key={channel.id} 
-          icon={getIcon(channel.type, channel.name)} 
-          label={channel.name} 
+      {serverChannels.filter(c => c.type !== 'voice').map((channel, index) => (
+        <ChannelItem
+          key={channel.id}
+          index={index}
+          icon={getIcon(channel.type, channel.name)}
+          label={channel.name}
           active={activeChannelId === channel.id}
           onClick={() => selectChannel(channel.id)}
           accentColor={brandingColor}
@@ -149,10 +162,11 @@ const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingCo
       ))}
 
       <SectionHeader label="Voice Channels" spacing="mt-4" />
-      {serverChannels.filter(c => c.type === 'voice').map((channel) => (
-        <ChannelItem 
-          key={channel.id} 
-          icon={getIcon(channel.type, channel.name)} 
+      {serverChannels.filter(c => c.type === 'voice').map((channel, index) => (
+        <ChannelItem
+          key={channel.id}
+          index={index}
+          icon={getIcon(channel.type, channel.name)}
           label={channel.name}
           active={activeChannelId === channel.id}
           onClick={() => selectChannel(channel.id)}
@@ -164,31 +178,41 @@ const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingCo
 };
 
 const SectionHeader = ({ label, spacing = "mt-2" }) => (
-  <div className={`${spacing} mb-1 px-1 flex items-center justify-between group cursor-pointer hover:text-white transition-colors`}>
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className={`${spacing} mb-1 px-1 flex items-center justify-between group cursor-pointer hover:text-white transition-colors`}
+  >
     <span className="text-[11px] font-bold text-text-muted uppercase tracking-[0.1em] flex items-center gap-1 group-hover:text-interactive-hover">
       <span className="-rotate-90 text-[8px] opacity-70 transition-transform group-hover:rotate-0">▼</span> {label}
     </span>
     <Plus size={14} className="text-text-muted group-hover:text-interactive-hover" />
-  </div>
+  </motion.div>
 );
 
 const HomeItem = ({ icon, label, active, onClick }) => (
-  <div 
-    onClick={() => { if(onClick) onClick(); playClick(); }}
-    className={`p-2 rounded-md flex items-center gap-3 cursor-pointer transition-colors ${
-    active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:bg-bg-modifier-hover hover:text-interactive-hover'
-  }`}>
+  <motion.div
+    onClick={() => { if (onClick) onClick(); playClick(); }}
+    whileHover={{ x: 4, backgroundColor: 'var(--color-bg-modifier-hover)' }}
+    whileTap={{ scale: 0.98 }}
+    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+    className={`py-2.5 px-3 rounded-md flex items-center gap-3 cursor-pointer transition-colors ${active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:text-interactive-hover'
+      }`}>
     <span className={active ? 'text-white' : 'text-channel-icon'}>{icon}</span>
-    <span className="text-[15px] font-black tracking-tight uppercase">{label}</span>
-  </div>
+    <span className="text-[14px] font-bold tracking-tight uppercase opacity-90 group-hover:opacity-100">{label}</span>
+  </motion.div>
 );
 
-const ChannelItem = ({ icon, label, active, onClick, accentColor }) => (
-  <div 
+const ChannelItem = ({ icon, label, active, onClick, accentColor, index }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -5 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ type: "spring", stiffness: 400, damping: 25, delay: index * 0.03 }}
     onClick={() => { onClick(); playClick(); }}
-    className={`p-1 px-2 mt-[1px] rounded-md flex items-center gap-2 cursor-pointer transition-all group ${
-      active ? 'bg-bg-modifier-selected text-white' : 'text-text-muted hover:bg-bg-modifier-hover hover:text-interactive-hover'
-    }`}
+    whileHover={{ x: 4, backgroundColor: 'var(--color-bg-modifier-hover)' }}
+    whileTap={{ scale: 0.98 }}
+    className={`py-1.5 px-2 rounded-md flex items-center gap-2 cursor-pointer transition-colors group ${active ? 'bg-bg-modifier-selected text-white' : 'text-text-muted hover:text-interactive-hover'
+      }`}
     style={{ borderLeft: active ? `2px solid ${accentColor || '#5865f2'}` : '2px solid transparent' }}
   >
     <span className={`transition-colors ${active ? 'text-white' : 'text-channel-icon group-hover:text-interactive-hover'}`}>
@@ -202,7 +226,9 @@ const ChannelItem = ({ icon, label, active, onClick, accentColor }) => (
         <Settings size={14} className="text-text-muted" />
       </div>
     )}
-  </div>
+  </motion.div>
 );
 
-export default ChannelSidebar;
+// export default ChannelSidebar;
+
+// export default ChannelSidebar;
