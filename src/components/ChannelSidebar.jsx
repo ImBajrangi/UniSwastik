@@ -110,10 +110,31 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
   
   return (
     <div className="flex flex-col gap-1.5 px-2 pt-2" role="list">
-      <HomeItem icon={<Users size={20} />} label="Friends" active={isFriendsActive} index={0} />
-      <HomeItem icon={<LayoutDashboard size={20} />} label="Campus Feed" index={1} />
-      <HomeItem icon={<ShoppingBag size={20} />} label="Academic Resources" index={2} />
-      <HomeItem icon={<Joystick size={20} />} label="Quests & Polls" index={3} />
+      <HomeItem 
+        icon={<Users size={20} />} 
+        label="Friends" 
+        active={isFriendsActive} 
+        onClick={() => setView('friends')} 
+        index={0} 
+      />
+      <HomeItem 
+        icon={<LayoutDashboard size={20} />} 
+        label="Campus Feed" 
+        onClick={() => setView('feed')} 
+        index={1} 
+      />
+      <HomeItem 
+        icon={<ShoppingBag size={20} />} 
+        label="Academic Resources" 
+        onClick={() => setView('resources')} 
+        index={2} 
+      />
+      <HomeItem 
+        icon={<Joystick size={20} />} 
+        label="Quests & Polls" 
+        onClick={() => setView('quests')} 
+        index={3} 
+      />
 
       <CollapsibleSection 
         label="Direct Messages" 

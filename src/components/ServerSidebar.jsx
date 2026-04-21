@@ -16,7 +16,7 @@ const iconMap = {
 };
 
 const ServerSidebar = () => {
-  const { servers, activeServerId, selectServer } = usePlatform();
+  const { servers, activeServerId, selectServer, setView } = usePlatform();
 
   return (
     <nav className="w-[72px] bg-bg-tertiary flex flex-col items-center py-3 gap-2 overflow-y-auto no-scrollbar shadow-2xl relative z-50 h-full border-r border-black/20" aria-label="Servers">
@@ -43,10 +43,23 @@ const ServerSidebar = () => {
 
       <div className="w-8 h-[2px] bg-white/5 rounded-full my-1 shadow-inner" role="separator" />
 
-      <ServerActionIcon icon={<Plus size={24} />} label="Add a Server" />
-      <ServerActionIcon icon={<Compass size={24} />} label="Explore Communities" color="green" />
+      <ServerActionIcon 
+        icon={<Plus size={24} />} 
+        label="Add a Server" 
+        onClick={() => {}} 
+      />
+      <ServerActionIcon 
+        icon={<Compass size={24} />} 
+        label="Explore Communities" 
+        color="green" 
+        onClick={() => setView('discover')}
+      />
       <div className="mt-auto pt-4 flex flex-col gap-2">
-        <ServerActionIcon icon={<Download size={24} />} label="Download Apps" color="green" />
+        <ServerActionIcon 
+          icon={<Download size={24} />} 
+          label="Download Apps" 
+          color="green" 
+        />
       </div>
     </nav>
   );
@@ -132,7 +145,7 @@ const ServerIcon = ({ server, isActive, onClick }) => {
   );
 };
 
-const ServerActionIcon = ({ icon, label, color }) => {
+const ServerActionIcon = ({ icon, label, color, onClick }) => {
   const [isHovered, setIsHovered] = React.useState(false);
   
   return (
@@ -141,7 +154,7 @@ const ServerActionIcon = ({ icon, label, color }) => {
         className="relative group cursor-pointer" 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={playClick}
+        onClick={() => { if (onClick) onClick(); playClick(); }}
       >
         <motion.div 
           animate={{ 

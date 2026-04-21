@@ -1,15 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth, db } from '../lib/firebase';
+import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { dbService } from '../services/db';
+import { seedDatabase } from '../utils/firebaseSeeder';
 import { 
-  servers, 
-  channels as initialChannels, 
-  dmList as initialDmList, 
-  currentUser,
-  notifications as initialNotifications
+  servers as mockServers, 
+  channels as mockChannels, 
+  dmList as mockDmList, 
+  currentUser as mockUser
 } from '../data/mockData';
 
 const PlatformContext = createContext();
-
-export const usePlatform = () => useContext(PlatformContext);
 
 export const PlatformProvider = ({ children }) => {
   const [activeServerId, setActiveServerId] = useState('home');
@@ -19,63 +20,90 @@ export const PlatformProvider = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   
-  // Stateful Channels and DMs with persistence
-  const [channels, setChannels] = useState(initialChannels);
-  const [dmList, setDmList] = useState(initialDmList);
-  const [messageHistory, setMessageHistory] = useState({});
+  // Dynamic State - Driven by Firestore
+  const [servers, setServers] = useState(mockServers);
+  const [channels, setChannels] = useState(mockChannels);
+  const [dmList, setDmList] = useState(mockDmList);
+  const [currentUser, setCurrentUser] = useState(mockUser);
   const [showMemberList, setShowMemberList] = useState(true);
   const [showThreadsSidebar, setShowThreadsSidebar] = useState(false);
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState([]);
   const [mutedChannels, setMutedChannels] = useState([]);
-const [pinnedMessages, setPinnedMessages] = useState({
-  'welcome': [
-    { id: 'pin-1', user: 'Prof. Dev', time: 'Oct 24', content: 'Welcome to Swastik University! Please read the rules in this channel before proceeding.' },
-    { id: 'pin-2', user: 'Alex Verified', time: 'Oct 25', content: 'The Hackathon registration link is now live!' }
-  ],
-  'general': [
-    { id: 'pin-3', user: 'Priya Sharma', time: 'Today', content: 'Remember to pick up your campus ID cards at the registrar office!' }
-  ]
-});
+  const [pinnedMessages, setPinnedMessages] = useState({});
   const [showInbox, setShowInbox] = useState(false);
   const [showPins, setShowPins] = useState(false);
 
-  // Hybrid Hydration - Market Ready Cache System
+  // 1. Firebase Auth Initialization
   useEffect(() => {
-    const loadCache = () => {
-      try {
-        const savedChannels = localStorage.getItem('swastik_channels');
-        const savedDms = localStorage.getItem('swastik_dms');
-        const savedMessages = localStorage.getItem('swastik_messages');
-        const savedShowMembers = localStorage.getItem('swastik_show_members');
-        const savedMuted = localStorage.getItem('swastik_muted_channels');
-        const savedPins = localStorage.getItem('swastik_pins');
-
-        if (savedChannels) setChannels(JSON.parse(savedChannels));
-        if (savedDms) setDmList(JSON.parse(savedDms));
-        if (savedMessages) setMessageHistory(JSON.parse(savedMessages));
-        if (savedShowMembers !== null) setShowMemberList(JSON.parse(savedShowMembers));
-        if (savedMuted) setMutedChannels(JSON.parse(savedMuted));
-        if (savedPins) setPinnedMessages(JSON.parse(savedPins));
-      } catch (e) {
-        console.error("Cache Hydration Error:", e);
-      } finally {
-        setIsHydrated(true);
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser({
+          id: user.uid,
+          name: user.displayName || 'Swastik Student',
+          avatar: user.photoURL || '',
+          status: 'online',
+          university: 'Swastik University'
+        });
+      } else {
+        await signInAnonymously(auth);
       }
-    };
-
-    loadCache();
+    });
+    return unsub;
   }, []);
 
-  // Persistent Write-Through Cache
+  // 2. Real-time Firestore Subscriptions with Resilient Fallbacks
   useEffect(() => {
-    if (!isHydrated) return;
-    localStorage.setItem('swastik_show_members', JSON.stringify(showMemberList));
-    localStorage.setItem('swastik_channels', JSON.stringify(channels));
-    localStorage.setItem('swastik_dms', JSON.stringify(dmList));
-    localStorage.setItem('swastik_messages', JSON.stringify(messageHistory));
-    localStorage.setItem('swastik_muted_channels', JSON.stringify(mutedChannels));
-    localStorage.setItem('swastik_pins', JSON.stringify(pinnedMessages));
-  }, [showMemberList, channels, dmList, messageHistory, mutedChannels, pinnedMessages, isHydrated]);
+    if (!currentUser?.id) return;
+
+    const prepareCloud = async () => {
+      try {
+        await seedDatabase();
+      } catch (err) {
+        console.warn("Seeding failed (Permissions?):", err.message);
+      }
+    };
+    prepareCloud();
+
+    const unsubServers = dbService.subscribeToServers((data) => {
+      try {
+        if (data && data.length > 0) {
+          setServers(data);
+          setIsHydrated(true);
+        }
+      } catch (err) {
+        console.error("Cloud Server Sync Error:", err);
+      }
+    });
+
+    const unsubDMs = dbService.subscribeToDMs(currentUser.id, (data) => {
+      try {
+        if (data && data.length > 0) setDmList(data);
+      } catch (err) {
+        console.error("Cloud DM Sync Error:", err);
+      }
+    });
+
+    return () => {
+      unsubServers();
+      unsubDMs();
+    };
+  }, [currentUser?.id]);
+
+  // Resilient Channel Syncing
+  useEffect(() => {
+    if (activeServerId === 'home') return;
+    
+    try {
+      const unsubChannels = dbService.subscribeToChannels(activeServerId, (data) => {
+        if (data && data.length > 0) {
+          setChannels(prev => ({ ...prev, [activeServerId]: data }));
+        }
+      });
+      return unsubChannels;
+    } catch (err) {
+      console.error(`Cloud Channel Sync Error [${activeServerId}]:`, err);
+    }
+  }, [activeServerId]);
 
   const selectServer = (serverId) => {
     setActiveServerId(serverId);
@@ -106,19 +134,9 @@ const [pinnedMessages, setPinnedMessages] = useState({
     setActiveChannelId(null);
   };
 
-  const sendMessage = (targetId, content) => {
-    const newMessage = {
-      id: Date.now(),
-      user: currentUser.name,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      content,
-      isMe: true
-    };
-
-    setMessageHistory(prev => ({
-      ...prev,
-      [targetId]: [...(prev[targetId] || []), newMessage]
-    }));
+  const sendMessage = async (targetId, content) => {
+    if (!currentUser) return;
+    await dbService.sendMessage(targetId, currentUser.id, currentUser.name, content);
   };
 
   const toggleMute = (channelId) => {
@@ -142,55 +160,11 @@ const [pinnedMessages, setPinnedMessages] = useState({
     });
   };
 
-  // MUTATIONS: Manage Chats and Channels
-  const addChannel = (serverId, name, type = 'text') => {
-    const newChannel = { id: `chan-${Date.now()}`, name, type };
-    setChannels(prev => ({
-      ...prev,
-      [serverId]: [...(prev[serverId] || []), newChannel]
-    }));
-    return newChannel;
-  };
-
-  const updateChannel = (serverId, channelId, newData) => {
-    setChannels(prev => ({
-      ...prev,
-      [serverId]: prev[serverId].map(c => c.id === channelId ? { ...c, ...newData } : c)
-    }));
-  };
-
-  const removeChannel = (serverId, channelId) => {
-    setChannels(prev => ({
-      ...prev,
-      [serverId]: prev[serverId].filter(c => c.id !== channelId)
-    }));
-    if (activeChannelId === channelId) setActiveChannelId(null);
-  };
-
-  const addDM = (user) => {
-    const newDM = {
-      id: `dm-${Date.now()}`,
-      name: user.name,
-      status: 'online',
-      avatar: user.avatar || '',
-      subText: 'Just connected',
-      relationship: 'friend'
-    };
-    setDmList(prev => [newDM, ...prev]);
-    return newDM;
-  };
-
-  const removeDM = (dmId) => {
-    setDmList(prev => prev.filter(dm => dm.id !== dmId));
-    if (activeDMId === dmId) setActiveDMId(null);
-  };
-
   const value = {
     activeServerId,
     activeChannelId,
     activeDMId,
     view,
-    messageHistory,
     selectServer,
     selectChannel,
     selectDM,
@@ -203,11 +177,6 @@ const [pinnedMessages, setPinnedMessages] = useState({
     setShowMemberList,
     showThreadsSidebar,
     setShowThreadsSidebar,
-    addChannel,
-    updateChannel,
-    removeChannel,
-    addDM,
-    removeDM,
     isMobileMenuOpen,
     setIsMobileMenuOpen,
     setView,
@@ -228,4 +197,12 @@ const [pinnedMessages, setPinnedMessages] = useState({
       {children}
     </PlatformContext.Provider>
   );
+};
+
+export const usePlatform = () => {
+  const context = useContext(PlatformContext);
+  if (!context) {
+    throw new Error('usePlatform must be used within a PlatformProvider');
+  }
+  return context;
 };

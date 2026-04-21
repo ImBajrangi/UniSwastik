@@ -13,6 +13,7 @@ import PinsPopover from '../components/PinsPopover';
 import InboxPopover from '../components/InboxPopover';
 import HelpModal from '../components/HelpModal';
 import ThreadsSidebar from '../components/ThreadsSidebar';
+import { dbService } from '../services/db';
 import { BellOff } from 'lucide-react';
 
 const HeroActionCard = ({ icon, label, onClick, index }) => (
@@ -107,7 +108,7 @@ const MemberCategory = ({ label, members }) => (
 const ChatView = ({ targetId }) => {
   const {
     activeServerId, channels, dmList,
-    messageHistory, sendMessage, updateChannel,
+    sendMessage, updateChannel,
     currentUser, showMemberList, setShowMemberList,
     setIsMobileMenuOpen, showThreadsSidebar, setShowThreadsSidebar,
     mutedChannels, toggleMute, pinnedMessages, togglePinMessage,
@@ -116,6 +117,7 @@ const ChatView = ({ targetId }) => {
 
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [messages, setMessages] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [showHelp, setShowHelp] = useState(false);
@@ -126,7 +128,24 @@ const ChatView = ({ targetId }) => {
   const title = channel?.name || dm?.name || 'chat';
   const isMuted = mutedChannels.includes(targetId);
 
-  const messages = (messageHistory[targetId] || []).filter(msg =>
+  // Real-time Message Subscription with Crash Protection
+  useEffect(() => {
+    if (!targetId) return;
+    try {
+      const unsub = dbService.subscribeToMessages(targetId, (data) => {
+        setMessages(data);
+      }, (err) => {
+        console.warn("Chat Firestore Error (Permissions?):", err.message);
+        setMessages([]); // Fallback to empty instead of crashing
+      });
+      return unsub;
+    } catch (err) {
+      console.error("Critical Chat Subscription Error:", err);
+    }
+  }, [targetId]);
+
+  // Filtering for local search
+  const filteredMessages = messages.filter(msg =>
     msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
     msg.user.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -178,23 +197,23 @@ const ChatView = ({ targetId }) => {
   return (
     <div className="flex-1 flex min-h-0 h-full bg-bg-primary relative overflow-hidden mesh-silk animate-mesh">
       <AnimatePresence>
-         {showPins && (
-           <PinsPopover 
-            channelName={title} 
-            pins={pinnedMessages[targetId] || []} 
+        {showPins && (
+          <PinsPopover
+            channelName={title}
+            pins={pinnedMessages[targetId] || []}
             onClose={() => setShowPins(false)}
             onUnpin={(msg) => togglePinMessage(targetId, msg)}
-           />
-         )}
-         {showInbox && (
-           <InboxPopover 
-            notifications={notifications} 
-            onClose={() => setShowInbox(false)} 
-           />
-         )}
-         {showHelp && (
-           <HelpModal onClose={() => setShowHelp(false)} />
-         )}
+          />
+        )}
+        {showInbox && (
+          <InboxPopover
+            notifications={notifications}
+            onClose={() => setShowInbox(false)}
+          />
+        )}
+        {showHelp && (
+          <HelpModal onClose={() => setShowHelp(false)} />
+        )}
       </AnimatePresence>
 
       {/* Main Chat Area - STABLIZED FLEX HIERARCHY */}
@@ -238,21 +257,21 @@ const ChatView = ({ targetId }) => {
           </div>
 
           <div className="flex items-center gap-1.5 p-1">
-            <HeaderIcon 
-              icon={isMuted ? <BellOff size={20} className="text-[#f23f42]" /> : <Bell size={20} />} 
-              label={isMuted ? "Unmute" : "Mute"} 
+            <HeaderIcon
+              icon={isMuted ? <BellOff size={20} className="text-[#f23f42]" /> : <Bell size={20} />}
+              label={isMuted ? "Unmute" : "Mute"}
               active={isMuted}
               onClick={() => toggleMute(targetId)}
             />
-            <HeaderIcon 
-              icon={<Pin size={20} />} 
-              label="Pins" 
+            <HeaderIcon
+              icon={<Pin size={20} />}
+              label="Pins"
               active={showPins}
               onClick={() => setShowPins(!showPins)}
             />
-            <HeaderIcon 
-              icon={<ThreadsIcon />} 
-              label="Threads" 
+            <HeaderIcon
+              icon={<ThreadsIcon />}
+              label="Threads"
               active={showThreadsSidebar}
               onClick={toggleThreadsSidebar}
             />
@@ -277,15 +296,15 @@ const ChatView = ({ targetId }) => {
             </div>
 
             <div className="hidden sm:flex items-center gap-1">
-              <HeaderIcon 
-                icon={<Inbox size={20} />} 
-                label="Inbox" 
+              <HeaderIcon
+                icon={<Inbox size={20} />}
+                label="Inbox"
                 active={showInbox}
                 onClick={() => setShowInbox(!showInbox)}
               />
-              <HeaderIcon 
-                icon={<HelpCircle size={20} />} 
-                label="Help" 
+              <HeaderIcon
+                icon={<HelpCircle size={20} />}
+                label="Help"
                 onClick={() => setShowHelp(true)}
               />
             </div>
@@ -354,12 +373,12 @@ const ChatView = ({ targetId }) => {
           </div>
 
           <div className="px-4 space-y-0">
-            {messages.map((msg, idx) => (
+            {filteredMessages.map((msg, idx) => (
               <Message
                 key={msg.id}
                 index={idx}
                 {...msg}
-                hideGutter={idx > 0 && messages[idx - 1].user === msg.user}
+                hideGutter={idx > 0 && filteredMessages[idx - 1].user === msg.user}
               />
             ))}
             {/* <div ref={messagesEndRef} className="h-4 invisible pointer-events-none" /> */}
@@ -448,7 +467,16 @@ const ChatView = ({ targetId }) => {
           )}
 
           {showThreadsSidebar && (
-            <ThreadsSidebar key="threads" onClose={() => setShowThreadsSidebar(false)} />
+            <React.Fragment key="threads">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowThreadsSidebar(false)}
+                className="lg:hidden fixed inset-0 bg-black/70 z-[250] backdrop-blur-sm"
+              />
+              <ThreadsSidebar key="threads" onClose={() => setShowThreadsSidebar(false)} />
+            </React.Fragment>
           )}
         </AnimatePresence>
       </div>

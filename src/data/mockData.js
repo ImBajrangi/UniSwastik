@@ -1,44 +1,47 @@
 export const servers = [
-  {
-    id: 'home',
-    name: 'Home',
-    iconName: 'Home',
-    isHome: true,
+  { 
+    id: 'home', 
+    name: 'Home', 
+    iconName: 'Home', 
+    isHome: true, 
+    notificationCount: 3, 
+    acronym: 'H' 
   },
-  {
-    id: 'su-main',
-    name: 'Swastik University',
-    iconName: 'GraduationCap',
-    acronym: 'SU',
-    members: 15420,
-    online: 4230,
-    notificationCount: 3,
-    description: 'The official digital home for all Swastik University students and faculty.',
-    banner: 'https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?w=800&q=80',
-    brandingColor: '#5865f2', 
+  { 
+    id: 'swastik-eng', 
+    name: 'Swastik Engineering', 
+    iconName: 'GraduationCap', 
+    notificationCount: 12, 
+    brandingColor: '#5865F2', 
+    banner: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=80',
+    acronym: 'SE',
+    description: 'The pulse of Swastik engineering students. Collaborative coding and lab help.',
+    members: 2450,
+    online: 420
   },
-  {
-    id: 'sc-club',
-    name: 'Science Club',
-    iconName: 'FlaskConical',
-    acronym: 'SC',
-    members: 850,
-    online: 120,
-    description: 'Exploring the frontiers of physics, chemistry, and biology through collaboration.',
-    banner: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&q=80',
-    brandingColor: '#23a55a',
+  { 
+    id: 'science-hub', 
+    name: 'Faculty of Science', 
+    iconName: 'FlaskConical', 
+    notificationCount: 0, 
+    brandingColor: '#248046',
+    banner: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=800&q=80',
+    acronym: 'FS',
+    description: 'Research, seminars, and academic discussions for science enthusiasts.',
+    members: 1890,
+    online: 156
   },
-  {
-    id: 'ai-ml',
-    name: 'AI & ML Society',
-    iconName: 'Cpu',
-    acronym: 'AI',
-    members: 2300,
-    online: 450,
-    notificationCount: 12,
-    description: 'A community of builders, researchers, and enthusiasts pushing the boundaries of AI.',
-    banner: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80',
-    brandingColor: '#00a8fc',
+  { 
+    id: 'tech-innovators', 
+    name: 'Tech Innovators', 
+    iconName: 'Cpu', 
+    notificationCount: 5, 
+    brandingColor: '#eb459e',
+    banner: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80',
+    acronym: 'TI',
+    description: 'Hacking, building, and exploring the future of tech at Swastik.',
+    members: 3200,
+    online: 890
   }
 ];
 

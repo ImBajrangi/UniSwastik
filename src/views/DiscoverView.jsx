@@ -1,12 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Compass, ShieldCheck, Calendar, ArrowRight, TrendingUp, Newspaper, Menu } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import ParallaxCard from '../components/ParallaxCard';
-import { campusNews, upcomingEvents } from '../data/mockData';
+import { db } from '../lib/firebase';
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 
 const DiscoverView = () => {
   const { servers, selectServer, setIsMobileMenuOpen } = usePlatform();
+  const [news, setNews] = useState([]);
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    // Subscribe to News with Resilience
+    const qNews = query(collection(db, "news"), orderBy("id", "asc"), limit(6));
+    const unsubNews = onSnapshot(qNews, (snapshot) => {
+      if (!snapshot.empty) {
+        setNews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }
+    }, (err) => {
+      console.warn("Discover News Error (Permissions?):", err.message);
+    });
+
+    // Subscribe to Events with Resilience
+    const qEvents = query(collection(db, "events"), orderBy("date", "asc"), limit(8));
+    const unsubEvents = onSnapshot(qEvents, (snapshot) => {
+      if (!snapshot.empty) {
+        setEvents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }
+    }, (err) => {
+      console.warn("Discover Events Error (Permissions?):", err.message);
+    });
+
+    return () => {
+      unsubNews();
+      unsubEvents();
+    };
+  }, []);
 
   const staggerContainer = {
     hidden: { opacity: 0 },
@@ -174,9 +204,9 @@ const DiscoverView = () => {
           </header>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {campusNews.map((news, idx) => (
+            {news.map((item, idx) => (
               <motion.div 
-                key={news.id} 
+                key={item.id} 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -185,17 +215,17 @@ const DiscoverView = () => {
                 className="bg-transparent rounded-2xl overflow-hidden flex flex-col group cursor-pointer"
               >
                 <div className="h-48 overflow-hidden rounded-2xl shadow-premium relative">
-                  <img src={news.image} alt={news.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <span className="absolute bottom-4 left-4 glass px-2 py-1 rounded text-[10px] font-black text-white uppercase tracking-widest">
-                    {news.category}
+                    {item.category}
                   </span>
                 </div>
                 <div className="pt-5 flex flex-col flex-1">
-                  <h3 className="text-white font-bold text-xl mb-3 group-hover:text-brand-indigo transition-colors font-display leading-tight">{news.title}</h3>
-                  <p className="text-text-muted text-sm font-medium line-clamp-3 mb-4 flex-1 opacity-70 leading-relaxed">{news.summary}</p>
+                  <h3 className="text-white font-bold text-xl mb-3 group-hover:text-brand-indigo transition-colors font-display leading-tight">{item.title}</h3>
+                  <p className="text-text-muted text-sm font-medium line-clamp-3 mb-4 flex-1 opacity-70 leading-relaxed">{item.summary}</p>
                   <div className="flex items-center justify-between text-[11px] font-black text-text-muted uppercase tracking-widest border-t border-white/5 pt-4 group-hover:border-brand-indigo/30 transition-colors">
-                    <span>{news.date}</span>
+                    <span>{item.date}</span>
                     <div className="flex items-center gap-1 group-hover:translate-x-2 transition-transform">
                       Read story <ArrowRight size={14} />
                     </div>
@@ -215,7 +245,7 @@ const DiscoverView = () => {
           </header>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {upcomingEvents.map((event, idx) => (
+            {events.map((event, idx) => (
               <motion.div 
                 key={event.id}
                 initial={{ opacity: 0, scale: 0.95 }}
