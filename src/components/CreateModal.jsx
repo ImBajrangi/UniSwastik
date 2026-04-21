@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Hash, Volume2, MessagesSquare, Lock, Sparkles } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
@@ -21,10 +22,10 @@ const CreateModal = ({ type, serverId, onClose }) => {
     onClose();
   };
 
-  const springTransition = { type: "spring", stiffness: 500, damping: 30 };
+  const springTransition = { type: "spring", stiffness: 400, damping: 25 };
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-0">
       {/* Backdrop - Solid dark look */}
       <motion.div 
         initial={{ opacity: 0 }}
@@ -36,11 +37,11 @@ const CreateModal = ({ type, serverId, onClose }) => {
 
       {/* Modal - Discord Palette */}
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        transition={{ ...springTransition, damping: 40 }}
-        className="relative w-full max-w-[460px] bg-[#313338] rounded-md shadow-2xl overflow-hidden"
+        initial={{ scale: 0.85, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.85, opacity: 0, y: -20 }}
+        transition={springTransition}
+        className="relative w-[90%] max-w-[460px] bg-[#313338] rounded-md shadow-2xl overflow-hidden"
       >
         <div className="p-4 pt-6">
           <div className="flex items-center justify-between mb-4 px-2">
@@ -149,7 +150,8 @@ const CreateModal = ({ type, serverId, onClose }) => {
           </form>
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

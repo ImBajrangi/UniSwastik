@@ -64,18 +64,36 @@ const ChannelSidebar = () => {
         </div>
       )}
 
-      {/* Content Area - No Flickering Stagger */}
+      {/* Content Area - Macro Animated Container */}
       <div className="flex-1 overflow-y-auto no-scrollbar py-2">
-        {isHome ? (
-          <HomeNavigation dmList={dmList} activeDMId={activeDMId} selectDM={selectDM} />
-        ) : (
-          <ServerNavigation
-            serverId={activeServerId}
-            activeChannelId={activeChannelId}
-            selectChannel={selectChannel}
-            brandingColor={activeServer?.brandingColor}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {isHome ? (
+            <motion.div
+              key="home-nav"
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            >
+              <HomeNavigation dmList={dmList} activeDMId={activeDMId} selectDM={selectDM} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="server-nav"
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            >
+              <ServerNavigation
+                serverId={activeServerId}
+                activeChannelId={activeChannelId}
+                selectChannel={selectChannel}
+                brandingColor={activeServer?.brandingColor}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <UserPanel />
@@ -107,10 +125,10 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
             <motion.div
               layout
               key={dm.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, x: -10, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22, delay: index * 0.015 }}
               onClick={() => { selectDM(dm.id); playClick(); }}
               className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors relative mb-0.5 ${activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-white/5'
                 }`}
@@ -136,7 +154,9 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
         </AnimatePresence>
       </CollapsibleSection>
 
-      {showCreateDM && <CreateModal type="dm" onClose={() => setShowCreateDM(false)} />}
+      <AnimatePresence>
+        {showCreateDM && <CreateModal type="dm" onClose={() => setShowCreateDM(false)} />}
+      </AnimatePresence>
     </div>
   );
 };
@@ -189,7 +209,9 @@ const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingCo
         </AnimatePresence>
       </CollapsibleSection>
 
-      {showCreateChannel && <CreateModal type="channel" serverId={serverId} onClose={() => setShowCreateChannel(false)} />}
+      <AnimatePresence>
+        {showCreateChannel && <CreateModal type="channel" serverId={serverId} onClose={() => setShowCreateChannel(false)} />}
+      </AnimatePresence>
     </div>
   );
 };
@@ -227,13 +249,14 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-6", classNam
         )}
       </div>
       
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
+            layout
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 35 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className="overflow-hidden pt-1.5 flex flex-col gap-0.5"
           >
             {children}
@@ -247,8 +270,8 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-6", classNam
 const HomeItem = ({ icon, label, active, onClick }) => (
   <motion.div
     onClick={() => { if (onClick) onClick(); playClick(); }}
-    whileTap={{ scale: 0.98 }}
-    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+    whileTap={{ scale: 0.95 }}
+    transition={{ type: "spring", stiffness: 300, damping: 22 }}
     className={`py-3 px-3 rounded-md flex items-center gap-4 cursor-pointer transition-colors mb-0.5 ${active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:bg-white/5 hover:text-interactive-hover'
       }`}>
     <span className={active ? 'text-white' : 'text-channel-icon'}>{icon}</span>
@@ -259,10 +282,10 @@ const HomeItem = ({ icon, label, active, onClick }) => (
 const ChannelItem = ({ icon, label, active, onClick, accentColor, index, onRemove }) => (
   <motion.div
     layout
-    initial={{ opacity: 0, x: -5 }}
-    animate={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: -10 }}
-    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+    initial={{ opacity: 0, x: -10, scale: 0.95 }}
+    animate={{ opacity: 1, x: 0, scale: 1 }}
+    exit={{ opacity: 0, x: 10, scale: 0.95 }}
+    transition={{ type: "spring", stiffness: 300, damping: 22, delay: index * 0.015 }}
     onClick={() => { onClick(); playClick(); }}
     className={`py-1.5 px-3 rounded-md flex items-center gap-3 cursor-pointer transition-all group mb-0.5 relative ${
       active ? 'bg-white/10 text-white shadow-sm' : 'text-[#949BA4] hover:bg-white/5 hover:text-[#DBDEE1]'
