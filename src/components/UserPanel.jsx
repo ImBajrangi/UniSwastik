@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Headphones, Settings, MicOff, HeadphoneOff, ChevronDown } from 'lucide-react';
 import Avatar from './Avatar';
 import UserProfileCard from './UserProfileCard';
+import VoiceSettingsPopover from './VoiceSettingsPopover';
 import { usePlatform } from '../context/PlatformContext';
 import { playClick } from '../utils/sounds';
 
@@ -11,20 +12,28 @@ const UserPanel = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [activePopover, setActivePopover] = useState(null); // 'mic' or 'audio'
   const panelRef = useRef(null);
 
   const springTransition = { type: "spring", stiffness: 500, damping: 32 };
 
-  // Handle click outside to close profile
+  // Handle click outside to close popovers
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (panelRef.current && !panelRef.current.contains(event.target)) {
         setShowProfile(false);
+        setActivePopover(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const togglePopover = (type, e) => {
+    e.stopPropagation();
+    setActivePopover(activePopover === type ? null : type);
+    playClick();
+  };
 
   return (
     <div className="relative" ref={panelRef}>
@@ -35,17 +44,23 @@ const UserPanel = () => {
             onClose={() => setShowProfile(false)} 
           />
         )}
+        {activePopover && (
+          <VoiceSettingsPopover 
+            type={activePopover === 'mic' ? 'input' : 'output'} 
+            onClose={() => setActivePopover(null)} 
+          />
+        )}
       </AnimatePresence>
 
       <motion.div 
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={springTransition}
-        className="h-[52px] bg-[#232428] px-2 flex items-center justify-between group select-none"
+        className="h-[52px] bg-[#232428] px-2 flex items-center justify-between group select-none relative z-10"
       >
         {/* User Info Area */}
         <motion.div 
-          onClick={() => setShowProfile(!showProfile)}
+          onClick={() => { setShowProfile(!showProfile); setActivePopover(null); }}
           whileHover={{ backgroundColor: "rgba(78, 80, 88, 0.3)" }}
           whileTap={{ scale: 0.98 }}
           transition={springTransition}
@@ -77,6 +92,7 @@ const UserPanel = () => {
             hasDropdown
             icon={isMuted ? <MicOff size={18} /> : <Mic size={18} />} 
             onClick={() => setIsMuted(!isMuted)}
+            onDropdown={(e) => togglePopover('mic', e)}
             label={isMuted ? "Unmute" : "Mute"}
           />
           <PanelIcon 
@@ -87,6 +103,7 @@ const UserPanel = () => {
                 setIsDeafened(!isDeafened); 
                 if(!isDeafened) setIsMuted(true); 
             }}
+            onDropdown={(e) => togglePopover('audio', e)}
             label={isDeafened ? "Undeafen" : "Deafen"}
           />
           <PanelIcon 
@@ -99,7 +116,7 @@ const UserPanel = () => {
   );
 };
 
-const PanelIcon = ({ icon, onClick, active, isRed, hasDropdown, label }) => {
+const PanelIcon = ({ icon, onClick, onDropdown, active, isRed, hasDropdown, label }) => {
   const springTransition = { type: "spring", stiffness: 500, damping: 30 };
 
   return (
@@ -123,7 +140,10 @@ const PanelIcon = ({ icon, onClick, active, isRed, hasDropdown, label }) => {
         </div>
       </motion.div>
       {hasDropdown && (
-        <span className="text-[#B5BAC1] opacity-40 hover:opacity-100 cursor-pointer p-0.5 -ml-1 transition-opacity">
+        <span 
+          onClick={onDropdown}
+          className="text-[#B5BAC1] opacity-40 hover:opacity-100 cursor-pointer p-0.5 -ml-1 transition-opacity"
+        >
            <ChevronDown size={14} strokeWidth={3} />
         </span>
       )}
