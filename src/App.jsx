@@ -114,6 +114,7 @@ const AppContent = () => {
       {/* Desktop Sidebars */}
       <div className="hidden lg:flex shrink-0">
         <ServerSidebar />
+        {/* Sidebar remains visible for Home (Chat/Friends), Notifications, and Profile */}
         <ChannelSidebar />
       </div>
 

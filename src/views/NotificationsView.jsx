@@ -14,72 +14,74 @@ const NotificationsView = () => {
 
   const getIcon = (type) => {
     switch (type) {
-      case 'mention': return <AtSign size={16} className="text-[#5865F2]" />;
-      case 'request': return <UserPlus size={16} className="text-[#23A559]" />;
-      case 'reaction': return <Star size={16} className="text-[#F0B232]" />;
-      default: return <Info size={16} className="text-[#949BA4]" />;
+      case 'mention': return <AtSign size={15} className="text-[#5865F2]" />;
+      case 'request': return <UserPlus size={15} className="text-[#23A559]" />;
+      case 'reaction': return <Star size={15} className="text-[#F0B232]" />;
+      default: return <Info size={15} className="text-[#949BA4]" />;
     }
   };
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#313338]">
-      {/* Header */}
-      <header className="h-12 px-4 flex items-center justify-between border-b border-black/20 shadow-sm shrink-0">
-        <div className="flex items-center gap-2">
-          <Bell size={20} className="text-text-muted" />
+      {/* Header - Standardized to h-14 */}
+      <header className="h-14 px-6 flex items-center justify-between border-b border-black/10 shadow-lg shrink-0">
+        <div className="flex items-center gap-3">
+          <Bell size={22} className="text-text-muted" />
           <h1 className="text-white font-black text-[15px] tracking-tight font-display">Notifications</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button 
             onClick={markAllRead}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-[12px] font-bold text-white transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[12px] font-bold text-white transition-all active:scale-95 border border-white/5"
           >
             <Check size={14} /> Mark all as read
           </button>
-          <HeaderIcon icon={<Inbox size={20} />} label="Inbox" />
+          <HeaderIcon icon={<Inbox size={22} />} label="Inbox" />
         </div>
       </header>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-2 mesh-silk">
-        {notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[60vh] opacity-50 text-center px-8">
-            <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-4">
-              <Bell size={48} className="text-text-muted" />
+      {/* Content - Responsive Max-Width for Desktop */}
+      <div className="flex-1 overflow-y-auto no-scrollbar mesh-silk">
+        <div className="max-w-[800px] mx-auto p-6 sm:p-10 space-y-3">
+          {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[60vh] opacity-50 text-center px-8">
+              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                <Bell size={48} className="text-text-muted" />
+              </div>
+              <h2 className="text-white font-bold text-lg mb-1 font-display">Quiet as a library</h2>
+              <p className="text-sm">You're all caught up with your campus notifications.</p>
             </div>
-            <h2 className="text-white font-bold text-lg mb-1">Quiet as a library</h2>
-            <p className="text-sm">You're all caught up with your campus notifications.</p>
-          </div>
-        ) : (
-          notifications.map((notif, idx) => (
-            <motion.div
-              key={notif.id}
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: idx * 0.05 }}
-              className={`p-4 rounded-xl flex items-start gap-4 transition-all group cursor-pointer ${
-                notif.unread ? 'bg-brand-indigo/5 border border-brand-indigo/20 shadow-lg' : 'hover:bg-white/5 border border-transparent'
-              }`}
-            >
-              <div className="relative">
-                <Avatar name={notif.user} size={40} />
-                <div className="absolute -bottom-1 -right-1 bg-[#2b2d31] p-1 rounded-full shadow-lg">
-                  {getIcon(notif.type)}
+          ) : (
+            notifications.map((notif, idx) => (
+              <motion.div
+                key={notif.id}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: idx * 0.05 }}
+                className={`p-5 rounded-2xl flex items-start gap-5 transition-all group cursor-pointer ${
+                  notif.unread ? 'bg-brand-indigo/5 border border-brand-indigo/20 shadow-xl' : 'hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                <div className="relative shrink-0">
+                  <Avatar name={notif.user} size={48} />
+                  <div className="absolute -bottom-1.5 -right-1.5 bg-[#2b2d31] p-1.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.5)] border-2 border-[#313338] transition-transform group-hover:scale-110">
+                    {getIcon(notif.type)}
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-white font-bold text-[14px]">{notif.user}</span>
-                  <span className="text-text-muted text-[11px] font-medium">{notif.time}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-white font-bold text-[15px] font-display">{notif.user}</span>
+                    <span className="text-text-muted text-[12px] font-medium opacity-60 tracking-wider uppercase">{notif.time}</span>
+                  </div>
+                  <p className="text-[14px] text-text-normal leading-relaxed font-medium">{notif.content}</p>
                 </div>
-                <p className="text-[14px] text-text-normal leading-relaxed">{notif.content}</p>
-              </div>
-              {notif.unread && (
-                <div className="w-2.5 h-2.5 bg-brand-indigo rounded-full mt-2 shrink-0 shadow-[0_0_8px_rgba(88,101,242,0.8)]" />
-              )}
-            </motion.div>
-          ))
-        )}
+                {notif.unread && (
+                  <div className="w-3 h-3 bg-brand-indigo rounded-full mt-2.5 shrink-0 shadow-[0_0_12px_rgba(88,101,242,0.8)] animate-pulse" />
+                )}
+              </motion.div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
