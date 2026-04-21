@@ -109,11 +109,10 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
               key={dm.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, scale: 0.95, filter: 'blur(4px)' }}
-              transition={{ ...springTransition, delay: index * 0.03 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
               onClick={() => { selectDM(dm.id); playClick(); }}
-              whileHover={{ backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
-              className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors relative mb-0.5 ${activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-bg-modifier-hover'
+              className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors relative mb-0.5 ${activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-white/5'
                 }`}
             >
               <Avatar src={dm.avatar} name={dm.name} status={dm.status} size={32} />
@@ -248,10 +247,9 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-6", classNam
 const HomeItem = ({ icon, label, active, onClick }) => (
   <motion.div
     onClick={() => { if (onClick) onClick(); playClick(); }}
-    whileHover={{ backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
     whileTap={{ scale: 0.98 }}
-    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-    className={`py-3 px-3 rounded-md flex items-center gap-4 cursor-pointer transition-colors mb-0.5 ${active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:text-interactive-hover'
+    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+    className={`py-3 px-3 rounded-md flex items-center gap-4 cursor-pointer transition-colors mb-0.5 ${active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:bg-white/5 hover:text-interactive-hover'
       }`}>
     <span className={active ? 'text-white' : 'text-channel-icon'}>{icon}</span>
     <span className="text-[15px] font-bold tracking-tight opacity-90 group-hover:opacity-100">{label}</span>
@@ -264,9 +262,8 @@ const ChannelItem = ({ icon, label, active, onClick, accentColor, index, onRemov
     initial={{ opacity: 0, x: -5 }}
     animate={{ opacity: 1, x: 0 }}
     exit={{ opacity: 0, x: -10 }}
-    transition={{ type: "spring", stiffness: 400, damping: 25, delay: index * 0.03 }}
+    transition={{ type: "spring", stiffness: 500, damping: 30 }}
     onClick={() => { onClick(); playClick(); }}
-    whileHover={{ backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
     className={`py-1.5 px-3 rounded-md flex items-center gap-3 cursor-pointer transition-all group mb-0.5 relative ${
       active ? 'bg-white/10 text-white shadow-sm' : 'text-[#949BA4] hover:bg-white/5 hover:text-[#DBDEE1]'
     }`}

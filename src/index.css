@@ -5,30 +5,42 @@
   /* Elite Masterpiece Tokens - Deep Obsidian & Celestial Indigo */
   --color-brand-indigo: #5865f2;
   --color-brand-crimson: #ed4245;
-  
-  --color-bg-primary: #121214;        /* Elite Deep Obsidian */
-  --color-bg-secondary: #0b0c0e;      /* Satin Shell Background */
-  --color-bg-secondary-alt: #18191c;  /* Soft Satin Hover Surface */
-  --color-bg-tertiary: #050505;       /* Pure Carbon Sidebar */
-  
+
+  --color-bg-primary: #121214;
+  /* Elite Deep Obsidian */
+  --color-bg-secondary: #0b0c0e;
+  /* Satin Shell Background */
+  --color-bg-secondary-alt: #18191c;
+  /* Soft Satin Hover Surface */
+  --color-bg-tertiary: #050505;
+  /* Pure Carbon Sidebar */
+
   --color-text-normal: #dbdee1;
-  --color-text-muted: #8e9297;        /* Softened for better hierarchy */
+  --color-text-muted: #8e9297;
+  /* Softened for better hierarchy */
   --color-text-header: #ffffff;
-  
+
   --color-status-online: #23a559;
   --color-status-idle: #f0b232;
   --color-status-dnd: #f23f43;
-  
+
   /* Elite Shadows - Atmospheric Inner Reflections */
-  --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 40px rgba(255, 255, 255, 0.02);
+  --shadow-premium: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-glass: 0 4px 16px rgba(0, 0, 0, 0.3);
 
   /* Animations */
   --animate-float: float 3s ease-in-out infinite;
-  
+
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-5px);
+    }
   }
 }
 
@@ -36,10 +48,13 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Elite-Precision Typography System */
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -47,14 +62,19 @@ html, body, #root {
   background-color: var(--color-bg-tertiary);
   color: var(--color-text-normal);
   -webkit-font-smoothing: antialiased;
-  letter-spacing: -0.022em; /* Elite-tier precision tracking */
+  letter-spacing: -0.022em;
+  /* Elite-tier precision tracking */
   transform: translateZ(0);
   will-change: transform, opacity;
 }
 
-h1, h2, h3, .font-display {
+h1,
+h2,
+h3,
+.font-display {
   font-family: 'Outfit', sans-serif;
-  letter-spacing: -0.05em; /* Bold, high-fashion tracking */
+  letter-spacing: -0.05em;
+  /* Bold, high-fashion tracking */
   line-height: 1;
 }
 
@@ -74,25 +94,28 @@ h1, h2, h3, .font-display {
   width: 4px;
   height: 4px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.05); /* Subtle dark thumb */
+  background: rgba(255, 255, 255, 0.05);
+  /* Subtle dark thumb */
   border-radius: 20px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
 /* Masterpiece Utility Extensions */
 @utility glass {
-  background: rgba(11, 12, 14, 0.7);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 15, 17, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: var(--shadow-glass);
-  transform: translateZ(0);
 }
 
 @utility glass-thin {
@@ -103,15 +126,12 @@ h1, h2, h3, .font-display {
 }
 
 @utility mesh-silk {
-  background: 
-    radial-gradient(at 0% 0%, rgba(88, 101, 242, 0.08) 0px, transparent 50%),
-    radial-gradient(at 50% 0%, rgba(147, 51, 234, 0.06) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
-  background-attachment: fixed;
+  background: radial-gradient(circle at 10% 10%, rgba(88, 101, 242, 0.05) 0%, transparent 40%);
 }
 
 @utility glow-brand {
   position: relative;
+
   &::after {
     content: '';
     position: absolute;
@@ -134,6 +154,7 @@ h1, h2, h3, .font-display {
 
 @utility no-scrollbar {
   scrollbar-width: none;
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -150,16 +171,22 @@ h1, h2, h3, .font-display {
 
 /* Masterpiece Animations */
 @keyframes mesh-float {
-  0% { background-position: 0% 0%; }
-  50% { background-position: 100% 100%; }
-  100% { background-position: 0% 0%; }
+  0% {
+    background-position: 0% 0%;
+  }
+
+  50% {
+    background-position: 100% 100%;
+  }
+
+  100% {
+    background-position: 0% 0%;
+  }
 }
 
-.animate-mesh {
-  background-size: 200% 200%;
-  animation: mesh-float 20s ease infinite;
-  will-change: background-position;
-}
+/* .animate-mesh {
+  /* Simplified: removed animation for instant feel *
+} */
 
 /* Mobile Safety */
 .pb-safe {

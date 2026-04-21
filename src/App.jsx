@@ -91,17 +91,11 @@ const AppContent = () => {
       <AnimatePresence mode="wait">
         <motion.div
           key={view}
-          initial={{ opacity: 0, scale: 1.02, filter: 'blur(8px)' }}
-          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, scale: 0.98, filter: 'blur(8px)' }}
-          transition={{ 
-            type: "spring", 
-            stiffness: 400, 
-            damping: 30,
-            mass: 0.8
-          }}
-          style={{ willChange: 'transform, opacity, filter' }}
-          className="flex-1 flex flex-col min-h-0 h-full overflow-hidden bg-transparent transform-gpu"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15, ease: "easeInOut" }}
+          className="flex-1 flex flex-col min-h-0 h-full overflow-hidden bg-transparent"
           role="main"
           id="main-content"
         >

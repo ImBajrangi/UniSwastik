@@ -12,9 +12,9 @@ import HeaderIcon from '../components/HeaderIcon';
 
 const HeroActionCard = ({ icon, label, onClick }) => (
   <motion.div
-    whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', x: 4 }}
+    whileHover={{ x: 4 }}
     onClick={onClick}
-    className="w-full bg-black/10 border border-white/5 p-4 rounded-2xl flex items-center justify-between group cursor-pointer transition-all"
+    className="w-full bg-black/10 hover:bg-white/5 border border-white/5 p-4 rounded-2xl flex items-center justify-between group cursor-pointer transition-all"
   >
     <div className="flex items-center gap-4">
       <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center transition-transform group-hover:scale-110">
@@ -36,14 +36,9 @@ const ThreadsIcon = ({ size = 20 }) => (
 
 const Message = ({ user, time, content, isMe, hideGutter }) => (
   <motion.div
-    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-    animate={{ opacity: 1, scale: 1, y: 0 }}
-    transition={{ 
-      type: "spring", 
-      stiffness: 400, 
-      damping: 25,
-      mass: 0.8
-    }}
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ duration: 0.15 }}
     className={`flex gap-4 group hover:bg-white/[0.03] -mx-4 px-4 ${hideGutter ? 'py-0.5' : 'py-2 mt-4'} transition-colors relative border-l-2 border-transparent hover:border-brand-indigo/30`}
   >
     <div className="w-10 shrink-0">
@@ -220,7 +215,7 @@ const ChatView = ({ targetId }) => {
         </header>
 
         {/* Messages Scroll Area */}
-        <div className="flex-1 overflow-y-auto no-scrollbar pb-28 min-h-0 bg-transparent">
+        <div className="flex-1 overflow-y-auto no-scrollbar pb-40 min-h-0 bg-transparent">
           {/* Welcome Hero - MASTERPIECE DESIGN */}
           <div className="px-6 py-16 flex flex-col items-start max-w-[800px]">
             {dm ? (
@@ -293,7 +288,7 @@ const ChatView = ({ targetId }) => {
         </div>
 
         {/* Message Input Container - DISCORD REFERENCE PILL DESIGN */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-2 z-30 pointer-events-none lg:pb-8 lg:px-6">
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-12 pt-2 z-30 pointer-events-none lg:pb-16 lg:px-6">
           <div className="max-w-[1240px] mx-auto pointer-events-auto">
             <motion.div 
               initial={{ y: 30, opacity: 0 }}
