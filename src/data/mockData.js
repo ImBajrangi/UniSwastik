@@ -16,7 +16,6 @@ export const servers = [
     description: 'The official digital home for all Swastik University students and faculty.',
     banner: 'https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?w=800&q=80',
     brandingColor: '#5865f2', 
-    largeSymbol: '🏛️'
   },
   {
     id: 'sc-club',
@@ -28,7 +27,6 @@ export const servers = [
     description: 'Exploring the frontiers of physics, chemistry, and biology through collaboration.',
     banner: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&q=80',
     brandingColor: '#23a55a',
-    largeSymbol: '🔬'
   },
   {
     id: 'ai-ml',
@@ -41,7 +39,6 @@ export const servers = [
     description: 'A community of builders, researchers, and enthusiasts pushing the boundaries of AI.',
     banner: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80',
     brandingColor: '#00a8fc',
-    largeSymbol: '🤖'
   }
 ];
 

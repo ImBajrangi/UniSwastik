@@ -26,7 +26,7 @@ const ChannelSidebar = () => {
     <nav className="w-[240px] bg-bg-secondary flex flex-col h-full overflow-hidden border-r border-black/10 shrink-0" aria-label="Channels">
       {/* Sidebar Header with Banner Expansion - Stable Container */}
       {!isHome && (
-        <div className="relative w-full h-[120px] bg-bg-tertiary overflow-hidden">
+        <div className="relative w-full h-[80px] bg-bg-tertiary overflow-hidden shadow-inner">
           <AnimatePresence mode="wait">
             {activeServer?.banner ? (
               <motion.div
@@ -34,25 +34,15 @@ const ChannelSidebar = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.4 }}
                 className="absolute inset-0 w-full h-full"
               >
-                <img src={activeServer.banner} className="w-full h-full object-cover" alt="" />
-                <div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-black/30" />
-
-                {/* Large Floating Symbol */}
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="absolute -bottom-2 right-4 text-5xl filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] select-none pointer-events-none"
-                >
-                  <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}>
-                    {activeServer.largeSymbol}
-                  </motion.div>
-                </motion.div>
+                <img src={activeServer.banner} className="w-full h-full object-cover opacity-80" alt="" />
+                <div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-black/20 to-transparent" />
               </motion.div>
-            ) : null}
+            ) : (
+              <div className="absolute inset-0 premium-gradient opacity-60" />
+            )}
           </AnimatePresence>
         </div>
       )}

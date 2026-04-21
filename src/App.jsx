@@ -6,6 +6,77 @@ import ChannelSidebar from './components/ChannelSidebar';
 import FriendsView from './views/FriendsView';
 import ChatView from './views/ChatView';
 import DiscoverView from './views/DiscoverView';
+import { 
+  Hash, Users, Compass, User, Bell, 
+  Search, MessageSquare 
+} from 'lucide-react';
+
+const BottomNav = () => {
+  const { view, setView, setIsMobileMenuOpen } = usePlatform();
+
+  const tabs = [
+    { id: 'servers', label: 'Servers', icon: <MessageSquare size={22} />, action: () => { setView('chat'); } },
+    { id: 'friends', label: 'Friends', icon: <Users size={22} />, action: () => { setView('friends'); } },
+    { id: 'discover', label: 'Discover', icon: <Compass size={22} />, action: () => { setView('discover'); } },
+    { id: 'profile', label: 'You', icon: <User size={22} />, action: () => { console.log('Profile'); } },
+  ];
+
+  return (
+    <div className="lg:hidden relative h-[72px] glass-dark border-t border-white/5 flex items-center justify-around px-4 z-[400] pb-safe shadow-[0_-8px_24px_rgba(0,0,0,0.3)] shrink-0">
+      {tabs.map((tab) => {
+        const isActive = (tab.id === 'friends' && view === 'friends') || 
+                        (tab.id === 'discover' && view === 'discover') ||
+                        (tab.id === 'servers' && view === 'chat');
+        
+        return (
+          <button
+            key={tab.id}
+            id={`tab-${tab.id}`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              tab.action();
+            }}
+            className="relative flex flex-col items-center justify-center gap-1.5 w-16 group outline-none"
+          >
+            {/* Active Glow/Indicator */}
+            <AnimatePresence>
+              {isActive && (
+                <motion.div
+                  layoutId="bottomTab"
+                  className="absolute -top-1 w-8 h-1 bg-brand-indigo rounded-full shadow-[0_0_8px_rgba(88,101,242,0.8)]"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+            </AnimatePresence>
+
+            <div className={`relative p-2 rounded-2xl transition-all duration-300 ${
+              isActive 
+                ? 'text-white scale-110' 
+                : 'text-[#949BA4] group-hover:bg-white/5 hover:text-[#DBDEE1]'
+            }`}>
+              {/* Subtle Icon Background for active */}
+              {isActive && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="absolute inset-0 bg-brand-indigo/10 rounded-xl blur-sm"
+                />
+              )}
+              <div className="relative z-10">{tab.icon}</div>
+            </div>
+            
+            <span className={`text-[10px] font-bold tracking-tight font-display transition-colors ${
+              isActive ? 'text-white' : 'text-[#949BA4]'
+            }`}>
+              {tab.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 const AppContent = () => {
   const { view, activeChannelId, activeDMId, isMobileMenuOpen, setIsMobileMenuOpen } = usePlatform();
@@ -34,8 +105,7 @@ const AppContent = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#1e1f22] overflow-hidden relative">
-      <a href="#main-content" className="skip-link">Skip to content</a>
+    <div className="flex h-screen w-full bg-bg-tertiary overflow-hidden relative">
       
       {/* Desktop Sidebars */}
       <div className="hidden lg:flex shrink-0">
@@ -53,15 +123,15 @@ const AppContent = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 bg-black/60 z-[100] lg:hidden"
+              className="fixed inset-0 bg-black/70 z-[150] lg:hidden"
             />
             {/* Drawer Content */}
             <motion.div 
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 z-[101] flex lg:hidden"
+              transition={{ type: "spring", damping: 30, stiffness: 250 }}
+              className="fixed inset-y-0 left-0 z-[500] flex lg:hidden shadow-[0_0_40px_rgba(0,0,0,0.6)] bg-bg-tertiary"
             >
               <ServerSidebar />
               <ChannelSidebar />
@@ -70,7 +140,12 @@ const AppContent = () => {
         )}
       </AnimatePresence>
 
-      {renderView()}
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        <main className="flex-1 min-h-0 relative">
+          {renderView()}
+        </main>
+        <BottomNav />
+      </div>
     </div>
   );
 };

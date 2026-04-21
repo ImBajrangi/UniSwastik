@@ -11,44 +11,45 @@ export const PlatformProvider = ({ children }) => {
   const [activeDMId, setActiveDMId] = useState(null);
   const [view, setView] = useState('friends'); // 'friends', 'chat', 'discover'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   
   // Stateful Channels and DMs with persistence
-  const [channels, setChannels] = useState(() => {
-    const saved = localStorage.getItem('swastik_channels');
-    return saved ? JSON.parse(saved) : initialChannels;
-  });
+  const [channels, setChannels] = useState(initialChannels);
+  const [dmList, setDmList] = useState(initialDmList);
+  const [messageHistory, setMessageHistory] = useState({});
+  const [showMemberList, setShowMemberList] = useState(true);
 
-  const [dmList, setDmList] = useState(() => {
-    const saved = localStorage.getItem('swastik_dms');
-    return saved ? JSON.parse(saved) : initialDmList;
-  });
-
-  // Message history state with persistence
-  const [messageHistory, setMessageHistory] = useState(() => {
-    const saved = localStorage.getItem('swastik_messages');
-    return saved ? JSON.parse(saved) : {};
-  });
-
-  const [showMemberList, setShowMemberList] = useState(() => {
-    const saved = localStorage.getItem('swastik_show_members');
-    return saved !== null ? JSON.parse(saved) : true;
-  });
-
+  // Hybrid Hydration - Market Ready Cache System
   useEffect(() => {
+    const loadCache = () => {
+      try {
+        const savedChannels = localStorage.getItem('swastik_channels');
+        const savedDms = localStorage.getItem('swastik_dms');
+        const savedMessages = localStorage.getItem('swastik_messages');
+        const savedShowMembers = localStorage.getItem('swastik_show_members');
+
+        if (savedChannels) setChannels(JSON.parse(savedChannels));
+        if (savedDms) setDmList(JSON.parse(savedDms));
+        if (savedMessages) setMessageHistory(JSON.parse(savedMessages));
+        if (savedShowMembers !== null) setShowMemberList(JSON.parse(savedShowMembers));
+      } catch (e) {
+        console.error("Cache Hydration Error:", e);
+      } finally {
+        setIsHydrated(true);
+      }
+    };
+
+    loadCache();
+  }, []);
+
+  // Persistent Write-Through Cache
+  useEffect(() => {
+    if (!isHydrated) return;
     localStorage.setItem('swastik_show_members', JSON.stringify(showMemberList));
-  }, [showMemberList]);
-
-  useEffect(() => {
     localStorage.setItem('swastik_channels', JSON.stringify(channels));
-  }, [channels]);
-
-  useEffect(() => {
     localStorage.setItem('swastik_dms', JSON.stringify(dmList));
-  }, [dmList]);
-
-  useEffect(() => {
     localStorage.setItem('swastik_messages', JSON.stringify(messageHistory));
-  }, [messageHistory]);
+  }, [showMemberList, channels, dmList, messageHistory, isHydrated]);
 
   const selectServer = (serverId) => {
     setActiveServerId(serverId);
@@ -159,7 +160,8 @@ export const PlatformProvider = ({ children }) => {
     addDM,
     removeDM,
     isMobileMenuOpen,
-    setIsMobileMenuOpen
+    setIsMobileMenuOpen,
+    setView
   };
 
   return (
