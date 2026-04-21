@@ -154,11 +154,12 @@ const ChatView = ({ targetId }) => {
     scrollToBottom('auto');
   }, [targetId]);
 
+  // FORCE SCROLL RECOVERY SYSTEM
   return (
-    <div className="flex-1 grid grid-cols-[1fr_auto] min-h-0 h-full bg-bg-primary relative overflow-hidden mesh-silk animate-mesh">
-      {/* Main Chat Area - Ultra Responsive Resize */}
+    <div className="flex-1 flex min-h-0 h-full bg-bg-primary relative overflow-hidden mesh-silk animate-mesh">
+      {/* Main Chat Area - STABLIZED FLEX HIERARCHY */}
       <div
-        className="flex flex-col min-w-0 h-full relative bg-transparent"
+        className="flex-1 flex flex-col min-w-0 h-full relative bg-transparent"
       >
         {/* Top Header - Glass Design */}
         <header className="h-14 px-4 flex items-center justify-between glass z-20 shrink-0 shadow-lg border-b border-white/5">
@@ -227,8 +228,8 @@ const ChatView = ({ targetId }) => {
           </div>
         </header>
 
-        {/* Messages Scroll Area - PROFESSIONAL CONSTRAINED FLOW */}
-        <div className="flex-1 overflow-y-auto min-h-0 bg-transparent scroll-smooth pb-32">
+        {/* Messages Scroll Area - STRICT VIEWPORT CONSTRAINT */}
+        <div className="flex-1 min-h-0 overflow-y-auto bg-transparent scroll-smooth pb-32">
           {/* Welcome Hero - MASTERPIECE DESIGN */}
           <div className="px-6 py-16 flex flex-col items-start max-w-[800px]">
             {dm ? (
@@ -303,11 +304,11 @@ const ChatView = ({ targetId }) => {
         </div>
 
         <div className="absolute bottom-[16px] left-0 right-0 px-4 pt-2 z-30 pointer-events-none lg:bottom-[32px] lg:px-6">
-          <div className="max-w-[1240px] mx-auto pointer-events-auto">
+          <div className="max-w-[1240px] mx-auto flex justify-center">
             <motion.div
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="bg-bg-secondary h-12 rounded-[24px] shadow-2xl flex items-center gap-2 relative px-2 focus-premium"
+              className="bg-bg-secondary h-12 w-full rounded-[24px] shadow-2xl flex items-center gap-2 relative px-2 focus-premium pointer-events-auto"
             >
               <div className="flex items-center gap-2">
                 <button className="text-[#B5BAC1] hover:text-white transition-colors"><PlusCircle size={24} /></button>
