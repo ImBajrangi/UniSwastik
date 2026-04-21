@@ -7,22 +7,21 @@ import FriendsView from './views/FriendsView';
 import ChatView from './views/ChatView';
 import DiscoverView from './views/DiscoverView';
 import { 
-  Hash, Users, Compass, User, Bell, 
-  Search, MessageSquare 
+  MessageSquare, Bell, Compass, Users, User, Menu
 } from 'lucide-react';
+import Avatar from './components/Avatar';
 
 const BottomNav = () => {
-  const { view, setView, setIsMobileMenuOpen } = usePlatform();
+  const { view, setView, setIsMobileMenuOpen, currentUser } = usePlatform();
 
   const tabs = [
-    { id: 'servers', label: 'Servers', icon: <MessageSquare size={22} />, action: () => { setView('chat'); } },
-    { id: 'friends', label: 'Friends', icon: <Users size={22} />, action: () => { setView('friends'); } },
-    { id: 'discover', label: 'Discover', icon: <Compass size={22} />, action: () => { setView('discover'); } },
-    { id: 'profile', label: 'You', icon: <User size={22} />, action: () => { console.log('Profile'); } },
+    { id: 'servers', label: 'Home', icon: <MessageSquare size={24} />, action: () => { setView('chat'); } },
+    { id: 'notifications', label: 'Notifications', icon: <Bell size={24} />, action: () => { console.log('Notifications'); } },
+    { id: 'profile', label: 'You', icon: <Avatar name={currentUser.name} size={24} />, action: () => { console.log('Profile'); } },
   ];
 
   return (
-    <div className="lg:hidden relative h-[72px] glass-dark border-t border-white/5 flex items-center justify-around px-4 z-[400] pb-safe shadow-[0_-8px_24px_rgba(0,0,0,0.3)] shrink-0">
+    <div className="lg:hidden relative h-[70px] bg-[#111214] border-t border-white/5 flex items-center justify-around px-2 z-[400] pb-safe shadow-[0_-8px_24px_rgba(0,0,0,0.3)] shrink-0">
       {tabs.map((tab) => {
         const isActive = (tab.id === 'friends' && view === 'friends') || 
                         (tab.id === 'discover' && view === 'discover') ||

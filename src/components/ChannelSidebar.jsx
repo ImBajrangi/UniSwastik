@@ -49,17 +49,17 @@ const ChannelSidebar = () => {
 
       {isHome && (
         <div className="h-12 border-b border-black/20 flex items-center px-4 shadow-sm shrink-0">
-          <div className="w-full bg-bg-tertiary h-7 px-2 rounded flex items-center text-text-muted text-[13px]">
+          <div className="w-full bg-bg-tertiary h-7 px-2 rounded flex items-center text-text-muted text-[13px] transition-all focus-premium">
             Find or start a conversation
           </div>
         </div>
       )}
 
       {!isHome && (
-        <div className="h-12 px-4 flex items-center shadow-sm border-b border-black/20 overflow-hidden hover:bg-bg-modifier-hover cursor-pointer transition-colors group shrink-0">
+        <div className="h-14 px-4 flex items-center shadow-lg border-b border-black/10 overflow-hidden hover:bg-white/5 cursor-pointer transition-all group shrink-0">
           <header className="flex items-center justify-between w-full">
-            <h2 className="text-white font-black text-[15px] truncate flex-1 tracking-tight uppercase">{activeServer?.name}</h2>
-            <ChevronDown size={16} className="text-interactive-normal group-hover:text-white transition-colors" />
+            <h2 className="text-white font-black text-[15px] truncate flex-1 tracking-tight capitalize font-display">{activeServer?.name}</h2>
+            <ChevronDown size={18} className="text-[#949BA4] group-hover:text-white transition-colors ml-2" />
           </header>
         </div>
       )}
@@ -267,8 +267,8 @@ const ChannelItem = ({ icon, label, active, onClick, accentColor, index, onRemov
     transition={{ type: "spring", stiffness: 400, damping: 25, delay: index * 0.03 }}
     onClick={() => { onClick(); playClick(); }}
     whileHover={{ backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
-    className={`py-2 px-2.5 rounded-md flex items-center gap-3 cursor-pointer transition-colors group mb-0.5 ${
-      active ? 'bg-bg-modifier-selected text-white' : 'text-[#949BA4] hover:text-[#DBDEE1]'
+    className={`py-2 px-2.5 rounded-md flex items-center gap-3 cursor-pointer transition-all group mb-0.5 ${
+      active ? 'bg-[#35373c] text-white' : 'text-[#949BA4] hover:bg-[#35373c]/50 hover:text-[#DBDEE1]'
     }`}
   >
     <span className={`transition-colors shrink-0 ${active ? 'text-white' : 'text-[#80848E] group-hover:text-[#DBDEE1]'}`}>

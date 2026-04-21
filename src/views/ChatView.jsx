@@ -3,12 +3,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Hash, Bell, Pin, Users, Search, Inbox, 
   HelpCircle, PlusCircle, Gift, Sticker, 
-  Smile, LayoutGrid, Menu, Pencil
+  Smile, LayoutGrid, Menu, Pencil, ChevronRight
 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import Avatar from '../components/Avatar';
 import Tooltip from '../components/Tooltip';
 import HeaderIcon from '../components/HeaderIcon';
+
+const HeroActionCard = ({ icon, label, onClick }) => (
+  <motion.div
+    whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', x: 4 }}
+    onClick={onClick}
+    className="w-full bg-black/10 border border-white/5 p-4 rounded-2xl flex items-center justify-between group cursor-pointer transition-all"
+  >
+    <div className="flex items-center gap-4">
+      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center transition-transform group-hover:scale-110">
+        {icon}
+      </div>
+      <span className="text-white font-bold text-base font-display">{label}</span>
+    </div>
+    <ChevronRight className="text-text-muted group-hover:text-white transition-colors" size={20} />
+  </motion.div>
+);
 
 const ThreadsIcon = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -41,6 +57,11 @@ const Message = ({ user, time, content, isMe, hideGutter }) => (
       {!hideGutter && (
         <div className="flex items-center gap-2 mb-0.5">
           <span className="font-bold text-[16px] hover:underline cursor-pointer leading-tight text-white font-display">{user}</span>
+          {user.toLowerCase().includes('bot') || user.toLowerCase().includes('ai') ? (
+            <span className="bg-[#5865F2] text-white text-[10px] px-1 py-0.5 rounded-[4px] font-black flex items-center gap-0.5 select-none -translate-y-0.5">
+              <Check size={8} strokeWidth={4} /> APP
+            </span>
+          ) : null}
           <span className="text-[#949BA4] text-[11px] font-bold select-none opacity-80">{time}</span>
         </div>
       )}
@@ -136,17 +157,28 @@ const ChatView = ({ targetId }) => {
               <Menu size={24} />
             </button>
             {dm ? (
-              <div className="flex items-center gap-2.5">
-                <span className="text-brand-indigo font-black text-2xl drop-shadow-sm select-none">@</span>
-                <span className="font-extrabold text-white truncate font-display tracking-tight text-lg">{dm.name}</span>
-                <div className="w-2 h-2 rounded-full bg-status-online opacity-80" />
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-brand-indigo font-black text-2xl select-none leading-none">@</span>
+                  <span className="font-extrabold text-white truncate font-display tracking-tight text-lg leading-tight">{dm.name}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-bold -mt-0.5 ml-0.5">
+                   <div className="w-2 h-2 rounded-full bg-status-online" />
+                   <span className="opacity-80">2 Online</span>
+                </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2.5">
-                <Hash className="text-text-muted" size={24} strokeWidth={3}/>
-                <span className="font-extrabold text-white truncate font-display tracking-tight text-lg">
-                  {title}
-                </span>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <Hash className="text-text-muted" size={24} strokeWidth={3}/>
+                  <span className="font-extrabold text-white truncate font-display tracking-tight text-lg leading-tight">
+                    {title}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-bold -mt-0.5 ml-0.5">
+                   <div className="w-2 h-2 rounded-full bg-status-online" />
+                   <span className="opacity-80">2 Online</span>
+                </div>
               </div>
             )}
           </div>
@@ -206,12 +238,12 @@ const ChatView = ({ targetId }) => {
                 <h1 className="text-5xl font-black text-white mb-3 font-display tracking-tighter leading-none">
                   Welcome to <span className="opacity-40 select-none">@</span>{dm.name}
                 </h1>
-                <p className="text-text-muted text-[17px] font-medium leading-relaxed max-w-[500px]">
+                <p className="text-text-muted text-[17px] font-medium leading-relaxed max-w-[500px] mb-8">
                   This is the very beginning of your direct message history with <span className="text-white">@{dm.name}</span>. Start something legendary.
                 </p>
-                <div className="flex gap-3 mt-8">
-                  <button className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm transition-all border border-white/5 active:scale-95">View Profile</button>
-                  <button className="px-5 py-2.5 rounded-xl bg-brand-indigo/10 hover:bg-brand-indigo/20 text-brand-indigo font-bold text-sm transition-all border border-brand-indigo/20 active:scale-95">Block User</button>
+                <div className="flex flex-col gap-2 w-full max-w-[400px]">
+                   <HeroActionCard icon={<Users className="text-purple-400" size={24} />} label="Invite your friends" />
+                   <HeroActionCard icon={<Pencil className="text-blue-400" size={24} />} label="Personalize your server" />
                 </div>
               </motion.div>
             ) : (
@@ -231,16 +263,12 @@ const ChatView = ({ targetId }) => {
                 <h1 className="text-6xl font-black text-white mb-4 font-display tracking-tighter leading-none">
                   Welcome to <span className="opacity-30 select-none">#</span>{title}
                 </h1>
-                <p className="text-text-muted text-[18px] font-medium leading-relaxed max-w-[540px]">
+                <p className="text-text-muted text-[18px] font-medium leading-relaxed max-w-[540px] mb-8">
                   Take center stage in <span className="text-white font-bold">#{title}</span>. This is where your community starts its journey.
                 </p>
-                <div className="flex gap-4 mt-8">
-                  <button 
-                    onClick={startEditing}
-                    className="flex items-center gap-2 group px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-sm uppercase tracking-widest hover:bg-brand-indigo transition-all hover:scale-105 active:scale-95 shadow-xl shadow-black/20"
-                  >
-                    <Pencil size={18} className="group-hover:rotate-12 transition-transform" /> Edit Channel
-                  </button>
+                <div className="flex flex-col gap-2 w-full max-w-[400px]">
+                   <HeroActionCard icon={<Users className="text-purple-400" size={24} />} label="Invite your friends" />
+                   <HeroActionCard icon={<Pencil className="text-blue-400" size={24} />} label="Personalize your server" />
                 </div>
               </motion.div>
             )}
@@ -259,40 +287,40 @@ const ChatView = ({ targetId }) => {
           </div>
         </div>
 
-        {/* Message Input Container - MASTERPIECE GLASS DESIGN */}
+        {/* Message Input Container - DISCORD REFERENCE PILL DESIGN */}
         <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-2 z-30 pointer-events-none lg:pb-8 lg:px-6">
           <div className="max-w-[1240px] mx-auto pointer-events-auto">
             <motion.div 
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="glass p-2 rounded-[24px] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] flex items-center gap-4 relative border border-white/5"
+              className="bg-bg-secondary h-12 rounded-[24px] shadow-2xl flex items-center gap-2 relative px-2 focus-premium"
             >
-              {/* Inner Glow Polish */}
-              <div className="absolute inset-0 rounded-[inherit] shadow-[inset_0_0_1px_1px_rgba(255,255,255,0.05)] pointer-events-none" />
-              
-              <button className="w-12 h-12 flex items-center justify-center rounded-[18px] bg-white/5 text-[#B5BAC1] hover:text-white transition-all hover:bg-brand-indigo hover:shadow-[0_0_15px_rgba(88,101,242,0.4)] group">
-                <PlusCircle size={24} className="group-hover:scale-110 transition-transform" />
-              </button>
-              
-              <input 
-                type="text" 
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={`Message ${dm ? '@' : '#'}${title}`} 
-                className="flex-1 bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none text-[16px] font-medium py-3 px-1"
-              />
-              
-              <div className="flex items-center gap-2 pr-2 text-[#B5BAC1]">
-                <Tooltip content="Premium Emoji">
-                  <button className="w-11 h-11 flex items-center justify-center rounded-[16px] hover:bg-white/5 hover:text-white transition-all"><Smile size={24} /></button>
-                </Tooltip>
-                <div className="hidden sm:flex">
-                  <Tooltip content="Choose layout">
-                    <button className="w-11 h-11 flex items-center justify-center rounded-[16px] hover:bg-white/5 hover:text-white transition-all"><LayoutGrid size={24} fill="currentColor" /></button>
-                  </Tooltip>
-                </div>
+              <div className="flex items-center gap-2">
+                 <button className="text-[#B5BAC1] hover:text-white transition-colors"><PlusCircle size={24} /></button>
+                 <button className="text-[#B5BAC1] hover:text-white transition-colors"><Gift size={20} /></button>
+                 <button className="text-[#B5BAC1] hover:text-white transition-colors"><Sticker size={20} /></button>
               </div>
+              
+              <div className="flex-1 bg-black/20 h-9 rounded-full flex items-center px-4">
+                <input 
+                  type="text" 
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder={`Message ${dm ? '@' : '#'}${title}`} 
+                  className="flex-1 bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none border-none focus:ring-0 focus:outline-none text-[15px] font-medium"
+                />
+                <button className="text-[#B5BAC1] hover:text-white transition-colors ml-2"><Smile size={20} /></button>
+              </div>
+              
+              <button className="w-9 h-9 flex items-center justify-center rounded-full text-[#B5BAC1] hover:text-white transition-all hover:bg-brand-indigo shadow-inner group">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
             </motion.div>
           </div>
         </div>

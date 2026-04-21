@@ -59,18 +59,16 @@ const DiscoverView = () => {
           </motion.div>
           
           <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            initial={{ y: 0, opacity: 1 }}
             className="relative w-full max-w-[540px] mx-auto group mt-8"
           >
-            <div className="glass p-1 rounded-2xl shadow-2xl transition-all group-focus-within:shadow-indigo-500/20 group-focus-within:ring-2 group-focus-within:ring-brand-indigo/30">
+            <div className="glass p-1 rounded-2xl shadow-2xl transition-all focus-premium">
               <div className="flex items-center h-12 px-4 gap-3">
                 <Search size={22} className="text-text-muted group-focus-within:text-white transition-colors" />
                 <input 
                   type="text" 
                   placeholder="Find your tribe, labs, or circles..." 
-                  className="bg-transparent border-none outline-none text-[15px] text-white w-full placeholder:text-text-muted font-medium" 
+                  className="bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-[15px] text-white w-full placeholder:text-text-muted font-medium" 
                 />
               </div>
             </div>

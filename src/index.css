@@ -6,10 +6,10 @@
   --color-brand-indigo: #5865f2;
   --color-brand-crimson: #ed4245;
   
-  --color-bg-primary: #111214;        /* Deepest Chat Background */
-  --color-bg-secondary: #1e1f22;      /* Sidebar Background */
-  --color-bg-secondary-alt: #161719;  /* Secondary Elements */
-  --color-bg-tertiary: #0e0f11;       /* Platform Shell */
+  --color-bg-primary: #313338;        /* Unified Chat/Main Background */
+  --color-bg-secondary: #1e1f22;      /* Channel Sidebar Background */
+  --color-bg-secondary-alt: #2b2d31;  /* Hover/Alt Surfaces */
+  --color-bg-tertiary: #111214;       /* Server Sidebar / Deep Shell */
   
   --color-text-normal: #dbdee1;
   --color-text-muted: #949ba4;
@@ -57,9 +57,15 @@ h1, h2, h3, .font-display {
 }
 
 /* Accessibility & Refinement */
-:focus-visible {
-  outline: 2px solid var(--color-brand-indigo);
-  outline-offset: 2px;
+/* Masterpiece Interaction — Mindblowing Focus Halo */
+:focus-visible:not(.focus-premium *) {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px var(--color-brand-indigo), 0 0 20px rgba(88, 101, 242, 0.4);
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:focus {
+  outline: none;
 }
 
 ::-webkit-scrollbar {
@@ -127,6 +133,15 @@ h1, h2, h3, .font-display {
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@utility focus-premium {
+  &:focus-within {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px var(--color-brand-indigo), 0 0 20px rgba(88, 101, 242, 0.3);
+    border-color: rgba(88, 101, 242, 0.5);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 

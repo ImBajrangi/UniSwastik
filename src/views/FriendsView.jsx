@@ -66,7 +66,7 @@ const FriendsView = () => {
         <div className="flex-1 flex flex-col p-6 overflow-y-auto no-scrollbar relative z-10">
           {/* Professional Search Input */}
           <div className="relative mb-8 group">
-            <div className="glass p-1 rounded-xl shadow-inner transition-all group-focus-within:shadow-indigo-500/10 group-focus-within:ring-2 group-focus-within:ring-brand-indigo/30">
+            <div className="glass p-1 rounded-xl shadow-inner transition-all focus-premium">
               <div className="flex items-center h-9 px-3 gap-3">
                 <Search size={18} className="text-text-muted group-focus-within:text-white transition-colors" />
                 <input 
@@ -74,7 +74,7 @@ const FriendsView = () => {
                   placeholder="Seach through your connections..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent border-none outline-none text-[14px] text-white w-full placeholder:text-text-muted font-medium" 
+                  className="bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-[14px] text-white w-full placeholder:text-text-muted font-medium" 
                 />
               </div>
             </div>
