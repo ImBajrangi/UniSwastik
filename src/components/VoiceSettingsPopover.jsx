@@ -13,7 +13,7 @@ const VoiceSettingsPopover = ({ type = 'input', onClose }) => {
       exit={{ opacity: 0, y: 10, scale: 0.95 }}
       transition={springTransition}
       onClick={(e) => e.stopPropagation()}
-      className="fixed bottom-[60px] left-[72px] w-[240px] bg-[#1e1f22] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.5)] z-[9999] border border-white/5 overflow-hidden p-2 flex flex-col gap-1"
+      className="fixed bottom-[64px] left-[72px] w-[min(240px,80vw)] h-auto max-h-[min(380px,80vh)] bg-[#1e1f22] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] z-[9999] border border-white/10 overflow-hidden p-2 flex flex-col gap-1"
     >
       <div className="space-y-1">
         {/* Device Selection Section */}

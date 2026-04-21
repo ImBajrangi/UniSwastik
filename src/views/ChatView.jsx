@@ -303,39 +303,41 @@ const ChatView = ({ targetId }) => {
           </div>
         </div>
 
-        <div className="absolute bottom-[16px] left-0 right-0 px-4 pt-2 z-30 pointer-events-none lg:bottom-[32px] lg:px-6">
-          <div className="max-w-[1240px] mx-auto flex justify-center">
+        {/* Integrated Message Input Bar - PRO ERGONOMICS */}
+        <div className="shrink-0 bg-bg-primary px-4 pb-6 pt-2 z-30">
+          <div className="max-w-[1240px] mx-auto flex flex-col items-center">
             <motion.div
-              initial={{ y: 30, opacity: 0 }}
+              initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="bg-bg-secondary h-12 w-full rounded-[24px] shadow-2xl flex items-center gap-2 relative px-2 focus-premium pointer-events-auto"
+              className="bg-bg-secondary w-full min-h-[44px] rounded-[8px] shadow-lg flex items-center gap-2 relative px-2 border border-white/5 mx-auto"
             >
-              <div className="flex items-center gap-2">
-                <button className="text-[#B5BAC1] hover:text-white transition-colors"><PlusCircle size={24} /></button>
-                <button className="text-[#B5BAC1] hover:text-white transition-colors"><Gift size={20} /></button>
-                <button className="text-[#B5BAC1] hover:text-white transition-colors"><Sticker size={20} /></button>
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors"><PlusCircle size={22} /></button>
               </div>
 
-              <div className="flex-1 bg-black/20 h-9 rounded-full flex items-center px-4">
+              <div className="flex-1 min-w-0 py-2">
                 <input
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder={`Message ${dm ? '@' : '#'}${title}`}
-                  className="flex-1 bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none border-none focus:ring-0 focus:outline-none text-[15px] font-medium"
+                  className="w-full bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none border-none focus:ring-0 focus:outline-none text-[15px] font-medium"
                 />
-                <button className="text-[#B5BAC1] hover:text-white transition-colors ml-2"><Smile size={20} /></button>
               </div>
 
-              <button className="w-9 h-9 flex items-center justify-center rounded-full text-[#B5BAC1] hover:text-white transition-all hover:bg-brand-indigo shadow-inner group">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                  <line x1="12" y1="19" x2="12" y2="23" />
-                  <line x1="8" y1="23" x2="16" y2="23" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1 sm:gap-2 pr-1 shrink-0">
+                <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Gift size={20} /></button>
+                <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Sticker size={20} /></button>
+                <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors"><Smile size={20} /></button>
+                <button className="p-1.5 flex items-center justify-center text-[#B5BAC1] hover:text-[#DBDEE1] transition-all">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" y1="19" x2="12" y2="23" />
+                  </svg>
+                </button>
+              </div>
             </motion.div>
           </div>
         </div>

@@ -27,7 +27,7 @@ const EmojiPicker = ({ onSelect, onClose }) => {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="fixed z-[10001] w-[400px] h-[480px] bg-[#2b2d31] rounded-xl shadow-2xl border border-white/5 flex overflow-hidden"
+      className="fixed z-[10001] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(400px,90vw)] h-[min(480px,80vh)] bg-[#2b2d31] rounded-xl shadow-[0_12px_64px_rgba(0,0,0,0.8)] border border-white/10 flex overflow-hidden lg:relative lg:top-auto lg:left-auto lg:translate-x-0 lg:translate-y-0"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Category Sidebar */}
