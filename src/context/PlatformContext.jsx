@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { servers, channels, dmList, currentUser } from '../data/mockData';
+import { servers, channels as initialChannels, dmList as initialDmList, currentUser } from '../data/mockData';
 
 const PlatformContext = createContext();
 
@@ -11,11 +11,30 @@ export const PlatformProvider = ({ children }) => {
   const [activeDMId, setActiveDMId] = useState(null);
   const [view, setView] = useState('friends'); // 'friends', 'chat', 'discover'
   
+  // Stateful Channels and DMs with persistence
+  const [channels, setChannels] = useState(() => {
+    const saved = localStorage.getItem('swastik_channels');
+    return saved ? JSON.parse(saved) : initialChannels;
+  });
+
+  const [dmList, setDmList] = useState(() => {
+    const saved = localStorage.getItem('swastik_dms');
+    return saved ? JSON.parse(saved) : initialDmList;
+  });
+
   // Message history state with persistence
   const [messageHistory, setMessageHistory] = useState(() => {
     const saved = localStorage.getItem('swastik_messages');
     return saved ? JSON.parse(saved) : {};
   });
+
+  useEffect(() => {
+    localStorage.setItem('swastik_channels', JSON.stringify(channels));
+  }, [channels]);
+
+  useEffect(() => {
+    localStorage.setItem('swastik_dms', JSON.stringify(dmList));
+  }, [dmList]);
 
   useEffect(() => {
     localStorage.setItem('swastik_messages', JSON.stringify(messageHistory));
@@ -28,7 +47,6 @@ export const PlatformProvider = ({ children }) => {
       setActiveChannelId(null);
     } else {
       setView('chat');
-      // Default to first channel of the server
       const firstChannel = channels[serverId]?.[0];
       if (firstChannel) setActiveChannelId(firstChannel.id);
     }
@@ -63,6 +81,42 @@ export const PlatformProvider = ({ children }) => {
     }));
   };
 
+  // MUTATIONS: Manage Chats and Channels
+  const addChannel = (serverId, name, type = 'text') => {
+    const newChannel = { id: `chan-${Date.now()}`, name, type };
+    setChannels(prev => ({
+      ...prev,
+      [serverId]: [...(prev[serverId] || []), newChannel]
+    }));
+    return newChannel;
+  };
+
+  const removeChannel = (serverId, channelId) => {
+    setChannels(prev => ({
+      ...prev,
+      [serverId]: prev[serverId].filter(c => c.id !== channelId)
+    }));
+    if (activeChannelId === channelId) setActiveChannelId(null);
+  };
+
+  const addDM = (user) => {
+    const newDM = {
+      id: `dm-${Date.now()}`,
+      name: user.name,
+      status: 'online',
+      avatar: user.avatar || '',
+      subText: 'Just connected',
+      relationship: 'friend'
+    };
+    setDmList(prev => [newDM, ...prev]);
+    return newDM;
+  };
+
+  const removeDM = (dmId) => {
+    setDmList(prev => prev.filter(dm => dm.id !== dmId));
+    if (activeDMId === dmId) setActiveDMId(null);
+  };
+
   const value = {
     activeServerId,
     activeChannelId,
@@ -76,7 +130,11 @@ export const PlatformProvider = ({ children }) => {
     currentUser,
     servers,
     channels,
-    dmList
+    dmList,
+    addChannel,
+    removeChannel,
+    addDM,
+    removeDM
   };
 
   return (

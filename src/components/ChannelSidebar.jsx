@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Hash, Volume2, Plus, Users, ShoppingBag,
@@ -9,6 +9,7 @@ import { usePlatform } from '../context/PlatformContext';
 import UserPanel from './UserPanel';
 import Avatar from './Avatar';
 import { playClick } from '../utils/sounds';
+import CreateModal from './CreateModal';
 
 const ChannelSidebar = () => {
   const {
@@ -92,51 +93,65 @@ const ChannelSidebar = () => {
 };
 
 const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
+  const { activeServerId, view, removeDM } = usePlatform();
+  const [showCreateDM, setShowCreateDM] = useState(false);
   const springTransition = { type: "spring", stiffness: 400, damping: 25 };
-
+  
+  const isFriendsActive = activeServerId === 'home' && !activeDMId && view === 'friends';
+  
   return (
-    <div className="flex flex-col gap-2 px-2 pt-2" role="list">
-      <HomeItem icon={<Users size={20} />} label="Friends" active={!activeDMId} />
+    <div className="flex flex-col gap-0 px-2 pt-2" role="list">
+      <HomeItem icon={<Users size={20} />} label="Friends" active={isFriendsActive} />
       <HomeItem icon={<LayoutDashboard size={20} />} label="Campus Feed" />
       <HomeItem icon={<ShoppingBag size={20} />} label="Academic Resources" />
       <HomeItem icon={<Joystick size={20} />} label="Quests & Polls" />
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="mt-4 mb-2 px-2 flex items-center justify-between group"
+      <CollapsibleSection 
+        label="Direct Messages" 
+        onAdd={() => setShowCreateDM(true)}
+        className="mt-4"
       >
-        <span className="text-[11px] font-bold text-text-muted uppercase tracking-[0.1em]">Direct Messages</span>
-        <Plus size={14} className="text-text-muted cursor-pointer hover:text-white transition-colors" />
-      </motion.div>
+        <AnimatePresence mode="popLayout">
+          {dmList.map((dm, index) => (
+            <motion.div
+              layout
+              key={dm.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.95, filter: 'blur(4px)' }}
+              transition={{ ...springTransition, delay: index * 0.03 }}
+              onClick={() => { selectDM(dm.id); playClick(); }}
+              whileHover={{ x: 4 }}
+              className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors relative mb-0.5 ${activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-bg-modifier-hover'
+                }`}
+            >
+              <Avatar src={dm.avatar} name={dm.name} status={dm.status} size={32} />
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className={`text-[15px] font-bold truncate tracking-tight ${activeDMId === dm.id ? 'text-white' : 'text-text-muted group-hover:text-interactive-hover'
+                  }`}>{dm.name}</span>
+                <span className="text-text-muted text-[11px] truncate font-medium opacity-70">{dm.subText}</span>
+              </div>
+              
+              {/* REMOVE BUTTON */}
+              <button 
+                onClick={(e) => { e.stopPropagation(); removeDM(dm.id); playClick(); }}
+                className="opacity-0 group-hover:opacity-100 p-1 hover:text-white text-text-muted transition-opacity"
+              >
+                <Plus size={14} className="rotate-45" />
+              </button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </CollapsibleSection>
 
-      {dmList.map((dm, index) => (
-        <motion.div
-          key={dm.id}
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ ...springTransition, delay: 0.3 + index * 0.05 }}
-          onClick={() => { selectDM(dm.id); playClick(); }}
-          whileHover={{ x: 4 }}
-          whileTap={{ scale: 0.98 }}
-          className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors ${activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-bg-modifier-hover'
-            }`}
-        >
-          <Avatar src={dm.avatar} name={dm.name} status={dm.status} size={32} />
-          <div className="flex flex-col min-w-0 flex-1">
-            <span className={`text-[15px] font-bold truncate tracking-tight ${activeDMId === dm.id ? 'text-white' : 'text-text-muted group-hover:text-interactive-hover'
-              }`}>{dm.name}</span>
-            <span className="text-text-muted text-[11px] truncate font-medium opacity-70">{dm.subText}</span>
-          </div>
-        </motion.div>
-      ))}
+      {showCreateDM && <CreateModal type="dm" onClose={() => setShowCreateDM(false)} />}
     </div>
   );
 };
 
 const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingColor }) => {
-  const { channels } = usePlatform();
+  const { channels, removeChannel } = usePlatform();
+  const [showCreateChannel, setShowCreateChannel] = useState(false);
   const serverChannels = channels[serverId] || [];
 
   const getIcon = (type, name) => {
@@ -148,72 +163,114 @@ const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingCo
 
   return (
     <div className="flex flex-col gap-1.5 px-2" role="list">
-      <SectionHeader label="Text Channels" />
-      {serverChannels.filter(c => c.type !== 'voice').map((channel, index) => (
-        <ChannelItem
-          key={channel.id}
-          index={index}
-          icon={getIcon(channel.type, channel.name)}
-          label={channel.name}
-          active={activeChannelId === channel.id}
-          onClick={() => selectChannel(channel.id)}
-          accentColor={brandingColor}
-        />
-      ))}
+      <CollapsibleSection label="Text Channels" onAdd={() => setShowCreateChannel(true)}>
+        <AnimatePresence mode="popLayout">
+          {serverChannels.filter(c => c.type !== 'voice').map((channel, index) => (
+            <ChannelItem
+              key={channel.id}
+              index={index}
+              icon={getIcon(channel.type, channel.name)}
+              label={channel.name}
+              active={activeChannelId === channel.id}
+              onClick={() => selectChannel(channel.id)}
+              onRemove={() => removeChannel(serverId, channel.id)}
+              accentColor={brandingColor}
+            />
+          ))}
+        </AnimatePresence>
+      </CollapsibleSection>
 
-      <SectionHeader label="Voice Channels" spacing="mt-4" />
-      {serverChannels.filter(c => c.type === 'voice').map((channel, index) => (
-        <ChannelItem
-          key={channel.id}
-          index={index}
-          icon={getIcon(channel.type, channel.name)}
-          label={channel.name}
-          active={activeChannelId === channel.id}
-          onClick={() => selectChannel(channel.id)}
-          accentColor={brandingColor}
-        />
-      ))}
+      <CollapsibleSection label="Voice Channels" spacing="mt-4">
+        <AnimatePresence mode="popLayout">
+          {serverChannels.filter(c => c.type === 'voice').map((channel, index) => (
+            <ChannelItem
+              key={channel.id}
+              index={index}
+              icon={getIcon(channel.type, channel.name)}
+              label={channel.name}
+              active={activeChannelId === channel.id}
+              onClick={() => selectChannel(channel.id)}
+              onRemove={() => removeChannel(serverId, channel.id)}
+              accentColor={brandingColor}
+            />
+          ))}
+        </AnimatePresence>
+      </CollapsibleSection>
+
+      {showCreateChannel && <CreateModal type="channel" serverId={serverId} onClose={() => setShowCreateChannel(false)} />}
     </div>
   );
 };
 
-const SectionHeader = ({ label, spacing = "mt-2" }) => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className={`${spacing} mb-1 px-1 flex items-center justify-between group cursor-pointer hover:text-white transition-colors`}
-  >
-    <span className="text-[11px] font-bold text-text-muted uppercase tracking-[0.1em] flex items-center gap-1 group-hover:text-interactive-hover">
-      <span className="-rotate-90 text-[8px] opacity-70 transition-transform group-hover:rotate-0">▼</span> {label}
-    </span>
-    <Plus size={14} className="text-text-muted group-hover:text-interactive-hover" />
-  </motion.div>
-);
+const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-2", className = "" }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  
+  return (
+    <div className={`${spacing} ${className}`}>
+      <div className="mb-1 px-1 flex items-center justify-between group cursor-pointer text-text-muted hover:text-white transition-colors">
+        <div 
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex-1 flex items-center gap-1"
+        >
+          <motion.span 
+            animate={{ rotate: isExpanded ? 0 : -90 }}
+            className="text-[8px] opacity-70"
+          >
+            ▼
+          </motion.span>
+          <span className="text-[11px] font-bold uppercase tracking-[0.1em]">{label}</span>
+        </div>
+        {onAdd && (
+          <Plus 
+            size={14} 
+            onClick={(e) => { e.stopPropagation(); onAdd(); }}
+            className="text-text-muted hover:text-white transition-colors" 
+          />
+        )}
+      </div>
+      
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="overflow-hidden"
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const HomeItem = ({ icon, label, active, onClick }) => (
   <motion.div
     onClick={() => { if (onClick) onClick(); playClick(); }}
-    whileHover={{ x: 4, backgroundColor: 'var(--color-bg-modifier-hover)' }}
+    whileHover={{ x: 4, backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
     whileTap={{ scale: 0.98 }}
     transition={{ type: "spring", stiffness: 400, damping: 25 }}
-    className={`py-2.5 px-3 rounded-md flex items-center gap-3 cursor-pointer transition-colors ${active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:text-interactive-hover'
+    className={`py-2.5 px-3 rounded-md flex items-center gap-3 cursor-pointer transition-colors mb-0.5 ${active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:text-interactive-hover'
       }`}>
     <span className={active ? 'text-white' : 'text-channel-icon'}>{icon}</span>
     <span className="text-[14px] font-bold tracking-tight uppercase opacity-90 group-hover:opacity-100">{label}</span>
   </motion.div>
 );
 
-const ChannelItem = ({ icon, label, active, onClick, accentColor, index }) => (
+const ChannelItem = ({ icon, label, active, onClick, accentColor, index, onRemove }) => (
   <motion.div
+    layout
     initial={{ opacity: 0, x: -5 }}
     animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -10 }}
     transition={{ type: "spring", stiffness: 400, damping: 25, delay: index * 0.03 }}
     onClick={() => { onClick(); playClick(); }}
-    whileHover={{ x: 4, backgroundColor: 'var(--color-bg-modifier-hover)' }}
-    whileTap={{ scale: 0.98 }}
-    className={`py-1.5 px-2 rounded-md flex items-center gap-2 cursor-pointer transition-colors group ${active ? 'bg-bg-modifier-selected text-white' : 'text-text-muted hover:text-interactive-hover'
-      }`}
-    style={{ borderLeft: active ? `2px solid ${accentColor || '#5865f2'}` : '2px solid transparent' }}
+    whileHover={{ x: 4, backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
+    className={`py-1.5 px-2 rounded-md flex items-center gap-2 cursor-pointer transition-colors group mb-0.5 ${
+      active ? 'bg-bg-modifier-selected text-white' : 'text-text-muted hover:text-interactive-hover'
+    }`}
   >
     <span className={`transition-colors ${active ? 'text-white' : 'text-channel-icon group-hover:text-interactive-hover'}`}>
       {icon}
@@ -221,14 +278,18 @@ const ChannelItem = ({ icon, label, active, onClick, accentColor, index }) => (
     <span className={`text-[15px] font-bold truncate flex-1 tracking-tight ${active ? 'text-white' : ''}`}>
       {label}
     </span>
-    {active && (
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Settings size={14} className="text-text-muted" />
-      </div>
-    )}
+    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {onRemove && (
+        <button 
+          onClick={(e) => { e.stopPropagation(); onRemove(); playClick(); }}
+          className="p-0.5 hover:text-white"
+        >
+          <Plus size={14} className="rotate-45" />
+        </button>
+      )}
+      {active && <Settings size={14} className="text-text-muted hover:text-white" />}
+    </div>
   </motion.div>
 );
 
-// export default ChannelSidebar;
-
-// export default ChannelSidebar;
+export default ChannelSidebar;
