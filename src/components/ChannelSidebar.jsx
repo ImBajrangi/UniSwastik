@@ -10,6 +10,7 @@ import UserPanel from './UserPanel';
 import Avatar from './Avatar';
 import { playClick } from '../utils/sounds';
 import CreateModal from './CreateModal';
+import Tooltip from './Tooltip';
 
 const ChannelSidebar = () => {
   const {
@@ -133,12 +134,14 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
               </div>
               
               {/* REMOVE BUTTON */}
-              <button 
-                onClick={(e) => { e.stopPropagation(); removeDM(dm.id); playClick(); }}
-                className="opacity-0 group-hover:opacity-100 p-1 hover:text-white text-text-muted transition-opacity"
-              >
-                <Plus size={14} className="rotate-45" />
-              </button>
+              <Tooltip content="Close DM">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); removeDM(dm.id); playClick(); }}
+                  className="opacity-0 group-hover:opacity-100 p-1 hover:text-white text-[#949BA4] transition-opacity"
+                >
+                  <Plus size={14} className="rotate-45" />
+                </button>
+              </Tooltip>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -224,12 +227,14 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-6", classNam
           <span className="text-[12px] font-bold uppercase tracking-[0.03em] select-none">{label}</span>
         </div>
         {onAdd && (
-          <Plus 
-            size={16} 
-            strokeWidth={2.5}
-            onClick={(e) => { e.stopPropagation(); onAdd(); playClick(); }}
-            className="text-[#949BA4] hover:text-white transition-colors p-0.5" 
-          />
+          <Tooltip content={label === 'Direct Messages' ? "Start DM" : "Create Channel"}>
+            <Plus 
+              size={16} 
+              strokeWidth={2.5}
+              onClick={(e) => { e.stopPropagation(); onAdd(); playClick(); }}
+              className="text-[#949BA4] hover:text-white transition-colors p-0.5" 
+            />
+          </Tooltip>
         )}
       </div>
       
@@ -284,14 +289,20 @@ const ChannelItem = ({ icon, label, active, onClick, accentColor, index, onRemov
     </span>
     <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
       {onRemove && (
-        <button 
-          onClick={(e) => { e.stopPropagation(); onRemove(); playClick(); }}
-          className="p-0.5 hover:text-white"
-        >
-          <Plus size={14} className="rotate-45" />
-        </button>
+        <Tooltip content="Close Channel">
+          <button 
+            onClick={(e) => { e.stopPropagation(); onRemove(); playClick(); }}
+            className="p-0.5 hover:text-white"
+          >
+            <Plus size={14} className="rotate-45" />
+          </button>
+        </Tooltip>
       )}
-      {active && <Settings size={14} className="text-[#949BA4] hover:text-white" />}
+      {active && (
+        <Tooltip content="Edit Channel">
+          <Settings size={14} className="text-[#949BA4] hover:text-white" />
+        </Tooltip>
+      )}
     </div>
   </motion.div>
 );

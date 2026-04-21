@@ -16,7 +16,7 @@ const AppContent = () => {
     return (
       <AnimatePresence mode="wait">
         <motion.div
-          key={view + (targetId || '')}
+          key={view}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

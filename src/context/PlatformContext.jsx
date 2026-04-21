@@ -28,6 +28,15 @@ export const PlatformProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : {};
   });
 
+  const [showMemberList, setShowMemberList] = useState(() => {
+    const saved = localStorage.getItem('swastik_show_members');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('swastik_show_members', JSON.stringify(showMemberList));
+  }, [showMemberList]);
+
   useEffect(() => {
     localStorage.setItem('swastik_channels', JSON.stringify(channels));
   }, [channels]);
@@ -91,6 +100,13 @@ export const PlatformProvider = ({ children }) => {
     return newChannel;
   };
 
+  const updateChannel = (serverId, channelId, newData) => {
+    setChannels(prev => ({
+      ...prev,
+      [serverId]: prev[serverId].map(c => c.id === channelId ? { ...c, ...newData } : c)
+    }));
+  };
+
   const removeChannel = (serverId, channelId) => {
     setChannels(prev => ({
       ...prev,
@@ -131,7 +147,10 @@ export const PlatformProvider = ({ children }) => {
     servers,
     channels,
     dmList,
+    showMemberList,
+    setShowMemberList,
     addChannel,
+    updateChannel,
     removeChannel,
     addDM,
     removeDM

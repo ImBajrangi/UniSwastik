@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import { playClick } from '../utils/sounds';
+import Tooltip from './Tooltip';
 
 const iconMap = {
   Home,
@@ -52,83 +53,79 @@ const ServerIcon = ({ server, isActive, onClick }) => {
   };
 
   return (
-    <div 
-      className="relative group cursor-pointer"
-      onClick={() => { onClick(); playClick(); }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      role="button"
-      aria-label={server.name}
-      aria-pressed={isActive}
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick()}
-    >
-      {/* Active indicator pill - Stable Spring Logic */}
-      <motion.div 
-        initial={false}
-        animate={{ 
-          height: isActive ? 40 : (isHovered ? 20 : 0),
-          opacity: (isActive || isHovered) ? 1 : 0,
-        }}
-        transition={springTransition}
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-[4px] bg-white rounded-r-full z-20"
-        style={{ originY: "50%" }}
-      />
-      
-      {/* Icon Container with layout transition */}
-      <motion.div 
-        layout
-        whileTap={{ scale: 0.90 }}
-        animate={{ 
-          borderRadius: isActive ? "16px" : "24px",
-          backgroundColor: isActive ? (server.brandingColor || "var(--color-bg-accent)") : "var(--color-bg-primary)",
-          color: isActive ? "white" : "var(--color-text-normal)"
-        }}
-        transition={springTransition}
-        className={`w-12 h-12 flex items-center justify-center shadow-sm border border-white/5 relative ${
-          isActive ? 'shadow-[0_0_20px_rgba(88,101,242,0.4)]' : ''
-        }`}
+    <Tooltip content={server.name} position="right">
+      <div 
+        className="relative group cursor-pointer"
+        onClick={() => { onClick(); playClick(); }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        role="button"
+        aria-label={server.name}
+        aria-pressed={isActive}
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && onClick()}
       >
+        {/* Active indicator pill - Stable Spring Logic */}
         <motion.div 
-          className="w-full h-full flex items-center justify-center overflow-hidden rounded-[inherit]"
+          initial={false}
+          animate={{ 
+            height: isActive ? 40 : (isHovered ? 20 : 0),
+            opacity: (isActive || isHovered) ? 1 : 0,
+          }}
+          transition={springTransition}
+          className="absolute left-[-16px] top-1/2 -translate-y-1/2 w-[4px] bg-white rounded-r-full z-20"
+          style={{ originY: "50%" }}
+        />
+        
+        {/* Icon Container with layout transition */}
+        <motion.div 
+          layout
+          whileTap={{ scale: 0.90 }}
+          animate={{ 
+            borderRadius: isActive ? "16px" : "24px",
+            backgroundColor: isActive ? (server.brandingColor || "var(--color-bg-accent)") : "var(--color-bg-primary)",
+            color: isActive ? "white" : "var(--color-text-normal)"
+          }}
+          transition={springTransition}
+          className={`w-12 h-12 flex items-center justify-center shadow-sm border border-white/5 relative ${
+            isActive ? 'shadow-[0_0_20px_rgba(88,101,242,0.4)]' : ''
+          }`}
         >
-          {IconComponent ? (
+          <motion.div 
+            className="w-full h-full flex items-center justify-center overflow-hidden rounded-[inherit]"
+          >
+            {IconComponent ? (
+              <motion.div 
+                transition={springTransition}
+                animate={{ scale: isHovered ? 1.15 : 1 }}
+              >
+                <IconComponent 
+                  size={28} 
+                  strokeWidth={2.5} 
+                />
+              </motion.div>
+            ) : (
+              <span className="text-sm font-semibold">{server.acronym}</span>
+            )}
+          </motion.div>
+
+          {/* NOTIFICATION BADGE - Fixed Circular Shape */}
+          {server.notificationCount > 0 && (
             <motion.div 
-              transition={springTransition}
-              animate={{ scale: isHovered ? 1.15 : 1 }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ ...springTransition, delay: 0.1 }}
+              className="absolute -bottom-1.5 -right-1.5 bg-status-dnd text-white text-[11px] font-bold h-[20px] min-w-[20px] px-1.5 flex items-center justify-center rounded-full border-[3px] border-bg-tertiary shadow-lg z-30 pointer-events-none"
+              style={{ 
+                boxSizing: 'border-box'
+              }}
             >
-              <IconComponent 
-                size={28} 
-                strokeWidth={2.5} 
-              />
+              {server.notificationCount}
             </motion.div>
-          ) : (
-            <span className="text-sm font-semibold">{server.acronym}</span>
           )}
         </motion.div>
-
-        {/* NOTIFICATION BADGE - Fixed Circular Shape */}
-        {server.notificationCount > 0 && (
-          <motion.div 
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ ...springTransition, delay: 0.1 }}
-            className="absolute -bottom-1.5 -right-1.5 bg-status-dnd text-white text-[11px] font-bold h-[20px] min-w-[20px] px-1.5 flex items-center justify-center rounded-full border-[3px] border-bg-tertiary shadow-lg z-30 pointer-events-none"
-            style={{ 
-              boxSizing: 'border-box'
-            }}
-          >
-            {server.notificationCount}
-          </motion.div>
-        )}
-      </motion.div>
-      
-      {/* Tooltip */}
-      <div className="absolute left-[80px] top-1/2 -translate-y-1/2 glass text-white text-xs px-3 py-2 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-2xl font-bold tracking-tight">
-        {server.name}
-        <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-[#1e1f22] rotate-45 border-l border-b border-white/5" />
       </div>
-    </div>
+    </Tooltip>
   );
 };
 
@@ -140,27 +137,25 @@ const ServerActionIcon = ({ icon, label, color }) => {
   };
 
   return (
-    <div className="relative group cursor-pointer mb-2" role="button" aria-label={label} tabIndex={0} onClick={playClick}>
-      <motion.div 
-        layout
-        whileHover={{ 
-          borderRadius: "16px", 
-          backgroundColor: color === 'green' ? "var(--color-status-online)" : "var(--color-bg-accent)",
-          color: "white" 
-        }}
-        whileTap={{ scale: 0.88 }}
-        transition={springTransition}
-        className={`w-12 h-12 rounded-[24px] bg-bg-primary flex items-center justify-center hover:shadow-lg text-status-online border border-white/5`}
-      >
-        <motion.div transition={springTransition} whileHover={{ scale: 1.2 }}>
-          {icon}
+    <Tooltip content={label} position="right">
+      <div className="relative group cursor-pointer mb-2" role="button" aria-label={label} tabIndex={0} onClick={playClick}>
+        <motion.div 
+          layout
+          whileHover={{ 
+            borderRadius: "16px", 
+            backgroundColor: color === 'green' ? "var(--color-status-online)" : "var(--color-bg-accent)",
+            color: "white" 
+          }}
+          whileTap={{ scale: 0.88 }}
+          transition={springTransition}
+          className={`w-12 h-12 rounded-[24px] bg-bg-primary flex items-center justify-center hover:shadow-lg text-status-online border border-white/5`}
+        >
+          <motion.div transition={springTransition} whileHover={{ scale: 1.2 }}>
+            {icon}
+          </motion.div>
         </motion.div>
-      </motion.div>
-      <div className="absolute left-[80px] top-1/2 -translate-y-1/2 glass text-white text-xs px-3 py-2 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 font-bold shadow-2xl tracking-tight">
-        {label}
-        <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-[#1e1f22] rotate-45 border-l border-b border-white/5" />
       </div>
-    </div>
+    </Tooltip>
   );
 };
 
