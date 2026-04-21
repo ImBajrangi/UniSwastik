@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Hash, Bell, Pin, Users, Search, Inbox, 
-  HelpCircle, PlusCircle, Gift, Sticker, 
+import {
+  Hash, Bell, Pin, Users, Search, Inbox,
+  HelpCircle, PlusCircle, Gift, Sticker,
   Smile, LayoutGrid, Menu, Pencil, ChevronRight
 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
@@ -80,19 +80,17 @@ const MemberCategory = ({ label, members }) => (
     <h3 className="text-[#949BA4] text-[12px] font-bold tracking-wide mb-2 px-2 opacity-60 uppercase">{label}</h3>
     <div className="space-y-0.5">
       {members.map(member => (
-        <div 
+        <div
           key={member.name}
           className="flex items-center gap-3 px-2 py-1.5 rounded-[8px] hover:bg-white/5 cursor-pointer group transition-all"
         >
           <div className="relative transition-transform group-hover:scale-105">
             <Avatar name={member.name} size={32} />
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#2B2D31] ${
-              member.status === 'online' ? 'bg-status-online' : 'bg-status-offline'
-            }`} />
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#2B2D31] ${member.status === 'online' ? 'bg-status-online' : 'bg-status-offline'
+              }`} />
           </div>
-          <span className={`text-[14px] font-bold truncate transition-colors ${
-            member.status === 'online' ? 'text-[#DBDEE1] group-hover:text-white' : 'text-[#80848E]'
-          }`}>
+          <span className={`text-[14px] font-bold truncate transition-colors ${member.status === 'online' ? 'text-[#DBDEE1] group-hover:text-white' : 'text-[#80848E]'
+            }`}>
             {member.name}
           </span>
         </div>
@@ -102,13 +100,13 @@ const MemberCategory = ({ label, members }) => (
 );
 
 const ChatView = ({ targetId }) => {
-  const { 
-    activeServerId, channels, dmList, 
+  const {
+    activeServerId, channels, dmList,
     messageHistory, sendMessage, updateChannel,
     currentUser, showMemberList, setShowMemberList,
     setIsMobileMenuOpen
   } = usePlatform();
-  
+
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -119,7 +117,7 @@ const ChatView = ({ targetId }) => {
   const dm = dmList.find(d => d.id === targetId);
   const title = channel?.name || dm?.name || 'chat';
 
-  const messages = (messageHistory[targetId] || []).filter(msg => 
+  const messages = (messageHistory[targetId] || []).filter(msg =>
     msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
     msg.user.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -138,22 +136,34 @@ const ChatView = ({ targetId }) => {
     }
   };
 
+  const scrollToBottom = (behavior = 'smooth') => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior,
+        block: 'end'
+      });
+    }
+  };
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Immediate scroll on channel switch to prevent the "hiding" effect
+    scrollToBottom('auto');
+  }, [targetId]);
 
   return (
     <div className="flex-1 grid grid-cols-[1fr_auto] min-h-0 h-full bg-bg-primary relative overflow-hidden mesh-silk animate-mesh">
       {/* Main Chat Area - Ultra Responsive Resize */}
-      <motion.div 
-        layout
-        transition={{ type: "spring", damping: 35, stiffness: 450 }}
-        className="flex flex-col min-w-0 h-full relative"
+      <div
+        className="flex flex-col min-w-0 h-full relative bg-transparent"
       >
         {/* Top Header - Glass Design */}
         <header className="h-14 px-4 flex items-center justify-between glass z-20 shrink-0 shadow-lg border-b border-white/5">
           <div className="flex items-center gap-2 overflow-hidden">
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="lg:hidden text-[#B5BAC1] hover:text-white mr-1 transition-colors p-2 rounded-xl hover:bg-white/5"
             >
@@ -166,50 +176,50 @@ const ChatView = ({ targetId }) => {
                   <span className="font-extrabold text-white truncate font-display tracking-tight text-lg leading-tight">{dm.name}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-bold -mt-0.5 ml-0.5">
-                   <div className="w-2 h-2 rounded-full bg-status-online" />
-                   <span className="opacity-80">2 Online</span>
+                  <div className="w-2 h-2 rounded-full bg-status-online" />
+                  <span className="opacity-80">2 Online</span>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <Hash className="text-text-muted" size={24} strokeWidth={3}/>
+                  <Hash className="text-text-muted" size={24} strokeWidth={3} />
                   <span className="font-extrabold text-white truncate font-display tracking-tight text-lg leading-tight">
                     {title}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-bold -mt-0.5 ml-0.5">
-                   <div className="w-2 h-2 rounded-full bg-status-online" />
-                   <span className="opacity-80">2 Online</span>
+                  <div className="w-2 h-2 rounded-full bg-status-online" />
+                  <span className="opacity-80">2 Online</span>
                 </div>
               </div>
             )}
           </div>
-          
+
           <div className="flex items-center gap-1.5 p-1">
             <HeaderIcon icon={<Bell size={20} />} label="Mute" />
             <HeaderIcon icon={<Pin size={20} />} label="Pins" />
             <HeaderIcon icon={<ThreadsIcon />} label="Threads" />
-            <HeaderIcon 
-              icon={<Users size={20} />} 
+            <HeaderIcon
+              icon={<Users size={20} />}
               label={showMemberList ? "Hide Member List" : "Show Member List"}
               active={showMemberList}
               onClick={() => setShowMemberList(!showMemberList)}
             />
-            
+
             <div className="hidden sm:flex relative group ml-1 mr-1">
               <div className="bg-bg-tertiary/60 border border-white/5 flex items-center h-7 px-2 rounded-lg w-[144px] transition-all group-focus-within:w-[240px] shadow-inner">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search" 
-                  className="bg-transparent border-none outline-none text-[13px] text-white w-full placeholder:text-text-muted font-medium" 
+                  placeholder="Search"
+                  className="bg-transparent border-none outline-none text-[13px] text-white w-full placeholder:text-text-muted font-medium"
                 />
                 <Search size={14} className="text-[#949BA4] shrink-0" />
               </div>
             </div>
-            
+
             <div className="hidden sm:flex items-center gap-1">
               <HeaderIcon icon={<Inbox size={20} />} label="Inbox" />
               <HeaderIcon icon={<HelpCircle size={20} />} label="Help" />
@@ -217,18 +227,18 @@ const ChatView = ({ targetId }) => {
           </div>
         </header>
 
-        {/* Messages Scroll Area */}
-        <div className="flex-1 overflow-y-auto no-scrollbar pb-40 min-h-0 bg-transparent">
+        {/* Messages Scroll Area - PROFESSIONAL CONSTRAINED FLOW */}
+        <div className="flex-1 overflow-y-auto min-h-0 bg-transparent scroll-smooth pb-32">
           {/* Welcome Hero - MASTERPIECE DESIGN */}
           <div className="px-6 py-16 flex flex-col items-start max-w-[800px]">
             {dm ? (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-start w-full"
               >
                 <div className="relative mb-8">
-                  <motion.div 
+                  <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", duration: 1 }}
@@ -245,17 +255,17 @@ const ChatView = ({ targetId }) => {
                   This is the very beginning of your direct message history with <span className="text-white">@{dm.name}</span>. Start something legendary.
                 </p>
                 <div className="flex flex-col gap-2 w-full max-w-[400px]">
-                   <HeroActionCard index={0} icon={<Users className="text-purple-400" size={24} />} label="Invite your friends" />
-                   <HeroActionCard index={1} icon={<Pencil className="text-blue-400" size={24} />} label="Personalize your server" />
+                  <HeroActionCard index={0} icon={<Users className="text-purple-400" size={24} />} label="Invite your friends" />
+                  <HeroActionCard index={1} icon={<Pencil className="text-blue-400" size={24} />} label="Personalize your server" />
                 </div>
               </motion.div>
             ) : (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="flex flex-col items-start w-full"
               >
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0.8, rotate: -10, opacity: 0 }}
                   animate={{ scale: 1, rotate: 0, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 20 }}
@@ -270,8 +280,8 @@ const ChatView = ({ targetId }) => {
                   Take center stage in <span className="text-white font-bold">#{title}</span>. This is where your community starts its journey.
                 </p>
                 <div className="flex flex-col gap-2 w-full max-w-[400px]">
-                   <HeroActionCard index={0} icon={<Users className="text-purple-400" size={24} />} label="Invite your friends" />
-                   <HeroActionCard index={1} icon={<Pencil className="text-blue-400" size={24} />} label="Personalize your server" />
+                  <HeroActionCard index={0} icon={<Users className="text-purple-400" size={24} />} label="Invite your friends" />
+                  <HeroActionCard index={1} icon={<Pencil className="text-blue-400" size={24} />} label="Personalize your server" />
                 </div>
               </motion.div>
             )}
@@ -280,62 +290,62 @@ const ChatView = ({ targetId }) => {
 
           <div className="px-4 space-y-0">
             {messages.map((msg, idx) => (
-              <Message 
-                key={msg.id} 
+              <Message
+                key={msg.id}
                 index={idx}
-                {...msg} 
-                hideGutter={idx > 0 && messages[idx-1].user === msg.user}
+                {...msg}
+                hideGutter={idx > 0 && messages[idx - 1].user === msg.user}
               />
             ))}
+            {/* <div ref={messagesEndRef} className="h-4 invisible pointer-events-none" /> */}
             <div ref={messagesEndRef} />
           </div>
         </div>
 
-        {/* Message Input Container - DISCORD REFERENCE PILL DESIGN */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 pb-12 pt-2 z-30 pointer-events-none lg:pb-16 lg:px-6">
+        <div className="absolute bottom-[16px] left-0 right-0 px-4 pt-2 z-30 pointer-events-none lg:bottom-[32px] lg:px-6">
           <div className="max-w-[1240px] mx-auto pointer-events-auto">
-            <motion.div 
+            <motion.div
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               className="bg-bg-secondary h-12 rounded-[24px] shadow-2xl flex items-center gap-2 relative px-2 focus-premium"
             >
               <div className="flex items-center gap-2">
-                 <button className="text-[#B5BAC1] hover:text-white transition-colors"><PlusCircle size={24} /></button>
-                 <button className="text-[#B5BAC1] hover:text-white transition-colors"><Gift size={20} /></button>
-                 <button className="text-[#B5BAC1] hover:text-white transition-colors"><Sticker size={20} /></button>
+                <button className="text-[#B5BAC1] hover:text-white transition-colors"><PlusCircle size={24} /></button>
+                <button className="text-[#B5BAC1] hover:text-white transition-colors"><Gift size={20} /></button>
+                <button className="text-[#B5BAC1] hover:text-white transition-colors"><Sticker size={20} /></button>
               </div>
-              
+
               <div className="flex-1 bg-black/20 h-9 rounded-full flex items-center px-4">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder={`Message ${dm ? '@' : '#'}${title}`} 
+                  placeholder={`Message ${dm ? '@' : '#'}${title}`}
                   className="flex-1 bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none border-none focus:ring-0 focus:outline-none text-[15px] font-medium"
                 />
                 <button className="text-[#B5BAC1] hover:text-white transition-colors ml-2"><Smile size={20} /></button>
               </div>
-              
+
               <button className="w-9 h-9 flex items-center justify-center rounded-full text-[#B5BAC1] hover:text-white transition-all hover:bg-brand-indigo shadow-inner group">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                  <line x1="12" y1="19" x2="12" y2="23"/>
-                  <line x1="8" y1="23" x2="16" y2="23"/>
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
                 </svg>
               </button>
             </motion.div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Member Sidebar - Premium Flex Drawer */}
       <div className="lg:static relative">
         <AnimatePresence>
           {showMemberList && (
             <>
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -357,13 +367,13 @@ const ChatView = ({ targetId }) => {
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-[100px] lg:pb-6 bg-black/5">
                   <MemberCategory label="The Founder — 1" members={[{ name: currentUser.name, status: 'online' }]} />
-                  <MemberCategory 
-                    label="Community — 3" 
+                  <MemberCategory
+                    label="Community — 3"
                     members={[
                       { name: 'Harsh g', status: 'offline' },
                       { name: 'Swastik AI', status: 'offline' },
                       { name: 'Study Buddy', status: 'offline' }
-                    ]} 
+                    ]}
                   />
                 </div>
               </motion.aside>
