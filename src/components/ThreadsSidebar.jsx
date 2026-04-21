@@ -12,12 +12,12 @@ const ThreadsSidebar = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState('active');
 
   return (
-    <motion.div
-      initial={{ x: 300 }}
-      animate={{ x: 0 }}
-      exit={{ x: 300 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="w-[300px] h-full bg-[#2b2d31] border-l border-white/5 flex flex-col shrink-0 relative z-20"
+    <motion.aside
+      initial={{ width: 0, opacity: 0 }}
+      animate={{ width: 280, opacity: 1 }}
+      exit={{ width: 0, opacity: 0 }}
+      transition={{ type: "spring", damping: 40, stiffness: 500 }}
+      className="fixed lg:static inset-y-0 right-0 bg-[#2b2d31] flex flex-col z-[251] lg:z-auto border-l border-white/5 overflow-hidden shadow-2xl h-full shrink-0"
     >
       <header className="h-14 px-4 flex items-center justify-between border-b border-white/5 shrink-0">
         <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ const ThreadsSidebar = ({ onClose }) => {
             )}
          </div>
       </div>
-    </motion.div>
+    </motion.aside>
   );
 };
 

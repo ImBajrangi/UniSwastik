@@ -448,7 +448,16 @@ const ChatView = ({ targetId }) => {
           )}
 
           {showThreadsSidebar && (
-            <ThreadsSidebar key="threads" onClose={() => setShowThreadsSidebar(false)} />
+            <React.Fragment key="threads">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowThreadsSidebar(false)}
+                className="lg:hidden fixed inset-0 bg-black/70 z-[250] backdrop-blur-sm"
+              />
+              <ThreadsSidebar key="threads" onClose={() => setShowThreadsSidebar(false)} />
+            </React.Fragment>
           )}
         </AnimatePresence>
       </div>
