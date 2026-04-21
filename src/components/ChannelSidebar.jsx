@@ -100,7 +100,7 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
   const isFriendsActive = activeServerId === 'home' && !activeDMId && view === 'friends';
   
   return (
-    <div className="flex flex-col gap-0 px-2 pt-2" role="list">
+    <div className="flex flex-col gap-1.5 px-2 pt-2" role="list">
       <HomeItem icon={<Users size={20} />} label="Friends" active={isFriendsActive} />
       <HomeItem icon={<LayoutDashboard size={20} />} label="Campus Feed" />
       <HomeItem icon={<ShoppingBag size={20} />} label="Academic Resources" />
@@ -121,7 +121,7 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
               exit={{ opacity: 0, scale: 0.95, filter: 'blur(4px)' }}
               transition={{ ...springTransition, delay: index * 0.03 }}
               onClick={() => { selectDM(dm.id); playClick(); }}
-              whileHover={{ x: 4 }}
+              whileHover={{ backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
               className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors relative mb-0.5 ${activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-bg-modifier-hover'
                 }`}
             >
@@ -202,29 +202,33 @@ const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingCo
   );
 };
 
-const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-2", className = "" }) => {
+const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-6", className = "" }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   
   return (
     <div className={`${spacing} ${className}`}>
-      <div className="mb-1 px-1 flex items-center justify-between group cursor-pointer text-text-muted hover:text-white transition-colors">
-        <div 
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex-1 flex items-center gap-1"
-        >
-          <motion.span 
+      <div 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="mb-2 px-0.5 flex items-center justify-between group cursor-pointer text-[#949BA4] hover:text-white transition-colors"
+      >
+        <div className="flex-1 flex items-center gap-1.5">
+          <motion.div 
             animate={{ rotate: isExpanded ? 0 : -90 }}
-            className="text-[8px] opacity-70"
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            className="flex items-center justify-center w-3 h-3"
           >
-            ▼
-          </motion.span>
-          <span className="text-[11px] font-bold uppercase tracking-[0.1em]">{label}</span>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="opacity-70">
+              <path d="M2.1 6.5l10.4 10.4L22.9 6.5z" />
+            </svg>
+          </motion.div>
+          <span className="text-[12px] font-bold uppercase tracking-[0.03em] select-none">{label}</span>
         </div>
         {onAdd && (
           <Plus 
-            size={14} 
-            onClick={(e) => { e.stopPropagation(); onAdd(); }}
-            className="text-text-muted hover:text-white transition-colors" 
+            size={16} 
+            strokeWidth={2.5}
+            onClick={(e) => { e.stopPropagation(); onAdd(); playClick(); }}
+            className="text-[#949BA4] hover:text-white transition-colors p-0.5" 
           />
         )}
       </div>
@@ -235,8 +239,8 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-2", classNam
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="overflow-hidden"
+            transition={{ type: "spring", stiffness: 400, damping: 35 }}
+            className="overflow-hidden pt-1.5 flex flex-col gap-0.5"
           >
             {children}
           </motion.div>
@@ -249,10 +253,10 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-2", classNam
 const HomeItem = ({ icon, label, active, onClick }) => (
   <motion.div
     onClick={() => { if (onClick) onClick(); playClick(); }}
-    whileHover={{ x: 4, backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
+    whileHover={{ backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
     whileTap={{ scale: 0.98 }}
     transition={{ type: "spring", stiffness: 400, damping: 25 }}
-    className={`py-2.5 px-3 rounded-md flex items-center gap-3 cursor-pointer transition-colors mb-0.5 ${active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:text-interactive-hover'
+    className={`py-3 px-3 rounded-md flex items-center gap-4 cursor-pointer transition-colors mb-0.5 ${active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:text-interactive-hover'
       }`}>
     <span className={active ? 'text-white' : 'text-channel-icon'}>{icon}</span>
     <span className="text-[14px] font-bold tracking-tight uppercase opacity-90 group-hover:opacity-100">{label}</span>
@@ -267,18 +271,18 @@ const ChannelItem = ({ icon, label, active, onClick, accentColor, index, onRemov
     exit={{ opacity: 0, x: -10 }}
     transition={{ type: "spring", stiffness: 400, damping: 25, delay: index * 0.03 }}
     onClick={() => { onClick(); playClick(); }}
-    whileHover={{ x: 4, backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
-    className={`py-1.5 px-2 rounded-md flex items-center gap-2 cursor-pointer transition-colors group mb-0.5 ${
-      active ? 'bg-bg-modifier-selected text-white' : 'text-text-muted hover:text-interactive-hover'
+    whileHover={{ backgroundColor: 'rgba(78, 80, 88, 0.3)' }}
+    className={`py-2 px-2.5 rounded-md flex items-center gap-3 cursor-pointer transition-colors group mb-0.5 ${
+      active ? 'bg-bg-modifier-selected text-white' : 'text-[#949BA4] hover:text-[#DBDEE1]'
     }`}
   >
-    <span className={`transition-colors ${active ? 'text-white' : 'text-channel-icon group-hover:text-interactive-hover'}`}>
+    <span className={`transition-colors shrink-0 ${active ? 'text-white' : 'text-[#80848E] group-hover:text-[#DBDEE1]'}`}>
       {icon}
     </span>
     <span className={`text-[15px] font-bold truncate flex-1 tracking-tight ${active ? 'text-white' : ''}`}>
       {label}
     </span>
-    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
       {onRemove && (
         <button 
           onClick={(e) => { e.stopPropagation(); onRemove(); playClick(); }}
@@ -287,7 +291,7 @@ const ChannelItem = ({ icon, label, active, onClick, accentColor, index, onRemov
           <Plus size={14} className="rotate-45" />
         </button>
       )}
-      {active && <Settings size={14} className="text-text-muted hover:text-white" />}
+      {active && <Settings size={14} className="text-[#949BA4] hover:text-white" />}
     </div>
   </motion.div>
 );
