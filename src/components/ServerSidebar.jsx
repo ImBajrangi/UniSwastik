@@ -20,13 +20,25 @@ const ServerSidebar = () => {
 
   return (
     <nav className="w-[72px] bg-bg-tertiary flex flex-col items-center py-3 gap-2 overflow-y-auto no-scrollbar shadow-2xl relative z-50 h-full border-r border-black/20" aria-label="Servers">
-      {servers.map((server) => (
-        <ServerIcon 
+      {servers.map((server, index) => (
+        <motion.div
           key={server.id}
-          server={server}
-          isActive={activeServerId === server.id}
-          onClick={() => selectServer(server.id)}
-        />
+          initial={{ opacity: 0, x: -4 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 300, 
+            damping: 26, 
+            delay: index * 0.02 
+          }}
+          className="w-full"
+        >
+          <ServerIcon 
+            server={server}
+            isActive={activeServerId === server.id}
+            onClick={() => selectServer(server.id)}
+          />
+        </motion.div>
       ))}
 
       <div className="w-8 h-[2px] bg-white/5 rounded-full my-1 shadow-inner" role="separator" />

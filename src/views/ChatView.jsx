@@ -10,8 +10,11 @@ import Avatar from '../components/Avatar';
 import Tooltip from '../components/Tooltip';
 import HeaderIcon from '../components/HeaderIcon';
 
-const HeroActionCard = ({ icon, label, onClick }) => (
+const HeroActionCard = ({ icon, label, onClick, index }) => (
   <motion.div
+    initial={{ opacity: 0, y: 8 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ type: "spring", stiffness: 300, damping: 26, delay: 0.1 + (index * 0.04) }}
     whileHover={{ x: 4 }}
     onClick={onClick}
     className="w-full bg-black/10 hover:bg-white/5 border border-white/5 p-4 rounded-2xl flex items-center justify-between group cursor-pointer transition-all"
@@ -34,11 +37,11 @@ const ThreadsIcon = ({ size = 20 }) => (
   </svg>
 );
 
-const Message = ({ user, time, content, isMe, hideGutter }) => (
+const Message = ({ user, time, content, isMe, hideGutter, index }) => (
   <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ duration: 0.15 }}
+    initial={{ opacity: 0, y: 4 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ type: "spring", stiffness: 300, damping: 26, delay: (index % 10) * 0.02 }}
     className={`flex gap-4 group hover:bg-white/[0.03] -mx-4 px-4 ${hideGutter ? 'py-0.5' : 'py-2 mt-4'} transition-colors relative border-l-2 border-transparent hover:border-brand-indigo/30`}
   >
     <div className="w-10 shrink-0">
@@ -242,8 +245,8 @@ const ChatView = ({ targetId }) => {
                   This is the very beginning of your direct message history with <span className="text-white">@{dm.name}</span>. Start something legendary.
                 </p>
                 <div className="flex flex-col gap-2 w-full max-w-[400px]">
-                   <HeroActionCard icon={<Users className="text-purple-400" size={24} />} label="Invite your friends" />
-                   <HeroActionCard icon={<Pencil className="text-blue-400" size={24} />} label="Personalize your server" />
+                   <HeroActionCard index={0} icon={<Users className="text-purple-400" size={24} />} label="Invite your friends" />
+                   <HeroActionCard index={1} icon={<Pencil className="text-blue-400" size={24} />} label="Personalize your server" />
                 </div>
               </motion.div>
             ) : (
@@ -267,8 +270,8 @@ const ChatView = ({ targetId }) => {
                   Take center stage in <span className="text-white font-bold">#{title}</span>. This is where your community starts its journey.
                 </p>
                 <div className="flex flex-col gap-2 w-full max-w-[400px]">
-                   <HeroActionCard icon={<Users className="text-purple-400" size={24} />} label="Invite your friends" />
-                   <HeroActionCard icon={<Pencil className="text-blue-400" size={24} />} label="Personalize your server" />
+                   <HeroActionCard index={0} icon={<Users className="text-purple-400" size={24} />} label="Invite your friends" />
+                   <HeroActionCard index={1} icon={<Pencil className="text-blue-400" size={24} />} label="Personalize your server" />
                 </div>
               </motion.div>
             )}
@@ -279,6 +282,7 @@ const ChatView = ({ targetId }) => {
             {messages.map((msg, idx) => (
               <Message 
                 key={msg.id} 
+                index={idx}
                 {...msg} 
                 hideGutter={idx > 0 && messages[idx-1].user === msg.user}
               />

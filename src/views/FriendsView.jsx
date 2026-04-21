@@ -89,13 +89,13 @@ const FriendsView = () => {
           <div className="flex flex-col gap-1" role="list">
             <AnimatePresence mode="popLayout">
               {filteredFriends.length > 0 ? (
-                filteredFriends.map((friend) => (
+                filteredFriends.map((friend, index) => (
                   <motion.div
                     key={friend.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    transition={{ duration: 0.2 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 26, delay: index * 0.02 }}
                   >
                     <FriendRow 
                       friend={friend} 
@@ -208,6 +208,24 @@ const FriendRow = ({ friend, onMessage, tab }) => (
       )}
     </div>
   </div>
+);
+
+const HeroActionCard = ({ icon, label, onClick, index }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    transition={{ type: "spring", stiffness: 300, damping: 22, delay: 0.2 + (index * 0.05) }}
+    whileHover={{ x: 4 }}
+    onClick={onClick}
+    className="w-full bg-black/10 hover:bg-white/5 border border-white/5 p-4 rounded-2xl flex items-center justify-between group cursor-pointer transition-all"
+  >
+    <div className="flex items-center gap-4">
+      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-brand-indigo">
+        {icon}
+      </div>
+      <span className="text-white font-bold text-sm">{label}</span>
+    </div>
+  </motion.div>
 );
 
 const ActionCircle = ({ icon, onClick, label, color }) => (

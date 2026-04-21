@@ -66,24 +66,24 @@ const ChannelSidebar = () => {
 
       {/* Content Area - Macro Animated Container */}
       <div className="flex-1 overflow-y-auto no-scrollbar py-2">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout" initial={false}>
           {isHome ? (
             <motion.div
               key="home-nav"
-              initial={{ opacity: 0, y: 15, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -15, scale: 0.98 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
             >
               <HomeNavigation dmList={dmList} activeDMId={activeDMId} selectDM={selectDM} />
             </motion.div>
           ) : (
             <motion.div
               key="server-nav"
-              initial={{ opacity: 0, y: 15, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -15, scale: 0.98 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
             >
               <ServerNavigation
                 serverId={activeServerId}
@@ -110,10 +110,10 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
   
   return (
     <div className="flex flex-col gap-1.5 px-2 pt-2" role="list">
-      <HomeItem icon={<Users size={20} />} label="Friends" active={isFriendsActive} />
-      <HomeItem icon={<LayoutDashboard size={20} />} label="Campus Feed" />
-      <HomeItem icon={<ShoppingBag size={20} />} label="Academic Resources" />
-      <HomeItem icon={<Joystick size={20} />} label="Quests & Polls" />
+      <HomeItem icon={<Users size={20} />} label="Friends" active={isFriendsActive} index={0} />
+      <HomeItem icon={<LayoutDashboard size={20} />} label="Campus Feed" index={1} />
+      <HomeItem icon={<ShoppingBag size={20} />} label="Academic Resources" index={2} />
+      <HomeItem icon={<Joystick size={20} />} label="Quests & Polls" index={3} />
 
       <CollapsibleSection 
         label="Direct Messages" 
@@ -123,12 +123,11 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
         <AnimatePresence mode="popLayout">
           {dmList.map((dm, index) => (
             <motion.div
-              layout
               key={dm.id}
-              initial={{ opacity: 0, x: -10, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 300, damping: 22, delay: index * 0.015 }}
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 26, delay: index * 0.01 }}
               onClick={() => { selectDM(dm.id); playClick(); }}
               className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors relative mb-0.5 ${activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-white/5'
                 }`}
@@ -252,11 +251,10 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-6", classNam
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
-            layout
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
             className="overflow-hidden pt-1.5 flex flex-col gap-0.5"
           >
             {children}
@@ -267,11 +265,13 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-6", classNam
   );
 };
 
-const HomeItem = ({ icon, label, active, onClick }) => (
+const HomeItem = ({ icon, label, active, onClick, index }) => (
   <motion.div
+    initial={{ opacity: 0, x: -4 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ type: "spring", stiffness: 300, damping: 26, delay: index * 0.015 }}
     onClick={() => { if (onClick) onClick(); playClick(); }}
-    whileTap={{ scale: 0.95 }}
-    transition={{ type: "spring", stiffness: 300, damping: 22 }}
+    whileTap={{ scale: 0.96 }}
     className={`py-3 px-3 rounded-md flex items-center gap-4 cursor-pointer transition-colors mb-0.5 ${active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:bg-white/5 hover:text-interactive-hover'
       }`}>
     <span className={active ? 'text-white' : 'text-channel-icon'}>{icon}</span>
@@ -281,11 +281,10 @@ const HomeItem = ({ icon, label, active, onClick }) => (
 
 const ChannelItem = ({ icon, label, active, onClick, accentColor, index, onRemove }) => (
   <motion.div
-    layout
-    initial={{ opacity: 0, x: -10, scale: 0.95 }}
-    animate={{ opacity: 1, x: 0, scale: 1 }}
-    exit={{ opacity: 0, x: 10, scale: 0.95 }}
-    transition={{ type: "spring", stiffness: 300, damping: 22, delay: index * 0.015 }}
+    initial={{ opacity: 0, x: -4 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0 }}
+    transition={{ type: "spring", stiffness: 300, damping: 26, delay: index * 0.01 }}
     onClick={() => { onClick(); playClick(); }}
     className={`py-1.5 px-3 rounded-md flex items-center gap-3 cursor-pointer transition-all group mb-0.5 relative ${
       active ? 'bg-white/10 text-white shadow-sm' : 'text-[#949BA4] hover:bg-white/5 hover:text-[#DBDEE1]'

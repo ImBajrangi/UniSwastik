@@ -24,16 +24,24 @@ const BottomNav = () => {
   ];
 
   return (
-    <div className="lg:hidden relative h-[70px] bg-[#111214] border-t border-white/5 flex items-center justify-around px-2 z-[400] pb-safe shadow-[0_-8px_24px_rgba(0,0,0,0.3)] shrink-0">
-      {tabs.map((tab) => {
+    <motion.div 
+      initial={{ y: 50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.1 }}
+      className="lg:hidden relative h-[70px] bg-[#111214] border-t border-white/5 flex items-center justify-around px-2 z-[400] pb-safe shadow-[0_-8px_24px_rgba(0,0,0,0.3)] shrink-0"
+    >
+      {tabs.map((tab, idx) => {
         const isActive = (tab.id === 'servers' && view === 'chat') || 
                         (tab.id === 'servers' && view === 'friends') ||
                         (tab.id === 'notifications' && view === 'notifications') ||
                         (tab.id === 'profile' && view === 'profile');
         
         return (
-          <button
+          <motion.button
             key={tab.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 + (idx * 0.05) }}
             id={`tab-${tab.id}`}
             onClick={(e) => {
               e.preventDefault();
@@ -74,10 +82,10 @@ const BottomNav = () => {
             }`}>
               {tab.label}
             </span>
-          </button>
+          </motion.button>
         );
       })}
-    </div>
+    </motion.div>
   );
 };
 
@@ -113,12 +121,18 @@ const AppContent = () => {
     <div className="flex h-screen w-full bg-[#050505] overflow-hidden relative">
       <GlobalAtmosphere />
       
-      {/* Desktop Sidebars */}
-      <div className="hidden lg:flex shrink-0">
+      {/* Desktop Sidebars - COORDINATED ENTRY */}
+      <motion.div 
+        className="hidden lg:flex shrink-0"
+        initial="initial"
+        animate="animate"
+        variants={{
+          animate: { transition: { staggerChildren: 0.1 } }
+        }}
+      >
         <ServerSidebar />
-        {/* Sidebar remains visible for Home (Chat/Friends), Notifications, and Profile */}
         <ChannelSidebar />
-      </div>
+      </motion.div>
 
       {/* Mobile Drawer */}
       <AnimatePresence>
