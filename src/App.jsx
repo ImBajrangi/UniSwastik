@@ -21,7 +21,7 @@ const AppContent = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.1, ease: "linear" }}
-          className="flex-1 flex flex-col overflow-hidden bg-bg-primary"
+          className="flex-1 flex flex-col min-h-0 h-full overflow-hidden bg-bg-primary"
           role="main"
           id="main-content"
         >

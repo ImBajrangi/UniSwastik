@@ -66,9 +66,9 @@ const ChatView = ({ targetId }) => {
   }, [messages]);
 
   return (
-    <div className="flex-1 flex min-h-0 bg-[#313338] relative overflow-hidden">
+    <div className="flex-1 flex min-h-0 h-full bg-[#313338] relative overflow-hidden">
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full">
         {/* Top Header - Discord Style */}
         <header className="h-12 px-4 flex items-center justify-between shadow-sm border-b border-black/20 shrink-0 bg-[#313338] z-10">
           <div className="flex items-center gap-2 overflow-hidden">
@@ -86,7 +86,7 @@ const ChatView = ({ targetId }) => {
             )}
           </div>
           
-          <div className="flex items-center gap-4 text-[#B5BAC1]">
+          <div className="flex items-center gap-1.5 p-1 pr-2">
             <HeaderIcon icon={<Bell size={20} />} label="Mute" />
             <HeaderIcon icon={<Pin size={20} />} label="Pins" />
             <HeaderIcon icon={<ThreadsIcon />} label="Threads" />
@@ -97,7 +97,7 @@ const ChatView = ({ targetId }) => {
               onClick={() => setShowMemberList(!showMemberList)}
             />
             
-            <div className="relative group">
+            <div className="relative group ml-1 mr-1">
               <div className="bg-[#1E1F22] flex items-center h-6 px-2 rounded-md w-[144px] transition-all group-focus-within:w-[240px]">
                 <input 
                   type="text" 
@@ -106,7 +106,7 @@ const ChatView = ({ targetId }) => {
                   placeholder="Search" 
                   className="bg-transparent border-none outline-none text-[13px] text-white w-full placeholder:text-[#949BA4]" 
                 />
-                <Search size={14} className="text-[#949BA4]" />
+                <Search size={14} className="text-[#949BA4] shrink-0" />
               </div>
             </div>
             
@@ -116,7 +116,7 @@ const ChatView = ({ targetId }) => {
         </header>
 
         {/* Messages Scroll Area */}
-        <div className="flex-1 overflow-y-auto no-scrollbar pb-4">
+        <div className="flex-1 overflow-y-auto no-scrollbar pb-4 min-h-0">
           {/* Welcome Block - Discord UI */}
           <div className="px-4 py-8">
             <div className="w-20 h-20 rounded-full bg-[#41434A] flex items-center justify-center mb-4 transition-transform hover:scale-105 cursor-pointer">
@@ -210,21 +210,21 @@ const ChatView = ({ targetId }) => {
               className="flex-1 bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none text-[16px]"
             />
             
-            <div className="flex items-center gap-3 text-[#B5BAC1] shrink-0">
+            <div className="flex items-center gap-1 pr-2 text-[#B5BAC1] shrink-0">
               <Tooltip content="Send a gift">
-                <button className="hover:text-white transition-colors"><Gift size={22} /></button>
+                <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#404249] hover:text-white transition-all"><Gift size={22} /></button>
               </Tooltip>
               <Tooltip content="Send a GIF">
-                <button className="hover:text-white transition-colors font-black text-xs px-1 border-2 border-current rounded-[3px] scale-90">GIF</button>
+                <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#404249] hover:text-white transition-all font-black text-xs px-1 border-2 border-current rounded-[3px] scale-90">GIF</button>
               </Tooltip>
               <Tooltip content="Send a sticker">
-                <button className="hover:text-white transition-colors"><Sticker size={22} /></button>
+                <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#404249] hover:text-white transition-all"><Sticker size={22} /></button>
               </Tooltip>
               <Tooltip content="Select Emoji">
-                <button className="hover:text-white transition-colors"><Smile size={22} /></button>
+                <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#404249] hover:text-white transition-all"><Smile size={22} /></button>
               </Tooltip>
               <Tooltip content="Choose an activity">
-                <button className="hover:text-white transition-colors"><LayoutGrid size={18} fill="currentColor" /></button>
+                <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#404249] hover:text-white transition-all"><LayoutGrid size={18} fill="currentColor" /></button>
               </Tooltip>
             </div>
           </div>
@@ -289,8 +289,8 @@ const HeaderIcon = ({ icon, label, onClick, active }) => (
   <Tooltip content={label}>
     <button 
       onClick={onClick}
-      className={`transition-colors cursor-pointer relative group p-1 ${
-        active ? 'text-white' : 'hover:text-[#DBDEE1] text-[#B5BAC1]'
+      className={`w-10 h-10 flex items-center justify-center rounded-full transition-all cursor-pointer relative group ${
+        active ? 'text-white' : 'hover:bg-[#404249] hover:text-[#DBDEE1] text-[#B5BAC1]'
       }`}
     >
       {icon}
