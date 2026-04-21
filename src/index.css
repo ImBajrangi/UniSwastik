@@ -2,26 +2,26 @@
 @import "tailwindcss";
 
 @theme {
-  /* Premium Design Tokens - HSL BASED for transparency control */
+  /* Elite Masterpiece Tokens - Deep Obsidian & Celestial Indigo */
   --color-brand-indigo: #5865f2;
   --color-brand-crimson: #ed4245;
   
-  --color-bg-primary: #313338;        /* Unified Chat/Main Background */
-  --color-bg-secondary: #1e1f22;      /* Channel Sidebar Background */
-  --color-bg-secondary-alt: #2b2d31;  /* Hover/Alt Surfaces */
-  --color-bg-tertiary: #111214;       /* Server Sidebar / Deep Shell */
+  --color-bg-primary: #121214;        /* Elite Deep Obsidian */
+  --color-bg-secondary: #0b0c0e;      /* Satin Shell Background */
+  --color-bg-secondary-alt: #18191c;  /* Soft Satin Hover Surface */
+  --color-bg-tertiary: #050505;       /* Pure Carbon Sidebar */
   
   --color-text-normal: #dbdee1;
-  --color-text-muted: #949ba4;
+  --color-text-muted: #8e9297;        /* Softened for better hierarchy */
   --color-text-header: #ffffff;
   
   --color-status-online: #23a559;
   --color-status-idle: #f0b232;
   --color-status-dnd: #f23f43;
   
-  /* Elevating Shadows - Tuned for Deeper Black */
-  --shadow-premium: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.05);
-  --shadow-glass: 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  /* Elite Shadows - Atmospheric Inner Reflections */
+  --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 40px rgba(255, 255, 255, 0.02);
 
   /* Animations */
   --animate-float: float 3s ease-in-out infinite;
@@ -38,7 +38,7 @@
   box-sizing: border-box;
 }
 
-/* Apple-Precision Typography System */
+/* Elite-Precision Typography System */
 html, body, #root {
   height: 100%;
   width: 100%;
@@ -47,13 +47,13 @@ html, body, #root {
   background-color: var(--color-bg-tertiary);
   color: var(--color-text-normal);
   -webkit-font-smoothing: antialiased;
-  letter-spacing: -0.015em; /* Tighter for premium feel */
+  letter-spacing: -0.022em; /* Elite-tier precision tracking */
 }
 
 h1, h2, h3, .font-display {
   font-family: 'Outfit', sans-serif;
-  letter-spacing: -0.04em; /* Aggressive Apple-style tracking */
-  line-height: 1.1;
+  letter-spacing: -0.05em; /* Bold, high-fashion tracking */
+  line-height: 1;
 }
 
 /* Accessibility & Refinement */
@@ -85,10 +85,10 @@ h1, h2, h3, .font-display {
 
 /* Masterpiece Utility Extensions */
 @utility glass {
-  background: rgba(13, 14, 16, 0.75);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(11, 12, 14, 0.7);
+  backdrop-filter: blur(48px) saturate(200%);
+  -webkit-backdrop-filter: blur(48px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: var(--shadow-glass);
 }
 

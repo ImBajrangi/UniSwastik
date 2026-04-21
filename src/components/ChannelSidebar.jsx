@@ -214,7 +214,7 @@ const CollapsibleSection = ({ label, children, onAdd, spacing = "mt-6", classNam
               <path d="M2.1 6.5l10.4 10.4L22.9 6.5z" />
             </svg>
           </motion.div>
-          <span className="text-[12px] font-bold uppercase tracking-[0.03em] select-none">{label}</span>
+          <span className="text-[11px] font-bold uppercase tracking-[0.1em] select-none opacity-60 group-hover:opacity-100 transition-opacity">{label}</span>
         </div>
         {onAdd && (
           <Tooltip content={label === 'Direct Messages' ? "Start DM" : "Create Channel"}>
@@ -254,7 +254,7 @@ const HomeItem = ({ icon, label, active, onClick }) => (
     className={`py-3 px-3 rounded-md flex items-center gap-4 cursor-pointer transition-colors mb-0.5 ${active ? 'bg-bg-modifier-selected text-white' : 'text-interactive-normal hover:text-interactive-hover'
       }`}>
     <span className={active ? 'text-white' : 'text-channel-icon'}>{icon}</span>
-    <span className="text-[14px] font-bold tracking-tight uppercase opacity-90 group-hover:opacity-100">{label}</span>
+    <span className="text-[15px] font-bold tracking-tight opacity-90 group-hover:opacity-100">{label}</span>
   </motion.div>
 );
 

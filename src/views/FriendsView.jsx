@@ -150,13 +150,14 @@ const FriendsView = () => {
 
 const HeaderTab = ({ label, active, onClick }) => (
   <motion.button 
-    whileTap={{ scale: 0.95 }}
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.96 }}
     role="tab"
     aria-selected={active}
     onClick={onClick}
-    className="relative px-4 py-2 group outline-none"
+    className="relative px-6 py-2 group outline-none min-w-[80px]"
   >
-    <span className={`relative z-10 text-[14px] font-bold transition-all duration-300 uppercase tracking-wide font-display ${
+    <span className={`relative z-10 text-[14px] font-black transition-all duration-300 uppercase tracking-widest font-display ${
       active ? 'text-white' : 'text-text-muted hover:text-[#DBDEE1]'
     }`}>
       {label}
@@ -164,9 +165,13 @@ const HeaderTab = ({ label, active, onClick }) => (
     {active && (
       <motion.div
         layoutId="friendsTab"
-        className="absolute inset-0 bg-white/10 rounded-lg shadow-sm border border-white/10"
+        className="absolute bottom-0 left-0 right-0 h-[3px] bg-brand-indigo rounded-full shadow-[0_0_12px_rgba(88,101,242,0.6)]"
         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
       />
+    )}
+    {/* Subtle Glass Pill on Hover */}
+    {!active && (
+      <div className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.03] rounded-xl transition-colors duration-200" />
     )}
   </motion.button>
 );

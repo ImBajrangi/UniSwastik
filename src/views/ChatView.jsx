@@ -74,7 +74,7 @@ const Message = ({ user, time, content, isMe, hideGutter }) => (
 
 const MemberCategory = ({ label, members }) => (
   <div className="mb-6">
-    <h3 className="text-[#949BA4] text-[11px] font-black uppercase tracking-[0.08em] mb-2 px-2 opacity-80">{label}</h3>
+    <h3 className="text-[#949BA4] text-[12px] font-bold tracking-wide mb-2 px-2 opacity-60 uppercase">{label}</h3>
     <div className="space-y-0.5">
       {members.map(member => (
         <div 
@@ -345,9 +345,11 @@ const ChatView = ({ targetId }) => {
                 transition={{ type: "spring", damping: 40, stiffness: 500, mass: 1 }}
                 className="fixed lg:static inset-y-0 right-0 bg-bg-secondary flex flex-col z-[251] lg:z-auto border-l border-black/20 overflow-hidden shadow-2xl shrink-0"
               >
-                <div className="px-5 h-14 flex items-center justify-between font-black text-white border-b border-black/10 shrink-0 font-display uppercase tracking-widest text-[11px] opacity-80 shadow-sm">
-                  <span>Member List</span>
-                  <Users size={16} className="text-brand-indigo" />
+                <div className="px-5 h-14 flex items-center justify-between font-bold text-white border-b border-black/10 shrink-0 font-display transition-all">
+                  <span className="text-[15px] tracking-tight">Members</span>
+                  <div className="p-1 px-2.5 rounded-lg bg-brand-indigo/10 border border-brand-indigo/20">
+                    <Users size={16} className="text-brand-indigo" />
+                  </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-[100px] lg:pb-6 bg-black/5">
                   <MemberCategory label="The Founder — 1" members={[{ name: currentUser.name, status: 'online' }]} />

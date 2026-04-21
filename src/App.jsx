@@ -12,6 +12,7 @@ import {
   MessageSquare, Bell, Compass, Users, User, Menu
 } from 'lucide-react';
 import Avatar from './components/Avatar';
+import GlobalAtmosphere from './components/GlobalAtmosphere';
 
 const BottomNav = () => {
   const { view, setView, setIsMobileMenuOpen, currentUser } = usePlatform();
@@ -94,7 +95,7 @@ const AppContent = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.1, ease: "linear" }}
-          className="flex-1 flex flex-col min-h-0 h-full overflow-hidden bg-[#313338]"
+          className="flex-1 flex flex-col min-h-0 h-full overflow-hidden bg-transparent"
           role="main"
           id="main-content"
         >
@@ -109,7 +110,8 @@ const AppContent = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-bg-tertiary overflow-hidden relative">
+    <div className="flex h-screen w-full bg-[#050505] overflow-hidden relative">
+      <GlobalAtmosphere />
       
       {/* Desktop Sidebars */}
       <div className="hidden lg:flex shrink-0">
