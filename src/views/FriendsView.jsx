@@ -7,14 +7,15 @@ import HeaderIcon from '../components/HeaderIcon';
 import { playClick } from '../utils/sounds';
 
 const FriendsView = () => {
-  const { dmList, selectDM, setIsMobileMenuOpen } = usePlatform();
+  const { dmList, selectDM, setIsMobileMenuOpen, userStatuses } = usePlatform();
   const [activeTab, setActiveTab] = useState('online');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filtering Logic
   const filteredFriends = dmList.filter(user => {
+    const currentStatus = userStatuses[user.id] || user.status;
     let relationMatch = false;
-    if (activeTab === 'online') relationMatch = user.relationship === 'friend' && user.status !== 'offline';
+    if (activeTab === 'online') relationMatch = user.relationship === 'friend' && currentStatus !== 'offline';
     else if (activeTab === 'all') relationMatch = user.relationship === 'friend';
     else if (activeTab === 'pending') relationMatch = user.relationship?.startsWith('pending');
     else if (activeTab === 'blocked') relationMatch = user.relationship === 'blocked';
@@ -100,6 +101,7 @@ const FriendsView = () => {
                     <FriendRow 
                       friend={friend} 
                       tab={activeTab}
+                      userStatuses={userStatuses}
                       onMessage={() => selectDM(friend.id)} 
                     />
                   </motion.div>
@@ -117,30 +119,46 @@ const FriendsView = () => {
           </div>
         </div>
 
-        {/* Improved Active Now Sidebar - Premium Branding */}
-        <aside className="w-[360px] border-l border-white/5 p-6 hidden lg:flex flex-col gap-6 bg-black/10 backdrop-blur-sm">
+        {/* Improved Active Now Sidebar - Real-time Users */}
+        <aside className="w-[360px] border-l border-white/5 p-6 hidden lg:flex flex-col gap-6 bg-black/10 backdrop-blur-sm overflow-y-auto no-scrollbar">
           <header className="flex items-center justify-between">
             <h2 className="text-white text-xl font-black tracking-tighter uppercase font-display">Active Now</h2>
             <TrendingUp size={18} className="text-brand-indigo" />
           </header>
 
-          <div className="flex flex-col gap-4">
-             {/* Dynamic Activity Card Placeholder */}
-             <div className="glass p-5 rounded-2xl border-white/5 hover:border-brand-indigo/30 transition-all cursor-pointer group shadow-premium">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-brand-indigo/10 flex items-center justify-center">
-                    <Smile size={24} className="text-brand-indigo" />
+          <div className="flex flex-col gap-3">
+             {dmList.filter(u => (userStatuses[u.id] || u.status) !== 'offline').length > 0 ? (
+               dmList
+                .filter(u => (userStatuses[u.id] || u.status) !== 'offline')
+                .map((u, i) => (
+                  <motion.div
+                    key={u.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    onClick={() => selectDM(u.id)}
+                    className="glass p-4 rounded-2xl border-white/5 hover:border-brand-indigo/30 transition-all cursor-pointer group shadow-premium flex items-center gap-4"
+                  >
+                    <Avatar userId={u.id} name={u.name} status={userStatuses[u.id] || u.status} size={40} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-white font-bold text-sm font-display truncate">{u.name}</span>
+                      <span className="text-brand-indigo text-[10px] font-black uppercase tracking-widest">Online Now</span>
+                    </div>
+                  </motion.div>
+                ))
+             ) : (
+               <div className="glass p-5 rounded-2xl border-white/5 opacity-60">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                      <Smile size={24} className="text-text-muted" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-white font-bold text-sm font-display leading-tight">It's quiet for now</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-white font-bold text-sm font-display leading-tight">It's quiet for now</span>
-                    <span className="text-text-muted text-[11px] font-bold uppercase tracking-widest opacity-60">General Alert</span>
-                  </div>
-                </div>
-                <p className="text-text-muted text-[13px] leading-relaxed font-medium opacity-80 mb-4">Classmates who are online or gaming will appear here. Invite someone to start the conversation!</p>
-                <button className="w-full py-2.5 bg-white/5 hover:bg-brand-indigo text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-inner">
-                  Invite Friends
-                </button>
-             </div>
+                  <p className="text-text-muted text-[13px] leading-relaxed font-medium opacity-80">When classmates are online, they'll appear here automatically.</p>
+               </div>
+             )}
           </div>
         </aside>
       </div>
@@ -176,10 +194,10 @@ const HeaderTab = ({ label, active, onClick }) => (
   </motion.button>
 );
 
-const FriendRow = ({ friend, onMessage, tab }) => (
+const FriendRow = ({ friend, onMessage, tab, userStatuses }) => (
   <div className="flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl group cursor-pointer transition-all border-b border-white/5 last:border-0 relative" role="listitem">
     <div className="relative transition-transform group-hover:scale-105">
-      <Avatar userId={friend.id} src={friend.avatar} name={friend.name} status={friend.status} size={40} />
+      <Avatar userId={friend.id} src={friend.avatar} name={friend.name} status={userStatuses[friend.id] || friend.status} size={40} />
     </div>
     
     <div className="flex-1 flex flex-col min-w-0">

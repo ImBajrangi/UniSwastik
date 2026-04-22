@@ -50,7 +50,7 @@ export const dmList = [
     id: 'midjourney',
     name: 'Midjourney Bot',
     status: 'online',
-    avatar: 'https://cdn.discordapp.com/app-icons/615452938577313809/489069d35c5936ad1a76f286e6f477e3.png',
+    avatar: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=100&q=80',
     subText: 'Official Bot',
     isBot: true,
     relationship: 'friend'

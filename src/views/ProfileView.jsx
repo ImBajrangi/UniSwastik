@@ -7,8 +7,19 @@ import Avatar from '../components/Avatar';
 const ProfileView = () => {
   const { currentUser, logout } = usePlatform();
 
+  const handleEditProfile = async () => {
+    const newName = prompt("Enter your new display name:", currentUser?.name);
+    if (newName && newName !== currentUser?.name) {
+      try {
+        await authService.updateUserData(currentUser.uid || currentUser.id, { name: newName });
+      } catch (err) {
+        alert("Failed to update profile: " + err.message);
+      }
+    }
+  };
+
   const settingsItems = [
-    { icon: <User size={20} />, label: 'Edit Profile', color: 'text-blue-400' },
+    { icon: <User size={20} />, label: 'Edit Profile', color: 'text-blue-400', onClick: handleEditProfile },
     { icon: <Shield size={20} />, label: 'Privacy & Safety', color: 'text-green-400' },
     { icon: <Bell size={20} />, label: 'Notifications', color: 'text-orange-400' },
     { icon: <Moon size={20} />, label: 'Appearance', color: 'text-purple-400' },
@@ -40,11 +51,14 @@ const ProfileView = () => {
             <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-8 mb-10 text-center sm:text-left">
               <div className="relative p-2 bg-[#1e1f22] rounded-full -mt-24 sm:-mt-32 shadow-premium">
                 <Avatar name={currentUser?.name || 'User'} size={130} className="border-[10px] border-[#1e1f22]" />
-                <div className="absolute bottom-4 right-4 w-6 h-6 bg-status-online rounded-full border-4 border-[#1e1f22] shadow-premium" />
+                <div className={`absolute bottom-4 right-4 w-6 h-6 rounded-full border-4 border-[#1e1f22] shadow-premium ${
+                  currentUser?.status === 'online' ? 'bg-status-online' : 'bg-status-offline'
+                }`} />
               </div>
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={handleEditProfile}
                 className="w-full sm:w-auto px-10 py-3.5 premium-gradient rounded-2xl text-white font-black text-[16px] tracking-widest uppercase transition-all shadow-[0_12px_40px_rgba(88,101,242,0.4)]"
               >
                 Edit Profile
@@ -75,6 +89,7 @@ const ProfileView = () => {
               {settingsItems.map((item, idx) => (
                 <motion.button 
                   key={idx}
+                  onClick={item.onClick}
                   whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                   className={`w-full flex items-center justify-between p-7 transition-all group border-b border-white/5 last:border-0`}
                 >

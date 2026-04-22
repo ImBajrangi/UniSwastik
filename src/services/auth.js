@@ -109,5 +109,19 @@ export const authService = {
       console.error("Get User Data Error:", error);
       return null;
     }
+  },
+
+  // Update user data in Firestore
+  updateUserData: async (uid, data) => {
+    try {
+      const userRef = doc(db, "users", uid);
+      await setDoc(userRef, {
+        ...data,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      console.error("Update User Data Error:", error);
+      throw error;
+    }
   }
 };

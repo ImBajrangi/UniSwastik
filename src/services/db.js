@@ -136,11 +136,22 @@ export const dbService = {
   },
 
   // --- User Presence & Profile ---
+  subscribeToAllUsers: (callback) => {
+    return onSnapshot(collection(db, "users"), (snapshot) => {
+      const users = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        uid: doc.id,
+        ...doc.data() 
+      }));
+      callback(users);
+    });
+  },
+
   subscribeToUserStatus: (callback) => {
     return onSnapshot(collection(db, "users"), (snapshot) => {
       const statuses = {};
       snapshot.docs.forEach(doc => {
-        statuses[doc.id] = doc.data().status;
+        statuses[doc.id] = doc.data().status || 'offline';
       });
       callback(statuses);
     });

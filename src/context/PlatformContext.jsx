@@ -87,11 +87,20 @@ export const PlatformProvider = ({ children }) => {
       }
     });
 
-    const unsubDMs = dbService.subscribeToDMs(uid, (data) => {
+    const unsubUsers = dbService.subscribeToAllUsers((data) => {
       try {
-        if (data && data.length > 0) setDmList(data);
+        if (data && data.length > 0) {
+          // Filter out the current user and map to match UI expectations
+          const otherUsers = data
+            .filter(u => u.uid !== uid)
+            .map(u => ({
+              ...u,
+              relationship: u.relationship || 'friend' // Default for now
+            }));
+          setDmList(otherUsers);
+        }
       } catch (err) {
-        console.error("Cloud DM Sync Error:", err);
+        console.error("Cloud User Sync Error:", err);
       }
     });
 
@@ -99,11 +108,27 @@ export const PlatformProvider = ({ children }) => {
       setUserStatuses(statuses);
     });
 
+    // 3. Presence Tracking
+    const handlePresence = () => {
+      const status = document.visibilityState === 'visible' ? 'online' : 'away';
+      dbService.updateUserStatus(uid, status);
+    };
+
+    const handleOffline = () => {
+      dbService.updateUserStatus(uid, 'offline');
+    };
+
+    window.addEventListener('visibilitychange', handlePresence);
+    window.addEventListener('beforeunload', handleOffline);
+    dbService.updateUserStatus(uid, 'online');
+
     return () => {
       unsubServers();
-      unsubDMs();
+      unsubUsers();
       unsubStatuses();
-      if (uid) dbService.updateUserStatus(uid, 'offline');
+      window.removeEventListener('visibilitychange', handlePresence);
+      window.removeEventListener('beforeunload', handleOffline);
+      dbService.updateUserStatus(uid, 'offline');
     };
   }, [currentUser]);
 

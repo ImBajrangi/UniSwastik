@@ -109,7 +109,8 @@ const ChatView = ({ targetId }) => {
     currentUser, showMemberList, setShowMemberList,
     setIsMobileMenuOpen, showThreadsSidebar, setShowThreadsSidebar,
     mutedChannels, toggleMute, pinnedMessages, togglePinMessage,
-    showInbox, setShowInbox, showPins, setShowPins, notifications
+    showInbox, setShowInbox, showPins, setShowPins, notifications,
+    userStatuses
   } = usePlatform();
 
   const [inputText, setInputText] = useState('');
@@ -505,13 +506,9 @@ const ChatView = ({ targetId }) => {
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-[100px] lg:pb-6 bg-black/5">
                   <MemberCategory label="The Founder — 1" members={[{ id: currentUser.id, name: currentUser.name, status: 'online' }]} />
-                  <MemberCategory
-                    label="Community — 3"
-                    members={[
-                      { id: 'harsh-g', name: 'Harsh g', status: 'offline' },
-                      { id: 'swastik-ai', name: 'Swastik AI', status: 'offline' },
-                      { id: 'study-buddy', name: 'Study Buddy', status: 'offline' }
-                    ]}
+                  <MemberCategory 
+                    label={`Classmates — ${dmList.length}`} 
+                    members={dmList.map(u => ({ ...u, status: userStatuses[u.id] || u.status }))} 
                   />
                 </div>
               </motion.aside>
