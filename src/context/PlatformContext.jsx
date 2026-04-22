@@ -22,10 +22,10 @@ export const PlatformProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   
   // Dynamic State - Driven by Firestore
-  const [servers, setServers] = useState(mockServers);
+  const [servers, setServers] = useState([]);
   const [discoverableServers, setDiscoverableServers] = useState([]);
-  const [channels, setChannels] = useState(mockChannels);
-  const [dmList, setDmList] = useState(mockDmList);
+  const [channels, setChannels] = useState({});
+  const [dmList, setDmList] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [showMemberList, setShowMemberList] = useState(true);
   const [showThreadsSidebar, setShowThreadsSidebar] = useState(false);
@@ -292,6 +292,17 @@ export const PlatformProvider = ({ children }) => {
     }
   };
 
+  const leaveServer = async (serverId) => {
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid) return;
+    try {
+      await dbService.leaveServer(serverId, uid);
+      if (activeServerId === serverId) selectServer('home');
+    } catch (err) {
+      console.error("Context LeaveServer Error:", err);
+    }
+  };
+
   const removeChannel = async (serverId, channelId) => {
     try {
       await dbService.deleteChannel(channelId);
@@ -419,7 +430,8 @@ export const PlatformProvider = ({ children }) => {
     deleteMessage,
     kickMember,
     updateServer,
-    joinServer
+    joinServer,
+    leaveServer
   };
 
   return (

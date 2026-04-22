@@ -98,47 +98,50 @@ export const dbService = {
     }
   },
 
+  leaveServer: async (serverId, userId) => {
+    try {
+      const serverRef = doc(db, "servers", serverId);
+      await updateDoc(serverRef, {
+        members: arrayRemove(userId),
+        [`memberRoles.${userId}`]: deleteField()
+      });
+    } catch (error) {
+      console.error("LeaveServer Error:", error);
+      throw error;
+    }
+  },
+
   // --- Messages ---
   subscribeToMessages: (targetId, callback, onError) => {
-    let currentUnsub = null;
+    // We remove orderBy to avoid index requirement during development
     const q = query(
       collection(db, "messages"), 
       where("targetId", "==", targetId),
-      orderBy("timestamp", "asc"),
       limit(100)
     );
     
-    const startSubscription = (queryToUse, isFallback = false) => {
-      return onSnapshot(queryToUse, (snapshot) => {
-        const messages = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return { 
-            id: doc.id, 
-            ...data,
-            time: data.timestamp?.toDate()?.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) || 'just now'
-          };
-        });
-        
-        if (isFallback) {
-          messages.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
-        }
-        
-        callback(messages);
-      }, (err) => {
-        if (!isFallback && err.code === 'failed-precondition') {
-          console.warn("Firestore: Composite index missing for messages. Falling back to local sort.");
-          const fallbackQ = query(collection(db, "messages"), where("targetId", "==", targetId), limit(100));
-          if (currentUnsub) currentUnsub();
-          currentUnsub = startSubscription(fallbackQ, true);
-        } else {
-          if (onError) onError(err);
-          else console.error("Firestore Messages Error:", err);
-        }
+    return onSnapshot(q, (snapshot) => {
+      const messages = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return { 
+          id: doc.id, 
+          ...data,
+          time: data.timestamp?.toDate()?.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) || 'just now'
+        };
       });
-    };
-
-    currentUnsub = startSubscription(q);
-    return () => { if (currentUnsub) currentUnsub(); };
+      
+      // Sort locally to avoid needing a composite index
+      messages.sort((a, b) => {
+        const timeA = a.timestamp?.seconds || 0;
+        const timeB = b.timestamp?.seconds || 0;
+        return timeA - timeB;
+      });
+      
+      callback(messages);
+    }, (err) => {
+      if (onError) onError(err);
+      else console.error("Firestore Messages Error:", err);
+    });
   },
 
   deleteMessage: async (messageId) => {

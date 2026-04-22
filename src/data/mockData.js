@@ -1,13 +1,5 @@
 export const servers = [
   { 
-    id: 'home', 
-    name: 'Home', 
-    iconName: 'Home', 
-    isHome: true, 
-    notificationCount: 3, 
-    acronym: 'H' 
-  },
-  { 
     id: 'swastik-eng', 
     name: 'Swastik Engineering', 
     iconName: 'GraduationCap', 
@@ -16,8 +8,9 @@ export const servers = [
     banner: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=80',
     acronym: 'SE',
     description: 'The pulse of Swastik engineering students. Collaborative coding and lab help.',
-    members: 2450,
-    online: 420
+    members: ['user-1'],
+    memberRoles: { 'user-1': 'member' },
+    privacy: 'public'
   },
   { 
     id: 'science-hub', 
@@ -28,8 +21,9 @@ export const servers = [
     banner: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=800&q=80',
     acronym: 'FS',
     description: 'Research, seminars, and academic discussions for science enthusiasts.',
-    members: 1890,
-    online: 156
+    members: ['user-1'],
+    memberRoles: { 'user-1': 'member' },
+    privacy: 'public'
   },
   { 
     id: 'tech-innovators', 
@@ -40,8 +34,9 @@ export const servers = [
     banner: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80',
     acronym: 'TI',
     description: 'Hacking, building, and exploring the future of tech at Swastik.',
-    members: 3200,
-    online: 890
+    members: ['user-1'],
+    memberRoles: { 'user-1': 'member' },
+    privacy: 'public'
   }
 ];
 

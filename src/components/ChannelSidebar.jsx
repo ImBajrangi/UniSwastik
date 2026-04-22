@@ -18,7 +18,7 @@ const ChannelSidebar = () => {
     activeServerId, activeChannelId, activeDMId,
     servers, channels, dmList,
     selectServer, selectChannel, selectDM, removeServer, removeChannel,
-    hasPermission
+    hasPermission, setView, view
   } = usePlatform();
 
   const [showSettings, setShowSettings] = useState(false);
@@ -66,8 +66,12 @@ const ChannelSidebar = () => {
               setShowSettings(true);
               playClick();
             } else if (hasPermission('delete_server')) {
-              if (confirm(`Are you sure you want to delete ${activeServer?.name}?`)) {
+              if (confirm(`Are you sure you want to delete ${activeServer?.name}? This action cannot be undone.`)) {
                 removeServer(activeServerId);
+              }
+            } else {
+              if (confirm(`Are you sure you want to leave ${activeServer?.name}? You will need a new invite or a public directory search to rejoin.`)) {
+                leaveServer(activeServerId);
               }
             }
           }}>
@@ -76,10 +80,11 @@ const ChannelSidebar = () => {
               {hasPermission('manage_server') ? (
                 <Settings size={18} className="text-[#949BA4] group-hover:text-white transition-all group-hover:rotate-45" />
               ) : (
-                <>
-                  {hasPermission('delete_server') && <span className="text-[10px] text-brand-crimson font-black uppercase opacity-0 group-hover:opacity-100 transition-opacity">Delete</span>}
-                  <ChevronDown size={18} className="text-[#949BA4] group-hover:text-white transition-colors" />
-                </>
+                <div className="flex items-center gap-1">
+                   {hasPermission('delete_server') && <span className="text-[10px] text-brand-crimson font-black uppercase opacity-0 group-hover:opacity-100 transition-opacity">Delete</span>}
+                   {!hasPermission('delete_server') && <span className="text-[10px] text-brand-indigo font-black uppercase opacity-0 group-hover:opacity-100 transition-opacity">Leave</span>}
+                   <ChevronDown size={18} className="text-[#949BA4] group-hover:text-white transition-colors" />
+                </div>
               )}
             </div>
           </header>
