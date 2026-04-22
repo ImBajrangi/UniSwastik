@@ -10,14 +10,18 @@ import UserPanel from './UserPanel';
 import Avatar from './Avatar';
 import { playClick } from '../utils/sounds';
 import CreateModal from './CreateModal';
+import ServerSettingsModal from './ServerSettingsModal';
 import Tooltip from './Tooltip';
 
 const ChannelSidebar = () => {
   const {
     activeServerId, activeChannelId, activeDMId,
     servers, channels, dmList,
-    selectServer, selectChannel, selectDM
+    selectServer, selectChannel, selectDM, removeServer, removeChannel,
+    hasPermission
   } = usePlatform();
+
+  const [showSettings, setShowSettings] = useState(false);
 
   const activeServer = servers.find(s => s.id === activeServerId);
   const isHome = activeServer?.isHome;
@@ -56,10 +60,28 @@ const ChannelSidebar = () => {
       )}
 
       {!isHome && (
-        <div className="h-14 px-4 flex items-center shadow-lg border-b border-black/10 overflow-hidden hover:bg-white/5 cursor-pointer transition-all group shrink-0">
-          <header className="flex items-center justify-between w-full">
+        <div className="h-14 px-4 flex items-center shadow-lg border-b border-black/10 overflow-hidden hover:bg-white/5 cursor-pointer transition-all group shrink-0 relative">
+          <header className="flex items-center justify-between w-full" onClick={() => {
+            if (hasPermission('manage_server')) {
+              setShowSettings(true);
+              playClick();
+            } else if (hasPermission('delete_server')) {
+              if (confirm(`Are you sure you want to delete ${activeServer?.name}?`)) {
+                removeServer(activeServerId);
+              }
+            }
+          }}>
             <h2 className="text-white font-black text-[15px] truncate flex-1 tracking-tight capitalize font-display">{activeServer?.name}</h2>
-            <ChevronDown size={18} className="text-[#949BA4] group-hover:text-white transition-colors ml-2" />
+            <div className="flex items-center gap-1">
+              {hasPermission('manage_server') ? (
+                <Settings size={18} className="text-[#949BA4] group-hover:text-white transition-all group-hover:rotate-45" />
+              ) : (
+                <>
+                  {hasPermission('delete_server') && <span className="text-[10px] text-brand-crimson font-black uppercase opacity-0 group-hover:opacity-100 transition-opacity">Delete</span>}
+                  <ChevronDown size={18} className="text-[#949BA4] group-hover:text-white transition-colors" />
+                </>
+              )}
+            </div>
           </header>
         </div>
       )}
@@ -97,6 +119,15 @@ const ChannelSidebar = () => {
       </div>
 
       <UserPanel />
+
+      <AnimatePresence>
+        {showSettings && (
+          <ServerSettingsModal 
+            serverId={activeServerId} 
+            onClose={() => setShowSettings(false)} 
+          />
+        )}
+      </AnimatePresence>
     </nav>
   );
 };
@@ -150,7 +181,7 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
               exit={{ opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 26, delay: index * 0.01 }}
               onClick={() => { selectDM(dm.id); playClick(); }}
-              className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors relative mb-0.5 ${activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-white/5'
+              className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors relative mb-0.5 ${activeDMId?.includes(dm.id) ? 'bg-bg-modifier-selected' : 'hover:bg-white/5'
                 }`}
             >
               <Avatar userId={dm.id} src={dm.avatar} name={dm.name} status={dm.status} size={32} />
@@ -182,7 +213,7 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
 };
 
 const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingColor }) => {
-  const { channels, removeChannel } = usePlatform();
+  const { channels, removeChannel, hasPermission } = usePlatform();
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const serverChannels = channels[serverId] || [];
 
@@ -195,7 +226,7 @@ const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingCo
 
   return (
     <div className="flex flex-col gap-1.5 px-2" role="list">
-      <CollapsibleSection label="Text Channels" onAdd={() => setShowCreateChannel(true)}>
+      <CollapsibleSection label="Text Channels" onAdd={hasPermission('manage_channels') ? () => setShowCreateChannel(true) : null}>
         <AnimatePresence mode="popLayout">
           {serverChannels.filter(c => c.type !== 'voice').map((channel, index) => (
             <ChannelItem
@@ -205,7 +236,7 @@ const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingCo
               label={channel.name}
               active={activeChannelId === channel.id}
               onClick={() => selectChannel(channel.id)}
-              onRemove={() => removeChannel(serverId, channel.id)}
+              onRemove={hasPermission('manage_channels') ? () => removeChannel(serverId, channel.id) : null}
               accentColor={brandingColor}
             />
           ))}
@@ -222,7 +253,7 @@ const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingCo
               label={channel.name}
               active={activeChannelId === channel.id}
               onClick={() => selectChannel(channel.id)}
-              onRemove={() => removeChannel(serverId, channel.id)}
+              onRemove={hasPermission('manage_channels') ? () => removeChannel(serverId, channel.id) : null}
               accentColor={brandingColor}
             />
           ))}

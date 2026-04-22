@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Compass, Download, Home, 
   GraduationCap, FlaskConical, Cpu 
@@ -7,6 +7,7 @@ import {
 import { usePlatform } from '../context/PlatformContext';
 import { playClick } from '../utils/sounds';
 import Tooltip from './Tooltip';
+import CreateModal from './CreateModal';
 
 const iconMap = {
   Home,
@@ -17,6 +18,7 @@ const iconMap = {
 
 const ServerSidebar = () => {
   const { servers, activeServerId, selectServer, setView } = usePlatform();
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   return (
     <nav className="w-[72px] bg-bg-tertiary flex flex-col items-center py-3 gap-2 overflow-y-auto no-scrollbar shadow-2xl relative z-50 h-full border-r border-black/20" aria-label="Servers">
@@ -46,8 +48,17 @@ const ServerSidebar = () => {
       <ServerActionIcon 
         icon={<Plus size={24} />} 
         label="Add a Server" 
-        onClick={() => {}} 
+        onClick={() => setShowCreateModal(true)} 
       />
+
+      <AnimatePresence>
+        {showCreateModal && (
+          <CreateModal 
+            type="server" 
+            onClose={() => setShowCreateModal(false)} 
+          />
+        )}
+      </AnimatePresence>
       <ServerActionIcon 
         icon={<Compass size={24} />} 
         label="Explore Communities" 

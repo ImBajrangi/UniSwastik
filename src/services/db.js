@@ -10,7 +10,11 @@ import {
   updateDoc,
   setDoc,
   getDocs,
-  limit
+  limit,
+  deleteDoc,
+  arrayUnion,
+  arrayRemove,
+  deleteField
 } from "firebase/firestore";
 import { db, auth } from "../lib/firebase";
 
@@ -35,6 +39,56 @@ export const dbService = {
       if (onError) onError(err);
       else console.error("Firestore Channels Error:", err);
     });
+  },
+
+  createServer: async (name, ownerId, iconName = 'Hash') => {
+    try {
+      const docRef = await addDoc(collection(db, "servers"), {
+        name,
+        ownerId,
+        iconName,
+        createdAt: serverTimestamp(),
+        members: [ownerId],
+        memberRoles: { [ownerId]: 'owner' },
+        acronym: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      });
+      // Create a default general channel
+      await addDoc(collection(db, "channels"), {
+        name: "general",
+        serverId: docRef.id,
+        type: "text",
+        createdAt: serverTimestamp()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error("CreateServer Error:", error);
+      throw error;
+    }
+  },
+
+  createChannel: async (serverId, name, type = "text") => {
+    try {
+      const docRef = await addDoc(collection(db, "channels"), {
+        serverId,
+        name,
+        type,
+        createdAt: serverTimestamp()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error("CreateChannel Error:", error);
+      throw error;
+    }
+  },
+
+  updateServer: async (serverId, data) => {
+    try {
+      const serverRef = doc(db, "servers", serverId);
+      await updateDoc(serverRef, data);
+    } catch (error) {
+      console.error("UpdateServer Error:", error);
+      throw error;
+    }
   },
 
   // --- Messages ---
@@ -80,6 +134,15 @@ export const dbService = {
     return () => { if (currentUnsub) currentUnsub(); };
   },
 
+  deleteMessage: async (messageId) => {
+    try {
+      await deleteDoc(doc(db, "messages", messageId));
+    } catch (error) {
+      console.error("DeleteMessage Error:", error);
+      throw error;
+    }
+  },
+
   sendMessage: async (targetId, userId, userName, content) => {
     try {
       await addDoc(collection(db, "messages"), {
@@ -123,6 +186,25 @@ export const dbService = {
     }
   },
 
+  deleteServer: async (serverId) => {
+    try {
+      await deleteDoc(doc(db, "servers", serverId));
+      // Optionally delete associated channels/messages
+    } catch (error) {
+      console.error("DeleteServer Error:", error);
+      throw error;
+    }
+  },
+
+  deleteChannel: async (channelId) => {
+    try {
+      await deleteDoc(doc(db, "channels", channelId));
+    } catch (error) {
+      console.error("DeleteChannel Error:", error);
+      throw error;
+    }
+  },
+
   // --- DMs ---
   subscribeToDMs: (userId, callback, onError) => {
     const q = query(collection(db, "dms"), where("participantIds", "array-contains", userId));
@@ -163,5 +245,30 @@ export const dbService = {
       status, 
       lastActive: serverTimestamp() 
     }, { merge: true });
+  },
+
+  updateMemberRole: async (serverId, userId, role) => {
+    try {
+      const serverRef = doc(db, "servers", serverId);
+      await updateDoc(serverRef, {
+        [`memberRoles.${userId}`]: role
+      });
+    } catch (error) {
+      console.error("UpdateMemberRole Error:", error);
+      throw error;
+    }
+  },
+
+  kickMember: async (serverId, userId) => {
+    try {
+      const serverRef = doc(db, "servers", serverId);
+      await updateDoc(serverRef, {
+        members: arrayRemove(userId),
+        [`memberRoles.${userId}`]: deleteField()
+      });
+    } catch (error) {
+      console.error("KickMember Error:", error);
+      throw error;
+    }
   }
 };

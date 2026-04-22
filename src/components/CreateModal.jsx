@@ -8,16 +8,19 @@ const CreateModal = ({ type, serverId, onClose }) => {
   const [name, setName] = useState('');
   const [channelType, setChannelType] = useState('text');
   const [isPrivate, setIsPrivate] = useState(false);
-  const { addChannel, addDM } = usePlatform();
+  const { createChannel, createServer, selectDM } = usePlatform();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     if (type === 'channel') {
-      addChannel(serverId, name, channelType);
+      createChannel(serverId, name, channelType);
+    } else if (type === 'server') {
+      createServer(name.trim());
     } else {
-      addDM({ name: name.trim() });
+      // Mock for DMs for now
+      selectDM({ name: name.trim() });
     }
     onClose();
   };
@@ -46,8 +49,11 @@ const CreateModal = ({ type, serverId, onClose }) => {
         <div className="p-4 pt-6">
           <div className="flex items-center justify-between mb-4 px-2">
             <div>
-              <h2 className="text-white text-[20px] font-bold">Create Channel</h2>
-              <div className="text-[#B5BAC1] text-[12px] opacity-80 font-medium">in Information</div>
+              <h2 className="text-white text-[20px] font-bold">
+                {type === 'server' ? 'Create a server' : type === 'channel' ? 'Create Channel' : 'Start DM'}
+              </h2>
+              {type === 'channel' && <div className="text-[#B5BAC1] text-[12px] opacity-80 font-medium">in Information</div>}
+              {type === 'server' && <div className="text-[#B5BAC1] text-[12px] opacity-80 font-medium">Give your new server a personality with a name. You can always change it later.</div>}
             </div>
             <button onClick={onClose} className="text-[#B5BAC1] hover:text-white transition-colors">
               <X size={22} strokeWidth={2.5} />
@@ -86,7 +92,7 @@ const CreateModal = ({ type, serverId, onClose }) => {
 
             <div className="space-y-2 px-2 pt-2">
               <label className="text-[#B5BAC1] text-[12px] font-bold uppercase tracking-tight">
-                {type === 'channel' ? 'Channel Name' : 'Recipient Name'}
+                {type === 'server' ? 'Server Name' : type === 'channel' ? 'Channel Name' : 'Recipient Name'}
               </label>
               <div className="relative">
                 {type === 'channel' && channelType === 'text' && (
@@ -99,7 +105,7 @@ const CreateModal = ({ type, serverId, onClose }) => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder={type === 'channel' ? "new-channel" : "Hars g"}
+                  placeholder={type === 'server' ? "Swastik Study Group" : type === 'channel' ? "new-channel" : "Hars g"}
                   className={`w-full bg-[#1E1F22] text-white h-[40px] rounded-[3px] outline-none transition-all placeholder:text-white/20 text-[16px] ${
                     type === 'channel' && channelType === 'text' ? 'pl-10 pr-3' : 'px-3'
                   }`}
@@ -107,24 +113,26 @@ const CreateModal = ({ type, serverId, onClose }) => {
               </div>
             </div>
 
-            {/* Private Channel Toggle */}
-            <div className="px-2 pt-2">
-              <div className="flex items-center justify-between group cursor-pointer" onClick={() => setIsPrivate(!isPrivate)}>
-                <div className="flex items-center gap-2">
-                  <Lock size={18} className="text-white" />
-                  <div>
-                    <div className="text-white text-[16px] font-bold">Private Channel</div>
-                    <div className="text-[#B5BAC1] text-[12px] leading-tight">Only selected members and roles will be able to view this channel.</div>
+            {/* Private Channel Toggle - Only for channels */}
+            {type === 'channel' && (
+              <div className="px-2 pt-2">
+                <div className="flex items-center justify-between group cursor-pointer" onClick={() => setIsPrivate(!isPrivate)}>
+                  <div className="flex items-center gap-2">
+                    <Lock size={18} className="text-white" />
+                    <div>
+                      <div className="text-white text-[16px] font-bold">Private Channel</div>
+                      <div className="text-[#B5BAC1] text-[12px] leading-tight">Only selected members and roles will be able to view this channel.</div>
+                    </div>
+                  </div>
+                  <div className={`w-10 h-6 rounded-full relative transition-colors duration-200 ${isPrivate ? 'bg-[#248046]' : 'bg-[#4E5058]'}`}>
+                    <motion.div 
+                      animate={{ x: isPrivate ? 18 : 2 }}
+                      className="absolute top-1 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm"
+                    />
                   </div>
                 </div>
-                <div className={`w-10 h-6 rounded-full relative transition-colors duration-200 ${isPrivate ? 'bg-[#248046]' : 'bg-[#4E5058]'}`}>
-                  <motion.div 
-                    animate={{ x: isPrivate ? 18 : 2 }}
-                    className="absolute top-1 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm"
-                  />
-                </div>
               </div>
-            </div>
+            )}
 
             {/* Footer with specific styling */}
             <div className="bg-[#2B2D31] -mx-4 p-4 flex items-center justify-end gap-2 mt-4">
@@ -144,7 +152,7 @@ const CreateModal = ({ type, serverId, onClose }) => {
                     : 'bg-[#5865F2] opacity-50 cursor-not-allowed'
                 }`}
               >
-                {type === 'channel' ? 'Create Channel' : 'Start DM'}
+                {type === 'server' ? 'Create Server' : type === 'channel' ? 'Create Channel' : 'Start DM'}
               </button>
             </div>
           </form>

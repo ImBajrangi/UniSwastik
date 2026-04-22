@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Hash, Bell, Pin, Users, Search, Inbox,
   HelpCircle, PlusCircle, Gift, Sticker,
-  Smile, LayoutGrid, Menu, Pencil, ChevronRight
+  Smile, LayoutGrid, Menu, Pencil, ChevronRight, X, BellOff
 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import Avatar from '../components/Avatar';
@@ -14,7 +14,6 @@ import InboxPopover from '../components/InboxPopover';
 import HelpModal from '../components/HelpModal';
 import ThreadsSidebar from '../components/ThreadsSidebar';
 import { dbService } from '../services/db';
-import { BellOff } from 'lucide-react';
 
 const HeroActionCard = ({ icon, label, onClick, index }) => (
   <motion.div
@@ -43,13 +42,24 @@ const ThreadsIcon = ({ size = 20 }) => (
   </svg>
 );
 
-const Message = ({ user, userId, time, content, isMe, hideGutter, index }) => (
+const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, role, onDelete, canDelete }) => (
   <motion.div
     initial={{ opacity: 0, y: 4 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ type: "spring", stiffness: 300, damping: 26, delay: (index % 10) * 0.02 }}
     className={`flex gap-4 group hover:bg-white/[0.03] -mx-4 px-4 ${hideGutter ? 'py-0.5' : 'py-2 mt-4'} transition-colors relative border-l-2 border-transparent hover:border-brand-indigo/30`}
   >
+    {canDelete && (
+      <div className="absolute top-1 right-8 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <button 
+          onClick={() => onDelete(id)}
+          className="p-1.5 bg-bg-secondary hover:bg-brand-crimson text-text-muted hover:text-white rounded-lg shadow-xl border border-white/10 transition-all active:scale-90"
+          title="Delete Message"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    )}
     <div className="w-10 shrink-0">
       {!hideGutter ? (
         <div className="relative cursor-pointer transition-transform hover:scale-105 active:scale-95">
@@ -64,7 +74,20 @@ const Message = ({ user, userId, time, content, isMe, hideGutter, index }) => (
     <div className="flex flex-col min-w-0 flex-1">
       {!hideGutter && (
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="font-bold text-[16px] hover:underline cursor-pointer leading-tight text-white font-display tracking-tight">{user}</span>
+          <span className={`font-bold text-[16px] hover:underline cursor-pointer leading-tight font-display tracking-tight ${
+            role === 'owner' ? 'text-brand-indigo' : role === 'admin' ? 'text-status-online' : role === 'moderator' ? 'text-purple-400' : 'text-white'
+          }`}>{user}</span>
+          
+          {role && role !== 'member' && (
+            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-sm ${
+              role === 'owner' ? 'bg-brand-indigo/20 text-brand-indigo' : 
+              role === 'admin' ? 'bg-status-online/20 text-status-online' : 
+              'bg-purple-400/20 text-purple-400'
+            }`}>
+              {role}
+            </span>
+          )}
+
           {user.toLowerCase().includes('bot') || user.toLowerCase().includes('ai') ? (
             <span className="bg-[#5865F2] text-white text-[10px] px-1 py-0.5 rounded-[4px] font-black flex items-center gap-0.5 select-none -translate-y-0.5 shadow-[0_0_10px_rgba(88,101,242,0.4)]">
               APP
@@ -80,15 +103,19 @@ const Message = ({ user, userId, time, content, isMe, hideGutter, index }) => (
   </motion.div>
 );
 
-const MemberCategory = ({ label, members }) => (
-  <div className="mb-6">
-    <h3 className="text-[#949BA4] text-[12px] font-bold tracking-wide mb-2 px-2 opacity-60 uppercase">{label}</h3>
-    <div className="space-y-0.5">
-      {members.map(member => (
-        <div
-          key={member.id || member.name}
-          className="flex items-center gap-3 px-2 py-1.5 rounded-[8px] hover:bg-white/5 cursor-pointer group transition-all"
-        >
+const MemberCategory = ({ label, members }) => {
+  const { selectDM } = usePlatform();
+  
+  return (
+    <div className="mb-6">
+      <h3 className="text-[#949BA4] text-[12px] font-bold tracking-wide mb-2 px-2 opacity-60 uppercase">{label}</h3>
+      <div className="space-y-0.5">
+        {members.map(member => (
+          <div
+            key={member.id || member.name}
+            onClick={() => { if (member.id) selectDM(member.id); }}
+            className="flex items-center gap-3 px-2 py-1.5 rounded-[8px] hover:bg-white/5 cursor-pointer group transition-all"
+          >
           <div className="relative transition-transform group-hover:scale-105">
             <Avatar userId={member.id} name={member.name} size={32} status={member.status} />
           </div>
@@ -96,21 +123,31 @@ const MemberCategory = ({ label, members }) => (
             }`}>
             {member.name}
           </span>
+          {member.role && member.role !== 'member' && (
+            <span className={`ml-auto text-[8px] px-1 py-0.5 rounded-full font-black uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-opacity ${
+              member.role === 'owner' ? 'bg-brand-indigo/20 text-brand-indigo' : 
+              member.role === 'admin' ? 'bg-status-online/20 text-status-online' : 
+              'bg-purple-400/20 text-purple-400'
+            }`}>
+              {member.role}
+            </span>
+          )}
         </div>
       ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ChatView = ({ targetId }) => {
   const {
-    activeServerId, channels, dmList,
+    activeServerId, channels, dmList, servers,
     sendMessage, setTyping, typingUsers,
     currentUser, showMemberList, setShowMemberList,
     setIsMobileMenuOpen, showThreadsSidebar, setShowThreadsSidebar,
     mutedChannels, toggleMute, pinnedMessages, togglePinMessage,
     showInbox, setShowInbox, showPins, setShowPins, notifications,
-    userStatuses
+    userStatuses, selectDM, hasPermission, deleteMessage
   } = usePlatform();
 
   const [inputText, setInputText] = useState('');
@@ -122,8 +159,18 @@ const ChatView = ({ targetId }) => {
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
+  const activeServer = servers.find(s => s.id === activeServerId);
   const channel = channels[activeServerId]?.find(c => c.id === targetId);
-  const dm = dmList.find(d => d.id === targetId);
+  
+  // Find DM recipient from combined ID or direct ID
+  let dm = null;
+  if (targetId?.includes('_')) {
+    const recipientId = targetId.split('_').find(id => id !== (currentUser?.uid || currentUser?.id));
+    dm = dmList.find(d => d.id === recipientId);
+  } else {
+    dm = dmList.find(d => d.id === targetId);
+  }
+
   const title = channel?.name || dm?.name || 'chat';
   const isMuted = mutedChannels.includes(targetId);
   const activeTypingUsers = typingUsers[targetId] || [];
@@ -402,15 +449,22 @@ const ChatView = ({ targetId }) => {
           </div>
 
           <div className="px-4 space-y-0">
-            {filteredMessages.map((msg, idx) => (
-              <Message
-                key={msg.id}
-                index={idx}
-                {...msg}
-                hideGutter={idx > 0 && filteredMessages[idx - 1].user === msg.user}
-              />
-            ))}
-            {/* <div ref={messagesEndRef} className="h-4 invisible pointer-events-none" /> */}
+            {filteredMessages.map((msg, idx) => {
+              const userRole = activeServer?.memberRoles?.[msg.userId] || 'member';
+              const canDelete = hasPermission('manage_messages') || msg.userId === currentUser?.id;
+              
+              return (
+                <Message
+                  key={msg.id}
+                  index={idx}
+                  {...msg}
+                  role={userRole}
+                  onDelete={deleteMessage}
+                  canDelete={canDelete}
+                  hideGutter={idx > 0 && filteredMessages[idx - 1].user === msg.user}
+                />
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
         </div>
@@ -505,10 +559,24 @@ const ChatView = ({ targetId }) => {
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-[100px] lg:pb-6 bg-black/5">
-                  <MemberCategory label="The Founder — 1" members={[{ id: currentUser.id, name: currentUser.name, status: 'online' }]} />
+                  {currentUser && (
+                    <MemberCategory 
+                      label="The Founder — 1" 
+                      members={[{ 
+                        id: currentUser.uid || currentUser.id, 
+                        name: currentUser.displayName || currentUser.name, 
+                        status: 'online',
+                        role: activeServer?.memberRoles?.[currentUser.uid || currentUser.id] || 'owner'
+                      }]} 
+                    />
+                  )}
                   <MemberCategory 
                     label={`Classmates — ${dmList.length}`} 
-                    members={dmList.map(u => ({ ...u, status: userStatuses[u.id] || u.status }))} 
+                    members={dmList.map(u => ({ 
+                      ...u, 
+                      status: userStatuses[u.id] || u.status,
+                      role: activeServer?.memberRoles?.[u.id] || 'member'
+                    }))} 
                   />
                 </div>
               </motion.aside>

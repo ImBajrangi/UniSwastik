@@ -184,7 +184,13 @@ export const PlatformProvider = ({ children }) => {
     setActiveDMId(null);
   };
 
-  const selectDM = (dmId) => {
+  const selectDM = (participantId) => {
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid) return;
+
+    // Deterministic ID for 1:1 DMs
+    const dmId = [uid, participantId].sort().join('_');
+
     setActiveDMId(dmId);
     setIsMobileMenuOpen(false);
     setActiveServerId('home');
@@ -230,6 +236,96 @@ export const PlatformProvider = ({ children }) => {
     });
   };
 
+  const createServer = async (name) => {
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid) return;
+    try {
+      const serverId = await dbService.createServer(name, uid);
+      selectServer(serverId);
+    } catch (err) {
+      console.error("Context CreateServer Error:", err);
+    }
+  };
+
+  const createChannel = async (serverId, name) => {
+    try {
+      await dbService.createChannel(serverId, name);
+    } catch (err) {
+      console.error("Context CreateChannel Error:", err);
+    }
+  };
+
+  const removeServer = async (serverId) => {
+    try {
+      await dbService.deleteServer(serverId);
+      if (activeServerId === serverId) selectServer('home');
+    } catch (err) {
+      console.error("Context RemoveServer Error:", err);
+    }
+  };
+
+  const removeChannel = async (serverId, channelId) => {
+    try {
+      await dbService.deleteChannel(channelId);
+      if (activeChannelId === channelId) {
+        const remaining = channels[serverId]?.filter(c => c.id !== channelId);
+        if (remaining?.length > 0) selectChannel(remaining[0].id);
+      }
+    } catch (err) {
+      console.error("Context RemoveChannel Error:", err);
+    }
+  };
+
+  const updateMemberRole = async (serverId, userId, role) => {
+    try {
+      await dbService.updateMemberRole(serverId, userId, role);
+    } catch (err) {
+      console.error("Context UpdateMemberRole Error:", err);
+    }
+  };
+
+  const kickMember = async (serverId, userId) => {
+    try {
+      await dbService.kickMember(serverId, userId);
+    } catch (err) {
+      console.error("Context KickMember Error:", err);
+    }
+  };
+
+  const updateServer = async (serverId, data) => {
+    try {
+      await dbService.updateServer(serverId, data);
+    } catch (err) {
+      console.error("Context UpdateServer Error:", err);
+    }
+  };
+
+  const hasPermission = (action, serverId = activeServerId) => {
+    if (!currentUser || !serverId || serverId === 'home') return false;
+    const server = servers.find(s => s.id === serverId);
+    if (!server) return false;
+
+    const userRole = server.memberRoles?.[currentUser.id || currentUser.uid] || 'member';
+
+    const permissions = {
+      manage_channels: ['owner', 'admin'],
+      delete_server: ['owner'],
+      manage_messages: ['owner', 'admin', 'moderator'],
+      manage_members: ['owner', 'admin'],
+      manage_server: ['owner', 'admin']
+    };
+
+    return permissions[action]?.includes(userRole) || false;
+  };
+
+  const deleteMessage = async (messageId) => {
+    try {
+      await dbService.deleteMessage(messageId);
+    } catch (err) {
+      console.error("Context DeleteMessage Error:", err);
+    }
+  };
+
   const logout = async () => {
     await authService.logout();
     setCurrentUser(null);
@@ -269,7 +365,16 @@ export const PlatformProvider = ({ children }) => {
     setShowPins,
     typingUsers,
     setTyping,
-    userStatuses
+    userStatuses,
+    createServer,
+    createChannel,
+    removeServer,
+    removeChannel,
+    hasPermission,
+    updateMemberRole,
+    deleteMessage,
+    kickMember,
+    updateServer
   };
 
   return (
