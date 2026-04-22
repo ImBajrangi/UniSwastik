@@ -39,7 +39,15 @@ const AuthView = () => {
         await authService.register(email, password, name);
       }
     } catch (err) {
-      setError(err.message.replace('Firebase:', '').trim());
+      let msg = err.message.replace('Firebase:', '').trim();
+      if (msg.includes('auth/invalid-credential')) {
+        msg = "Invalid email or password. Don't have an account? Register below!";
+      } else if (msg.includes('auth/email-already-in-use')) {
+        msg = "This email is already registered. Try logging in!";
+      } else if (msg.includes('auth/weak-password')) {
+        msg = "Password should be at least 6 characters long.";
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
