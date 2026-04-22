@@ -39,26 +39,45 @@ export const dbService = {
 
   // --- Messages ---
   subscribeToMessages: (targetId, callback, onError) => {
-    // Simplified query to avoid composite index requirement on first run
+    let currentUnsub = null;
     const q = query(
       collection(db, "messages"), 
       where("targetId", "==", targetId),
-      limit(50)
+      orderBy("timestamp", "asc"),
+      limit(100)
     );
-    return onSnapshot(q, (snapshot) => {
-      const messages = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return { 
-          id: doc.id, 
-          ...data,
-          time: data.timestamp?.toDate()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'just now'
-        };
-      }).sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0)); // Sort locally first
-      callback(messages);
-    }, (err) => {
-      if (onError) onError(err);
-      else console.error("Firestore Messages Error:", err);
-    });
+    
+    const startSubscription = (queryToUse, isFallback = false) => {
+      return onSnapshot(queryToUse, (snapshot) => {
+        const messages = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return { 
+            id: doc.id, 
+            ...data,
+            time: data.timestamp?.toDate()?.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) || 'just now'
+          };
+        });
+        
+        if (isFallback) {
+          messages.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+        }
+        
+        callback(messages);
+      }, (err) => {
+        if (!isFallback && err.code === 'failed-precondition') {
+          console.warn("Firestore: Composite index missing for messages. Falling back to local sort.");
+          const fallbackQ = query(collection(db, "messages"), where("targetId", "==", targetId), limit(100));
+          if (currentUnsub) currentUnsub();
+          currentUnsub = startSubscription(fallbackQ, true);
+        } else {
+          if (onError) onError(err);
+          else console.error("Firestore Messages Error:", err);
+        }
+      });
+    };
+
+    currentUnsub = startSubscription(q);
+    return () => { if (currentUnsub) currentUnsub(); };
   },
 
   sendMessage: async (targetId, userId, userName, content) => {
@@ -72,6 +91,35 @@ export const dbService = {
       });
     } catch (error) {
       console.error("SendMessage Error:", error);
+      throw error;
+    }
+  },
+
+  // --- Typing Indicators ---
+  subscribeToTyping: (targetId, callback) => {
+    const q = query(
+      collection(db, "typing"),
+      where("targetId", "==", targetId),
+      where("isTyping", "==", true)
+    );
+    return onSnapshot(q, (snapshot) => {
+      const typingUsers = snapshot.docs.map(doc => doc.data().userName);
+      callback(typingUsers);
+    });
+  },
+
+  setTypingStatus: async (targetId, userId, userName, isTyping) => {
+    try {
+      const typingRef = doc(db, "typing", `${targetId}_${userId}`);
+      await setDoc(typingRef, {
+        targetId,
+        userId,
+        userName,
+        isTyping,
+        lastUpdated: serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      console.error("SetTypingStatus Error:", error);
     }
   },
 
@@ -88,8 +136,21 @@ export const dbService = {
   },
 
   // --- User Presence & Profile ---
+  subscribeToUserStatus: (callback) => {
+    return onSnapshot(collection(db, "users"), (snapshot) => {
+      const statuses = {};
+      snapshot.docs.forEach(doc => {
+        statuses[doc.id] = doc.data().status;
+      });
+      callback(statuses);
+    });
+  },
+
   updateUserStatus: async (userId, status) => {
     const userRef = doc(db, "users", userId);
-    await updateDoc(userRef, { status, lastActive: serverTimestamp() });
+    await setDoc(userRef, { 
+      status, 
+      lastActive: serverTimestamp() 
+    }, { merge: true });
   }
 };

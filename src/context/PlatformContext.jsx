@@ -32,18 +32,23 @@ export const PlatformProvider = ({ children }) => {
   const [pinnedMessages, setPinnedMessages] = useState({});
   const [showInbox, setShowInbox] = useState(false);
   const [showPins, setShowPins] = useState(false);
+  const [typingUsers, setTypingUsers] = useState({}); // { targetId: [userNames] }
+  const [userStatuses, setUserStatuses] = useState({});
 
   // 1. Firebase Auth Initialization
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setCurrentUser({
+        const newUser = {
           id: user.uid,
-          name: user.displayName || 'Swastik Student',
+          name: user.displayName || `Student_${user.uid.slice(0, 4)}`,
           avatar: user.photoURL || '',
           status: 'online',
           university: 'Swastik University'
-        });
+        };
+        setCurrentUser(newUser);
+        // Sync user info to Firestore for presence
+        dbService.updateUserStatus(user.uid, 'online');
       } else {
         await signInAnonymously(auth);
       }
@@ -51,7 +56,7 @@ export const PlatformProvider = ({ children }) => {
     return unsub;
   }, []);
 
-  // 2. Real-time Firestore Subscriptions with Resilient Fallbacks
+  // 2. Real-time Firestore Subscriptions
   useEffect(() => {
     if (!currentUser?.id) return;
 
@@ -83,11 +88,33 @@ export const PlatformProvider = ({ children }) => {
       }
     });
 
+    const unsubStatuses = dbService.subscribeToUserStatus((statuses) => {
+      setUserStatuses(statuses);
+    });
+
     return () => {
       unsubServers();
       unsubDMs();
+      unsubStatuses();
+      // Set offline on logout/close
+      if (currentUser?.id) dbService.updateUserStatus(currentUser.id, 'offline');
     };
   }, [currentUser?.id]);
+
+  // Typing Subscription
+  useEffect(() => {
+    const targetId = activeDMId || activeChannelId;
+    if (!targetId) return;
+
+    const unsubTyping = dbService.subscribeToTyping(targetId, (users) => {
+      setTypingUsers(prev => ({
+        ...prev,
+        [targetId]: users.filter(u => u !== currentUser?.name)
+      }));
+    });
+
+    return unsubTyping;
+  }, [activeDMId, activeChannelId, currentUser?.name]);
 
   // Resilient Channel Syncing
   useEffect(() => {
@@ -136,7 +163,19 @@ export const PlatformProvider = ({ children }) => {
 
   const sendMessage = async (targetId, content) => {
     if (!currentUser) return;
-    await dbService.sendMessage(targetId, currentUser.id, currentUser.name, content);
+    try {
+      // Optimistic update could be handled in ChatView's messages state
+      await dbService.sendMessage(targetId, currentUser.id, currentUser.name, content);
+      // Immediately stop typing
+      setTyping(targetId, false);
+    } catch (err) {
+      console.error("Send Message Error:", err);
+    }
+  };
+
+  const setTyping = (targetId, isTyping) => {
+    if (!currentUser || !targetId) return;
+    dbService.setTypingStatus(targetId, currentUser.id, currentUser.name, isTyping);
   };
 
   const toggleMute = (channelId) => {
@@ -189,7 +228,10 @@ export const PlatformProvider = ({ children }) => {
     showInbox,
     setShowInbox,
     showPins,
-    setShowPins
+    setShowPins,
+    typingUsers,
+    setTyping,
+    userStatuses
   };
 
   return (

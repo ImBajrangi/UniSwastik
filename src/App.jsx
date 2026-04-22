@@ -20,7 +20,7 @@ const BottomNav = () => {
   const tabs = [
     { id: 'servers', label: 'Home', icon: <MessageSquare size={24} />, action: () => { setView('chat'); } },
     { id: 'notifications', label: 'Notifications', icon: <Bell size={24} />, action: () => { setView('notifications'); } },
-    { id: 'profile', label: 'You', icon: <Avatar name={currentUser.name} size={24} />, action: () => { setView('profile'); } },
+    { id: 'profile', label: 'You', icon: <Avatar name={currentUser?.name || 'Guest'} size={24} />, action: () => { setView('profile'); } },
   ];
 
   return (
@@ -112,6 +112,8 @@ const AppContent = () => {
           {view === 'discover' && <DiscoverView />}
           {view === 'notifications' && <NotificationsView />}
           {view === 'profile' && <ProfileView />}
+          {(view === 'feed' || view === 'resources' || view === 'quests') && <DiscoverView />}
+          {!['friends', 'chat', 'discover', 'notifications', 'profile', 'feed', 'resources', 'quests'].includes(view) && <FriendsView />}
         </motion.div>
       </AnimatePresence>
     );

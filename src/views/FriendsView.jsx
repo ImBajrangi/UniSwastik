@@ -179,10 +179,7 @@ const HeaderTab = ({ label, active, onClick }) => (
 const FriendRow = ({ friend, onMessage, tab }) => (
   <div className="flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl group cursor-pointer transition-all border-b border-white/5 last:border-0 relative" role="listitem">
     <div className="relative transition-transform group-hover:scale-105">
-      <Avatar src={friend.avatar} name={friend.name} status={friend.status} size={40} />
-      <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#313338] shadow-sm ${
-        friend.status === 'online' ? 'bg-status-online' : 'bg-status-offline'
-      }`} />
+      <Avatar userId={friend.id} src={friend.avatar} name={friend.name} status={friend.status} size={40} />
     </div>
     
     <div className="flex-1 flex flex-col min-w-0">

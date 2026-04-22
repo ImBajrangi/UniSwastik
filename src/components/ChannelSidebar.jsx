@@ -153,7 +153,7 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
               className={`group px-2 py-1.5 flex items-center gap-3 rounded-md cursor-pointer transition-colors relative mb-0.5 ${activeDMId === dm.id ? 'bg-bg-modifier-selected' : 'hover:bg-white/5'
                 }`}
             >
-              <Avatar src={dm.avatar} name={dm.name} status={dm.status} size={32} />
+              <Avatar userId={dm.id} src={dm.avatar} name={dm.name} status={dm.status} size={32} />
               <div className="flex flex-col min-w-0 flex-1">
                 <span className={`text-[15px] font-bold truncate tracking-tight ${activeDMId === dm.id ? 'text-white' : 'text-text-muted group-hover:text-interactive-hover'
                   }`}>{dm.name}</span>

@@ -70,6 +70,7 @@ const UserPanel = () => {
             <Avatar 
                src={currentUser.avatar} 
                name={currentUser.name} 
+               userId={currentUser.id}
                status={currentUser.status || 'online'} 
                size={32} 
             />

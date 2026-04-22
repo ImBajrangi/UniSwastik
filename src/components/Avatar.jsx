@@ -1,8 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { usePlatform } from '../context/PlatformContext';
 
-const Avatar = ({ src, name, size = 32, status, badge, isBot }) => {
+const Avatar = ({ src, name, size = 32, status, userId, badge, isBot }) => {
+  let context = null;
+  try {
+    context = usePlatform();
+  } catch (e) {
+    // Fallback if context is not available
+  }
+  const { userStatuses } = context || {};
   const initials = name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
+  
+  // Use real-time status if userId is provided
+  const displayStatus = (userId && userStatuses?.[userId]) || status;
   
   const springTransition = {
     type: "spring",
@@ -31,7 +42,7 @@ const Avatar = ({ src, name, size = 32, status, badge, isBot }) => {
         )}
       </div>
       
-      {status && (
+      {displayStatus && (
         <motion.div 
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -40,7 +51,7 @@ const Avatar = ({ src, name, size = 32, status, badge, isBot }) => {
           style={{ 
             width: size * 0.35, 
             height: size * 0.35,
-            backgroundColor: `var(--color-status-${status})`
+            backgroundColor: `var(--color-status-${displayStatus})`
           }}
         />
       )}

@@ -43,7 +43,7 @@ const ThreadsIcon = ({ size = 20 }) => (
   </svg>
 );
 
-const Message = ({ user, time, content, isMe, hideGutter, index }) => (
+const Message = ({ user, userId, time, content, isMe, hideGutter, index }) => (
   <motion.div
     initial={{ opacity: 0, y: 4 }}
     animate={{ opacity: 1, y: 0 }}
@@ -53,8 +53,7 @@ const Message = ({ user, time, content, isMe, hideGutter, index }) => (
     <div className="w-10 shrink-0">
       {!hideGutter ? (
         <div className="relative cursor-pointer transition-transform hover:scale-105 active:scale-95">
-          <Avatar name={user} size={40} />
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#121214] bg-status-online shadow-sm" />
+          <Avatar userId={userId} name={user} size={40} />
         </div>
       ) : (
         <div className="opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-[#949BA4] mt-1 select-none font-bold">
@@ -87,13 +86,11 @@ const MemberCategory = ({ label, members }) => (
     <div className="space-y-0.5">
       {members.map(member => (
         <div
-          key={member.name}
+          key={member.id || member.name}
           className="flex items-center gap-3 px-2 py-1.5 rounded-[8px] hover:bg-white/5 cursor-pointer group transition-all"
         >
           <div className="relative transition-transform group-hover:scale-105">
-            <Avatar name={member.name} size={32} />
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#2B2D31] ${member.status === 'online' ? 'bg-status-online' : 'bg-status-offline'
-              }`} />
+            <Avatar userId={member.id} name={member.name} size={32} status={member.status} />
           </div>
           <span className={`text-[14px] font-bold truncate transition-colors ${member.status === 'online' ? 'text-[#DBDEE1] group-hover:text-white' : 'text-[#80848E]'
             }`}>
@@ -108,7 +105,7 @@ const MemberCategory = ({ label, members }) => (
 const ChatView = ({ targetId }) => {
   const {
     activeServerId, channels, dmList,
-    sendMessage, updateChannel,
+    sendMessage, setTyping, typingUsers,
     currentUser, showMemberList, setShowMemberList,
     setIsMobileMenuOpen, showThreadsSidebar, setShowThreadsSidebar,
     mutedChannels, toggleMute, pinnedMessages, togglePinMessage,
@@ -122,11 +119,13 @@ const ChatView = ({ targetId }) => {
   const [editName, setEditName] = useState('');
   const [showHelp, setShowHelp] = useState(false);
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   const channel = channels[activeServerId]?.find(c => c.id === targetId);
   const dm = dmList.find(d => d.id === targetId);
   const title = channel?.name || dm?.name || 'chat';
   const isMuted = mutedChannels.includes(targetId);
+  const activeTypingUsers = typingUsers[targetId] || [];
 
   // Real-time Message Subscription with Crash Protection
   useEffect(() => {
@@ -152,8 +151,37 @@ const ChatView = ({ targetId }) => {
 
   const handleSend = () => {
     if (inputText.trim()) {
+      // Optimistic Update
+      const optimisticMsg = {
+        id: 'optimistic-' + Date.now(),
+        user: currentUser.name,
+        userId: currentUser.id,
+        content: inputText,
+        time: 'sending...',
+        timestamp: { seconds: Date.now() / 1000 }
+      };
+      setMessages(prev => [...prev, optimisticMsg]);
+      
       sendMessage(targetId, inputText);
       setInputText('');
+      setTyping(targetId, false);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setInputText(value);
+
+    // Typing Indicator Logic
+    if (value.trim()) {
+      setTyping(targetId, true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        setTyping(targetId, false);
+      }, 3000);
+    } else {
+      setTyping(targetId, false);
     }
   };
 
@@ -387,7 +415,31 @@ const ChatView = ({ targetId }) => {
         </div>
 
         {/* Integrated Message Input Bar - PRO ERGONOMICS */}
-        <div className="shrink-0 bg-bg-primary px-4 pb-6 pt-2 z-30">
+        <div className="shrink-0 bg-bg-primary px-4 pb-6 pt-2 z-30 relative">
+          {/* Typing Indicator Overlay */}
+          <AnimatePresence>
+            {activeTypingUsers.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute top-[-20px] left-8 flex items-center gap-2"
+              >
+                <div className="flex gap-1">
+                  <span className="w-1 h-1 bg-brand-indigo rounded-full animate-bounce" />
+                  <span className="w-1 h-1 bg-brand-indigo rounded-full animate-bounce [animation-delay:0.2s]" />
+                  <span className="w-1 h-1 bg-brand-indigo rounded-full animate-bounce [animation-delay:0.4s]" />
+                </div>
+                <span className="text-[12px] text-text-muted font-bold">
+                  {activeTypingUsers.length === 1 
+                    ? <><span className="text-white">{activeTypingUsers[0]}</span> is typing...</>
+                    : <><span className="text-white">{activeTypingUsers.length} people</span> are typing...</>
+                  }
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="max-w-[1240px] mx-auto flex flex-col items-center">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
@@ -402,7 +454,7 @@ const ChatView = ({ targetId }) => {
                 <input
                   type="text"
                   value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
+                  onChange={handleInputChange}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder={`Message ${dm ? '@' : '#'}${title}`}
                   className="w-full bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none border-none focus:ring-0 focus:outline-none text-[15px] font-medium"
@@ -452,13 +504,13 @@ const ChatView = ({ targetId }) => {
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-[100px] lg:pb-6 bg-black/5">
-                  <MemberCategory label="The Founder — 1" members={[{ name: currentUser.name, status: 'online' }]} />
+                  <MemberCategory label="The Founder — 1" members={[{ id: currentUser.id, name: currentUser.name, status: 'online' }]} />
                   <MemberCategory
                     label="Community — 3"
                     members={[
-                      { name: 'Harsh g', status: 'offline' },
-                      { name: 'Swastik AI', status: 'offline' },
-                      { name: 'Study Buddy', status: 'offline' }
+                      { id: 'harsh-g', name: 'Harsh g', status: 'offline' },
+                      { id: 'swastik-ai', name: 'Swastik AI', status: 'offline' },
+                      { id: 'study-buddy', name: 'Study Buddy', status: 'offline' }
                     ]}
                   />
                 </div>
