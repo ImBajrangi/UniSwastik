@@ -22,6 +22,36 @@ const ServerSidebar = () => {
 
   return (
     <nav className="w-[72px] bg-bg-tertiary flex flex-col items-center py-3 gap-2 overflow-y-auto no-scrollbar shadow-2xl relative z-50 h-full border-r border-black/20" aria-label="Servers">
+      {/* Home (HUB) Icon */}
+      <Tooltip content="Direct Messages" position="right">
+        <div 
+          className="relative flex items-center justify-center w-full group cursor-pointer mb-2"
+          onClick={() => { selectServer('home'); setView('friends'); playClick(); }}
+        >
+          <motion.div 
+            initial={false}
+            animate={{ 
+              height: activeServerId === 'home' ? 40 : 0,
+              opacity: activeServerId === 'home' ? 1 : 0
+            }}
+            className="absolute left-0 w-[4px] bg-white rounded-r-full z-20"
+          />
+          <motion.div 
+            whileTap={{ scale: 0.90 }}
+            animate={{ 
+              borderRadius: activeServerId === 'home' ? "16px" : "24px",
+              backgroundColor: activeServerId === 'home' ? "var(--color-brand-indigo)" : "var(--color-bg-primary)",
+              color: "white"
+            }}
+            className="w-12 h-12 flex items-center justify-center border border-white/5"
+          >
+            <Home size={28} />
+          </motion.div>
+        </div>
+      </Tooltip>
+
+      <div className="w-8 h-[2px] bg-white/5 rounded-full my-1 mb-2" role="separator" />
+
       {servers.map((server, index) => (
         <motion.div
           key={server.id}

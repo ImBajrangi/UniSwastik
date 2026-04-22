@@ -4,7 +4,7 @@ import { Search, Compass, Globe, Users, ChevronRight, Hash, ShieldCheck, Sparkle
 import { usePlatform } from '../context/PlatformContext';
 
 const DiscoveryView = () => {
-  const { discoverableServers, joinServer, selectServer, setIsMobileMenuOpen } = usePlatform();
+  const { discoverableServers, joinServer, selectServer, setIsMobileMenuOpen, currentUser } = usePlatform();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredServers = discoverableServers.filter(s => 
@@ -114,15 +114,26 @@ const DiscoveryView = () => {
                                 {server.members?.length || 0} Members
                              </div>
                           </div>
-                          <button 
-                            onClick={() => {
-                              joinServer(server.id);
-                              selectServer(server.id);
-                            }}
-                            className="bg-brand-indigo hover:bg-brand-indigo-hover text-white px-6 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg flex items-center gap-2 group/btn"
-                          >
-                            <Plus size={16} /> Join Server
-                          </button>
+                          {server.members?.includes(currentUser?.uid || currentUser?.id) ? (
+                            <button 
+                              onClick={() => {
+                                selectServer(server.id);
+                              }}
+                              className="bg-[#4E5058] hover:bg-[#6D6F78] text-white px-6 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg flex items-center gap-2 group/btn"
+                            >
+                              Open Server
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => {
+                                joinServer(server.id);
+                                selectServer(server.id);
+                              }}
+                              className="bg-brand-indigo hover:bg-brand-indigo-hover text-white px-6 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg flex items-center gap-2 group/btn"
+                            >
+                              <Plus size={16} /> Join Server
+                            </button>
+                          )}
                        </div>
                     </div>
                   </motion.div>

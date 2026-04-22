@@ -36,6 +36,7 @@ export const PlatformProvider = ({ children }) => {
   const [showPins, setShowPins] = useState(false);
   const [typingUsers, setTypingUsers] = useState({}); // { targetId: [userNames] }
   const [userStatuses, setUserStatuses] = useState({});
+  const [allUsers, setAllUsers] = useState([]);
 
   // 1. Firebase Auth Initialization
   useEffect(() => {
@@ -73,21 +74,11 @@ export const PlatformProvider = ({ children }) => {
     if (!currentUser) return;
     const uid = currentUser.uid || currentUser.id;
 
-    const prepareCloud = async () => {
-      try {
-        await seedDatabase();
-      } catch (err) {
-        console.warn("Seeding failed (Permissions?):", err.message);
-      }
-    };
-    prepareCloud();
-
     const unsubServers = dbService.subscribeToServers((data) => {
       try {
         if (data && data.length > 0) {
           const joined = data.filter(s => Array.isArray(s.members) && s.members.includes(uid));
           const discoverable = data.filter(s => {
-            if (Array.isArray(s.members) && s.members.includes(uid)) return false;
             if (s.privacy === 'public') return true;
             if (s.privacy === 'semi-public' && s.domain === currentUser?.domain) return true;
             return false; // private groups are NOT discoverable
@@ -103,16 +94,16 @@ export const PlatformProvider = ({ children }) => {
 
     const unsubUsers = dbService.subscribeToAllUsers((data) => {
       try {
-        if (data && data.length > 0) {
-          // Filter out the current user and map to match UI expectations
-          const otherUsers = data
-            .filter(u => u.uid !== uid)
-            .map(u => ({
-              ...u,
-              relationship: u.relationship || 'friend' // Default for now
-            }));
-          setDmList(otherUsers);
-        }
+          if (data && data.length > 0) {
+            setAllUsers(data);
+            const otherUsers = data
+              .filter(u => u.uid !== uid)
+              .map(u => ({
+                ...u,
+                relationship: u.relationship || 'friend'
+              }));
+            setDmList(otherUsers);
+          }
       } catch (err) {
         console.error("Cloud User Sync Error:", err);
       }
@@ -144,7 +135,20 @@ export const PlatformProvider = ({ children }) => {
       window.removeEventListener('beforeunload', handleOffline);
       dbService.updateUserStatus(uid, 'offline');
     };
-  }, [currentUser]);
+  }, [currentUser?.uid]);
+
+  // Seeding Effect - Separate to avoid re-triggering subscriptions
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const runSeeding = async () => {
+      try {
+        await seedDatabase();
+      } catch (err) {
+        console.warn("Seeding background task:", err.message);
+      }
+    };
+    runSeeding();
+  }, [currentUser?.uid]);
 
   // Typing Subscription
   useEffect(() => {
@@ -355,6 +359,18 @@ export const PlatformProvider = ({ children }) => {
     setCurrentUser(null);
   };
 
+  const startDM = async (otherUserId) => {
+    if (!currentUser) return;
+    try {
+      const dmId = await dbService.startDM([currentUser.uid, otherUserId]);
+      setActiveDMId(dmId);
+      setActiveServerId('home');
+      setView('chat');
+    } catch (err) {
+      console.error("PlatformContext startDM Error:", err);
+    }
+  };
+
   const value = {
     activeServerId,
     activeChannelId,
@@ -363,6 +379,8 @@ export const PlatformProvider = ({ children }) => {
     selectServer,
     selectChannel,
     selectDM,
+    startDM,
+    joinServer,
     sendMessage,
     currentUser,
     loading,
@@ -391,6 +409,7 @@ export const PlatformProvider = ({ children }) => {
     typingUsers,
     setTyping,
     userStatuses,
+    allUsers,
     createServer,
     createChannel,
     removeServer,

@@ -1,298 +1,261 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, HelpCircle, Search, MessageCircle, Plus, Smile, UserPlus, X, Check, Menu, TrendingUp } from 'lucide-react';
+import { 
+  Users, HelpCircle, Search, MessageCircle, Plus, Smile, UserPlus, 
+  X, Check, Menu, TrendingUp, QrCode, Scan, User, Hash, ArrowRight,
+  Sparkles, History, ShieldCheck
+} from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import Avatar from '../components/Avatar';
 import HeaderIcon from '../components/HeaderIcon';
 import { playClick } from '../utils/sounds';
-import CreateModal from '../components/CreateModal';
 
-const FriendsView = () => {
-  const { dmList, selectDM, setIsMobileMenuOpen, userStatuses } = usePlatform();
-  const [activeTab, setActiveTab] = useState('online');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showCreateServerModal, setShowCreateServerModal] = useState(false);
-
-  // Filtering Logic
-  const filteredFriends = dmList.filter(user => {
-    const currentStatus = userStatuses[user.id] || user.status;
-    let relationMatch = false;
-    if (activeTab === 'online') relationMatch = user.relationship === 'friend' && currentStatus !== 'offline';
-    else if (activeTab === 'all') relationMatch = user.relationship === 'friend';
-    else if (activeTab === 'pending') relationMatch = user.relationship?.startsWith('pending');
-    else if (activeTab === 'blocked') relationMatch = user.relationship === 'blocked';
-
-    if (!relationMatch) return false;
-    if (searchQuery.trim() === '') return true;
-    return user.name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
+const QRModal = ({ user, onClose }) => {
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-bg-primary relative">
-      {/* Header with Premium Tabs - Center Balanced */}
-      <header className="h-14 px-4 flex items-center justify-between glass shadow-xl z-20 shrink-0">
-        <div className="flex items-center gap-3 pr-4 border-r border-white/5 min-w-[140px]">
-          <button 
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="lg:hidden text-text-muted hover:text-white transition-all p-1.5 hover:bg-white/5 rounded-xl active:scale-90 mr-1"
-          >
-            <Menu size={26} />
-          </button>
-          <Users size={24} className="text-brand-indigo shrink-0" />
-          <span className="text-white font-black text-base tracking-tighter truncate font-display">Friends</span>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+      onClick={onClose}
+    >
+      <motion.div 
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        className="bg-[#1E1F22] w-full max-w-sm rounded-[32px] overflow-hidden border border-white/10 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-8 flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-brand-indigo rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+            <QrCode size={32} className="text-white" />
+          </div>
+          <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">Your Campus Pass</h2>
+          <p className="text-[#949BA4] text-sm font-medium mb-8">Let classmates scan this to start a chat instantly.</p>
+          
+          {/* Mock QR Code SVG */}
+          <div className="bg-white p-4 rounded-3xl shadow-inner mb-8">
+            <div className="w-48 h-48 bg-white flex flex-wrap gap-1 p-1">
+               {Array.from({ length: 49 }).map((_, i) => (
+                 <div key={i} className={`w-[24px] h-[24px] ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'} rounded-sm`} />
+               ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-white font-black text-lg uppercase tracking-widest">{user?.name}</span>
+            <span className="text-brand-indigo font-black text-xs uppercase tracking-widest opacity-60">#{user?.discriminator || '0001'}</span>
+          </div>
         </div>
         
-        <nav className="flex items-center justify-center gap-3 flex-1 px-4 overflow-x-auto no-scrollbar" role="tablist">
-          <HeaderTab label="Online" active={activeTab === 'online'} onClick={() => setActiveTab('online')} />
-          <HeaderTab label="All" active={activeTab === 'all'} onClick={() => setActiveTab('all')} />
-          <HeaderTab label="Pending" active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
-          <HeaderTab label="Blocked" active={activeTab === 'blocked'} onClick={() => setActiveTab('blocked')} />
-          
-          <div className="w-px h-6 bg-white/10 mx-4 hidden sm:block" />
-          
-          <motion.button 
-            whileHover={{ scale: 1.02, backgroundColor: '#248046' }}
-            whileTap={{ scale: 0.98 }}
-            className="bg-status-online text-white px-6 py-2 rounded-lg text-[12px] font-black shadow-lg transition-all tracking-widest uppercase font-display whitespace-nowrap ml-4"
+        <button 
+          onClick={onClose}
+          className="w-full bg-white/5 hover:bg-white/10 py-4 text-text-muted font-bold transition-colors border-t border-white/5 uppercase tracking-widest text-[10px]"
+        >
+          Close Passport
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const FriendsView = () => {
+  const { dmList, allUsers, startDM, setIsMobileMenuOpen, userStatuses, currentUser } = usePlatform();
+  const [activeTab, setActiveTab] = useState('chats'); // 'chats', 'search', 'pending'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showQR, setShowQR] = useState(false);
+
+  // Filtering for Chats (Recent DMs)
+  const recentChats = useMemo(() => {
+    return dmList.filter(u => u.relationship === 'friend');
+  }, [dmList]);
+
+  // Filtering for Global User Search
+  const searchResults = useMemo(() => {
+    if (activeTab !== 'search') return [];
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return allUsers.filter(u => u.uid !== currentUser?.uid).slice(0, 10);
+    return allUsers.filter(u => 
+      u.uid !== currentUser?.uid && 
+      (u.name?.toLowerCase().includes(query) || 
+       u.username?.toLowerCase().includes(query) ||
+       u.id?.toLowerCase().includes(query))
+    );
+  }, [allUsers, searchQuery, activeTab, currentUser]);
+
+  const displayedList = activeTab === 'chats' ? recentChats : searchResults;
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 bg-[#313338] relative overflow-hidden">
+      {/* Header with Premium Tabs */}
+      <header className="h-16 px-6 flex items-center justify-between border-b border-black/20 bg-[#313338]/80 backdrop-blur-md z-20 shrink-0">
+        <div className="flex items-center gap-4 pr-6 border-r border-white/5">
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="lg:hidden text-[#949BA4] hover:text-white transition-all p-1.5 hover:bg-white/5 rounded-xl mr-1"
           >
-            Add Friend
-          </motion.button>
+            <Menu size={24} />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-brand-indigo/20 flex items-center justify-center text-brand-indigo">
+              <MessageCircle size={20} />
+            </div>
+            <span className="text-white font-black text-lg tracking-tight uppercase font-display">Hub</span>
+          </div>
+        </div>
+        
+        <nav className="flex items-center justify-start gap-2 flex-1 px-6 overflow-x-auto no-scrollbar">
+          <HeaderTab label="Chats" icon={<History size={16} />} active={activeTab === 'chats'} onClick={() => setActiveTab('chats')} />
+          <HeaderTab label="Search" icon={<Search size={16} />} active={activeTab === 'search'} onClick={() => setActiveTab('search')} />
+          <HeaderTab label="Requests" icon={<UserPlus size={16} />} active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
         </nav>
 
-        <div className="flex items-center gap-2 min-w-[140px] justify-end pr-2 text-[#B5BAC1]">
-          <HeaderIcon icon={<HelpCircle size={22} />} label="Help" />
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowQR(true)}
+            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-all active:scale-95 border border-white/5"
+            title="Your QR Passport"
+          >
+            <QrCode size={20} />
+          </button>
+          <button className="p-2.5 rounded-xl bg-brand-indigo hover:bg-brand-indigo-hover text-white transition-all active:scale-95 shadow-lg shadow-brand-indigo/20 flex items-center gap-2 px-4 group">
+            <Scan size={20} className="group-hover:rotate-12 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Scan QR</span>
+          </button>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden relative">
-        <div className="flex-1 flex flex-col p-6 overflow-y-auto no-scrollbar relative z-10">
-          {/* Professional Search Input */}
-          <div className="relative mb-8 group">
-            <div className="glass p-1 rounded-xl shadow-inner transition-all focus-premium">
-              <div className="flex items-center h-9 px-3 gap-3">
-                <Search size={18} className="text-text-muted group-focus-within:text-white transition-colors" />
-                <input 
-                  type="text" 
-                  placeholder="Seach through your connections..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-[14px] text-white w-full placeholder:text-text-muted font-medium" 
-                />
-              </div>
-            </div>
+      <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col p-6 overflow-y-auto no-scrollbar">
+          {/* Contextual Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-black text-white tracking-tight uppercase mb-1">
+              {activeTab === 'chats' ? 'Your Conversations' : activeTab === 'search' ? 'Campus Directory' : 'Pending Requests'}
+            </h1>
+            <p className="text-[#949BA4] text-sm font-medium">
+              {activeTab === 'chats' ? 'People you have talked to recently.' : activeTab === 'search' ? 'Find any student or staff across the hub.' : 'New connection requests from classmates.'}
+            </p>
           </div>
 
-          <div className="flex items-center justify-between mb-4 px-1">
-            <h2 className="text-[11px] font-black text-text-muted uppercase tracking-[0.15em] opacity-80 font-display">
-              {activeTab} — {filteredFriends.length}
-            </h2>
-          </div>
-          
-          <div className="flex flex-col gap-1" role="list">
+          {/* Search Input for Search Tab */}
+          {activeTab === 'search' && (
+            <div className="relative mb-8 group">
+              <input 
+                type="text" 
+                placeholder="Search by name, @username, or ID..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-black/20 border border-white/5 focus:border-brand-indigo/50 text-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all placeholder:text-[#4E5058] font-bold shadow-inner" 
+              />
+              <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4E5058] group-focus-within:text-brand-indigo transition-colors" />
+            </div>
+          )}
+
+          <div className="space-y-2">
             <AnimatePresence mode="popLayout">
-              {filteredFriends.length > 0 ? (
-                filteredFriends.map((friend, index) => (
+              {displayedList.length > 0 ? (
+                displayedList.map((user, index) => (
                   <motion.div
-                    key={friend.id}
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 26, delay: index * 0.02 }}
+                    key={user.id || user.uid}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ delay: index * 0.03 }}
+                    onClick={() => startDM(user.uid || user.id)}
+                    className="flex items-center gap-4 p-4 hover:bg-white/[0.03] rounded-2xl cursor-pointer group transition-all border border-transparent hover:border-white/5"
                   >
-                    <FriendRow 
-                      friend={friend} 
-                      tab={activeTab}
-                      userStatuses={userStatuses}
-                      onMessage={() => selectDM(friend.id)} 
-                    />
+                    <div className="relative shrink-0">
+                      <Avatar userId={user.uid || user.id} name={user.name} status={userStatuses[user.uid || user.id] || user.status} size={48} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-white font-bold text-lg tracking-tight group-hover:text-brand-indigo transition-colors">{user.name}</span>
+                        {user.university && (
+                          <span className="text-[10px] font-black text-brand-indigo bg-brand-indigo/10 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                            {user.university}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[#949BA4] text-xs font-medium truncate flex items-center gap-2">
+                        <span>@{user.username || user.id?.slice(0, 8)}</span>
+                        <div className="w-1 h-1 rounded-full bg-[#4E5058]" />
+                        <span>Online</span>
+                      </div>
+                    </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity pr-2">
+                      <div className="w-10 h-10 rounded-xl bg-brand-indigo flex items-center justify-center text-white shadow-lg shadow-brand-indigo/30">
+                        <ArrowRight size={20} />
+                      </div>
+                    </div>
                   </motion.div>
                 ))
               ) : (
-                <div className="mt-20 flex flex-col items-center justify-center text-center py-12">
-                   <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 border border-white/5">
-                     <Search size={32} className="text-text-muted opacity-40" />
-                   </div>
-                   <h3 className="text-white font-bold text-lg mb-1 font-display">No classmates found</h3>
-                   <p className="text-text-muted text-sm font-medium opacity-60">We searched the entire campus, but they're not here.</p>
+                <div className="mt-20 flex flex-col items-center justify-center text-center opacity-40">
+                  <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-6">
+                    <Search size={40} className="text-[#949BA4]" />
+                  </div>
+                  <h3 className="text-white font-black text-xl uppercase tracking-widest mb-1">It's a bit empty here</h3>
+                  <p className="text-[#949BA4] text-sm font-medium">Try searching for a classmate to start a chat.</p>
                 </div>
               )}
             </AnimatePresence>
           </div>
         </div>
 
-        {/* Improved Active Now Sidebar - Real-time Users */}
-        <aside className="w-[360px] border-l border-white/5 p-6 hidden lg:flex flex-col gap-6 bg-black/10 backdrop-blur-sm overflow-y-auto no-scrollbar">
-          <header className="flex items-center justify-between">
-            <h2 className="text-white text-xl font-black tracking-tighter uppercase font-display">Active Now</h2>
-            <TrendingUp size={18} className="text-brand-indigo" />
-          </header>
+        {/* Right Sidebar - Campus Highlights */}
+        <aside className="w-[380px] hidden xl:flex flex-col p-8 border-l border-black/20 bg-black/5 overflow-y-auto no-scrollbar gap-8">
+           <section>
+              <h2 className="text-white font-black text-lg uppercase tracking-widest mb-6 flex items-center gap-3">
+                <Sparkles size={20} className="text-brand-indigo" />
+                Campus Trending
+              </h2>
+              <div className="space-y-4">
+                 <TrendingCard title="Global Hackathon 2026" category="Events" members="1.2k" />
+                 <TrendingCard title="Advanced AI Ethics" category="Study Groups" members="450" />
+                 <TrendingCard title="Music Production" category="Clubs" members="890" />
+              </div>
+           </section>
 
-          <div className="flex flex-col gap-3">
-             {/* Create Community Call to Action */}
-             <motion.div
-               initial={{ opacity: 0, scale: 0.9 }}
-               animate={{ opacity: 1, scale: 1 }}
-               whileHover={{ y: -4 }}
-               onClick={() => setShowCreateServerModal(true)}
-               className="premium-gradient p-[1px] rounded-2xl cursor-pointer group shadow-2xl mb-2"
-             >
-               <div className="bg-[#111214] rounded-[15px] p-5 flex flex-col gap-3">
-                 <div className="flex items-center justify-between">
-                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">
-                     <Plus size={24} strokeWidth={3} />
-                   </div>
-                   <span className="bg-white/10 text-white text-[9px] px-2 py-1 rounded-full font-black uppercase tracking-tighter">New Feature</span>
-                 </div>
-                 <div>
-                   <h3 className="text-white font-black text-lg font-display leading-tight">Start a Community</h3>
-                   <p className="text-white/60 text-xs font-medium mt-1">Create a space for your study group, club, or friends.</p>
-                 </div>
-               </div>
-             </motion.div>
-
-             <div className="h-px bg-white/5 my-2" />
-
-             {dmList.filter(u => (userStatuses[u.id] || u.status) !== 'offline').length > 0 ? (
-               dmList
-                .filter(u => (userStatuses[u.id] || u.status) !== 'offline')
-                .map((u, i) => (
-                  <motion.div
-                    key={u.id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    onClick={() => selectDM(u.id)}
-                    className="glass p-4 rounded-2xl border-white/5 hover:border-brand-indigo/30 transition-all cursor-pointer group shadow-premium flex items-center gap-4"
-                  >
-                    <Avatar userId={u.id} name={u.name} status={userStatuses[u.id] || u.status} size={40} />
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-white font-bold text-sm font-display truncate">{u.name}</span>
-                      <span className="text-brand-indigo text-[10px] font-black uppercase tracking-widest">Online Now</span>
-                    </div>
-                  </motion.div>
-                ))
-             ) : (
-               <div className="glass p-5 rounded-2xl border-white/5 opacity-60">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-                      <Smile size={24} className="text-text-muted" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-white font-bold text-sm font-display leading-tight">It's quiet for now</span>
-                    </div>
-                  </div>
-                  <p className="text-text-muted text-[13px] leading-relaxed font-medium opacity-80">When classmates are online, they'll appear here automatically.</p>
-               </div>
-             )}
-          </div>
+           <section className="bg-brand-indigo p-6 rounded-3xl shadow-2xl relative overflow-hidden group cursor-pointer">
+              <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:scale-125 transition-transform">
+                <ShieldCheck size={80} />
+              </div>
+              <div className="relative z-10">
+                <h3 className="text-white font-black text-xl uppercase leading-none mb-2">Verified Campus</h3>
+                <p className="text-white/80 text-xs font-bold leading-relaxed mb-4">Every user on this platform is a verified student or staff at Swastik University.</p>
+                <button className="bg-white text-brand-indigo px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Read Safety Guide</button>
+              </div>
+           </section>
         </aside>
       </div>
-      
+
       <AnimatePresence>
-        {showCreateServerModal && (
-          <CreateModal 
-            type="server" 
-            onClose={() => setShowCreateServerModal(false)} 
-          />
-        )}
+        {showQR && <QRModal user={currentUser} onClose={() => setShowQR(false)} />}
       </AnimatePresence>
     </div>
   );
 };
 
-const HeaderTab = ({ label, active, onClick }) => (
-  <motion.button 
-    whileHover={{ scale: 1.02 }}
-    whileTap={{ scale: 0.96 }}
-    role="tab"
-    aria-selected={active}
+const HeaderTab = ({ label, icon, active, onClick }) => (
+  <button 
     onClick={onClick}
-    className="relative px-6 py-2 group outline-none min-w-[80px]"
-  >
-    <span className={`relative z-10 text-[14px] font-black transition-all duration-300 uppercase tracking-widest font-display ${
-      active ? 'text-white' : 'text-text-muted hover:text-[#DBDEE1]'
-    }`}>
-      {label}
-    </span>
-    {active && (
-      <motion.div
-        layoutId="friendsTab"
-        className="absolute bottom-0 left-0 right-0 h-[3px] bg-brand-indigo rounded-full shadow-[0_0_12px_rgba(88,101,242,0.6)]"
-        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-      />
-    )}
-    {/* Subtle Glass Pill on Hover */}
-    {!active && (
-      <div className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.03] rounded-xl transition-colors duration-200" />
-    )}
-  </motion.button>
-);
-
-const FriendRow = ({ friend, onMessage, tab, userStatuses }) => (
-  <div className="flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl group cursor-pointer transition-all border-b border-white/5 last:border-0 relative" role="listitem">
-    <div className="relative transition-transform group-hover:scale-105">
-      <Avatar userId={friend.id} src={friend.avatar} name={friend.name} status={userStatuses[friend.id] || friend.status} size={40} />
-    </div>
-    
-    <div className="flex-1 flex flex-col min-w-0">
-      <div className="flex items-center gap-2">
-        <span className="text-white font-bold text-[16px] truncate group-hover:text-brand-indigo transition-colors font-display leading-tight">{friend.name}</span>
-        {friend.badge && <span className="bg-brand-indigo/20 text-brand-indigo text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider">{friend.badge}</span>}
-      </div>
-      <span className="text-text-muted text-[13px] truncate font-medium opacity-70">{friend.subText}</span>
-    </div>
-    <div className="flex items-center gap-2">
-      {tab === 'pending' ? (
-        <div className="flex gap-2">
-          <ActionCircle icon={<Check size={20} />} color="green" label="Accept" onClick={playClick} />
-          <ActionCircle icon={<X size={20} />} color="red" label="Decline" onClick={playClick} />
-        </div>
-      ) : tab === 'blocked' ? (
-        <ActionCircle icon={<UserPlus size={20} />} label="Unblock" onClick={playClick} />
-      ) : (
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <ActionCircle icon={<MessageCircle size={20} />} onClick={(e) => { e.stopPropagation(); onMessage(); playClick(); }} label="Chat" />
-          <ActionCircle icon={<span className="font-black text-[10px]">...</span>} label="More" onClick={playClick} />
-        </div>
-      )}
-    </div>
-  </div>
-);
-
-const HeroActionCard = ({ icon, label, onClick, index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{ type: "spring", stiffness: 300, damping: 22, delay: 0.2 + (index * 0.05) }}
-    whileHover={{ x: 4 }}
-    onClick={onClick}
-    className="w-full bg-black/10 hover:bg-white/5 border border-white/5 p-4 rounded-2xl flex items-center justify-between group cursor-pointer transition-all"
-  >
-    <div className="flex items-center gap-4">
-      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-brand-indigo">
-        {icon}
-      </div>
-      <span className="text-white font-bold text-sm">{label}</span>
-    </div>
-  </motion.div>
-);
-
-const ActionCircle = ({ icon, onClick, label, color }) => (
-  <motion.button 
-    whileHover={{ scale: 1.1 }}
-    whileTap={{ scale: 0.9 }}
-    onClick={onClick}
-    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all glass ${
-      color === 'green' ? 'text-status-online hover:bg-status-online/20' : 
-      color === 'red' ? 'text-brand-crimson hover:bg-brand-crimson/20' : 
-      'text-text-muted hover:text-white'
+    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all relative group ${
+      active ? 'bg-brand-indigo text-white shadow-lg shadow-brand-indigo/20' : 'text-[#949BA4] hover:bg-white/5 hover:text-white'
     }`}
-    title={label}
-    aria-label={label}
   >
     {icon}
-  </motion.button>
+    <span className="text-[12px] font-black uppercase tracking-widest font-display whitespace-nowrap">{label}</span>
+  </button>
+);
+
+const TrendingCard = ({ title, category, members }) => (
+  <div className="p-4 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/[0.06] transition-all cursor-pointer group">
+    <div className="flex items-center justify-between mb-1">
+      <span className="text-brand-indigo text-[9px] font-black uppercase tracking-widest">{category}</span>
+      <span className="text-[#949BA4] text-[9px] font-black uppercase tracking-widest">{members} students</span>
+    </div>
+    <h3 className="text-white font-bold text-[15px] group-hover:text-brand-indigo transition-colors">{title}</h3>
+  </div>
 );
 
 export default FriendsView;

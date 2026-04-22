@@ -7,6 +7,7 @@ import {
   onSnapshot, 
   serverTimestamp,
   doc,
+  getDoc,
   updateDoc,
   setDoc,
   getDocs,
@@ -213,7 +214,7 @@ export const dbService = {
 
   // --- DMs ---
   subscribeToDMs: (userId, callback, onError) => {
-    const q = query(collection(db, "dms"), where("participantIds", "array-contains", userId));
+    const q = query(collection(db, "dms"), where("participantIds", "array-contains", userId), orderBy("lastMessageAt", "desc"));
     return onSnapshot(q, (snapshot) => {
       const dms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       callback(dms);
@@ -221,6 +222,27 @@ export const dbService = {
       if (onError) onError(err);
       else console.error("Firestore DMs Error:", err);
     });
+  },
+
+  startDM: async (participantIds) => {
+    try {
+      const sortedIds = [...participantIds].sort();
+      const dmsRef = collection(db, "dms");
+      const q = query(dmsRef, where("participantIds", "==", sortedIds));
+      const snap = await getDocs(q);
+      
+      if (!snap.empty) return snap.docs[0].id;
+
+      const docRef = await addDoc(dmsRef, {
+        participantIds: sortedIds,
+        createdAt: serverTimestamp(),
+        lastMessageAt: serverTimestamp()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error("StartDM Error:", error);
+      throw error;
+    }
   },
 
   // --- User Presence & Profile ---
