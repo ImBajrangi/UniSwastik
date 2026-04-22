@@ -5,7 +5,7 @@ import { usePlatform } from '../context/PlatformContext';
 import Avatar from '../components/Avatar';
 
 const ProfileView = () => {
-  const { currentUser } = usePlatform();
+  const { currentUser, logout } = usePlatform();
 
   const settingsItems = [
     { icon: <User size={20} />, label: 'Edit Profile', color: 'text-blue-400' },
@@ -39,7 +39,7 @@ const ProfileView = () => {
           >
             <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-8 mb-10 text-center sm:text-left">
               <div className="relative p-2 bg-[#1e1f22] rounded-full -mt-24 sm:-mt-32 shadow-premium">
-                <Avatar name={currentUser.name} size={130} className="border-[10px] border-[#1e1f22]" />
+                <Avatar name={currentUser?.name || 'User'} size={130} className="border-[10px] border-[#1e1f22]" />
                 <div className="absolute bottom-4 right-4 w-6 h-6 bg-status-online rounded-full border-4 border-[#1e1f22] shadow-premium" />
               </div>
               <motion.button 
@@ -53,11 +53,13 @@ const ProfileView = () => {
 
             <div className="space-y-3 text-center sm:text-left">
               <h1 className="text-white text-4xl sm:text-5xl font-black tracking-tighter font-display flex flex-col sm:flex-row items-center gap-2">
-                {currentUser.name}
-                <span className="text-white/20 text-2xl font-medium tracking-tight">#{currentUser.discriminator}</span>
+                {currentUser?.name || 'Swastik Student'}
+                {currentUser?.discriminator && (
+                  <span className="text-white/20 text-2xl font-medium tracking-tight">#{currentUser.discriminator}</span>
+                )}
               </h1>
               <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-x-10 gap-y-4 text-text-muted text-[16px] font-semibold mt-6">
-                <span className="flex items-center gap-3 transition-colors hover:text-white"><GraduationCap size={20} className="text-brand-indigo" /> {currentUser.university}</span>
+                <span className="flex items-center gap-3 transition-colors hover:text-white"><GraduationCap size={20} className="text-brand-indigo" /> {currentUser?.university || 'Swastik University'}</span>
                 <span className="flex items-center gap-3 transition-colors hover:text-white"><MapPin size={20} className="text-brand-indigo" /> Main Campus</span>
                 <span className="flex items-center gap-3 transition-colors hover:text-white"><Calendar size={20} className="text-brand-indigo" /> Joined Oct 2026</span>
               </div>
@@ -91,6 +93,7 @@ const ProfileView = () => {
           <motion.button 
             whileHover={{ scale: 1.01, backgroundColor: 'rgba(237, 66, 69, 0.2)' }}
             whileTap={{ scale: 0.98 }}
+            onClick={logout}
             className="w-full bg-[#ed4245]/10 border-2 border-[#ed4245]/20 p-7 rounded-[32px] flex items-center justify-center gap-4 text-[#ed4245] font-black text-[18px] tracking-widest uppercase transition-all shadow-premium"
           >
             <LogOut size={24} />
@@ -99,6 +102,7 @@ const ProfileView = () => {
         </div>
       </div>
     </div>
+
   );
 };
 

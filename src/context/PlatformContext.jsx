@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, db } from '../lib/firebase';
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { dbService } from '../services/db';
+import { authService } from '../services/auth';
 import { seedDatabase } from '../utils/firebaseSeeder';
 import { 
   servers as mockServers, 
   channels as mockChannels, 
-  dmList as mockDmList, 
-  currentUser as mockUser
+  dmList as mockDmList
 } from '../data/mockData';
 
 const PlatformContext = createContext();
@@ -19,12 +19,13 @@ export const PlatformProvider = ({ children }) => {
   const [view, setView] = useState('friends'); // 'friends', 'chat', 'discover'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // Dynamic State - Driven by Firestore
   const [servers, setServers] = useState(mockServers);
   const [channels, setChannels] = useState(mockChannels);
   const [dmList, setDmList] = useState(mockDmList);
-  const [currentUser, setCurrentUser] = useState(mockUser);
+  const [currentUser, setCurrentUser] = useState(null);
   const [showMemberList, setShowMemberList] = useState(true);
   const [showThreadsSidebar, setShowThreadsSidebar] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -38,27 +39,33 @@ export const PlatformProvider = ({ children }) => {
   // 1. Firebase Auth Initialization
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
+      setLoading(true);
       if (user) {
-        const newUser = {
+        // Fetch full user data from Firestore
+        const userData = await authService.getUserData(user.uid);
+        const newUser = userData || {
+          uid: user.uid,
           id: user.uid,
           name: user.displayName || `Student_${user.uid.slice(0, 4)}`,
           avatar: user.photoURL || '',
           status: 'online',
-          university: 'Swastik University'
+          university: 'Swastik University',
+          discriminator: Math.floor(1000 + Math.random() * 9000).toString()
         };
         setCurrentUser(newUser);
-        // Sync user info to Firestore for presence
         dbService.updateUserStatus(user.uid, 'online');
       } else {
-        await signInAnonymously(auth);
+        setCurrentUser(null);
       }
+      setLoading(false);
     });
     return unsub;
   }, []);
 
   // 2. Real-time Firestore Subscriptions
   useEffect(() => {
-    if (!currentUser?.id) return;
+    if (!currentUser?.id && !currentUser?.uid) return;
+    const uid = currentUser.uid || currentUser.id;
 
     const prepareCloud = async () => {
       try {
@@ -80,7 +87,7 @@ export const PlatformProvider = ({ children }) => {
       }
     });
 
-    const unsubDMs = dbService.subscribeToDMs(currentUser.id, (data) => {
+    const unsubDMs = dbService.subscribeToDMs(uid, (data) => {
       try {
         if (data && data.length > 0) setDmList(data);
       } catch (err) {
@@ -96,15 +103,14 @@ export const PlatformProvider = ({ children }) => {
       unsubServers();
       unsubDMs();
       unsubStatuses();
-      // Set offline on logout/close
-      if (currentUser?.id) dbService.updateUserStatus(currentUser.id, 'offline');
+      if (uid) dbService.updateUserStatus(uid, 'offline');
     };
-  }, [currentUser?.id]);
+  }, [currentUser]);
 
   // Typing Subscription
   useEffect(() => {
     const targetId = activeDMId || activeChannelId;
-    if (!targetId) return;
+    if (!targetId || !currentUser) return;
 
     const unsubTyping = dbService.subscribeToTyping(targetId, (users) => {
       setTypingUsers(prev => ({
@@ -114,11 +120,11 @@ export const PlatformProvider = ({ children }) => {
     });
 
     return unsubTyping;
-  }, [activeDMId, activeChannelId, currentUser?.name]);
+  }, [activeDMId, activeChannelId, currentUser]);
 
   // Resilient Channel Syncing
   useEffect(() => {
-    if (activeServerId === 'home') return;
+    if (activeServerId === 'home' || !currentUser) return;
     
     try {
       const unsubChannels = dbService.subscribeToChannels(activeServerId, (data) => {
@@ -130,7 +136,7 @@ export const PlatformProvider = ({ children }) => {
     } catch (err) {
       console.error(`Cloud Channel Sync Error [${activeServerId}]:`, err);
     }
-  }, [activeServerId]);
+  }, [activeServerId, currentUser]);
 
   const selectServer = (serverId) => {
     setActiveServerId(serverId);
@@ -162,11 +168,10 @@ export const PlatformProvider = ({ children }) => {
   };
 
   const sendMessage = async (targetId, content) => {
-    if (!currentUser) return;
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid) return;
     try {
-      // Optimistic update could be handled in ChatView's messages state
-      await dbService.sendMessage(targetId, currentUser.id, currentUser.name, content);
-      // Immediately stop typing
+      await dbService.sendMessage(targetId, uid, currentUser.name, content);
       setTyping(targetId, false);
     } catch (err) {
       console.error("Send Message Error:", err);
@@ -174,8 +179,9 @@ export const PlatformProvider = ({ children }) => {
   };
 
   const setTyping = (targetId, isTyping) => {
-    if (!currentUser || !targetId) return;
-    dbService.setTypingStatus(targetId, currentUser.id, currentUser.name, isTyping);
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid || !targetId) return;
+    dbService.setTypingStatus(targetId, uid, currentUser.name, isTyping);
   };
 
   const toggleMute = (channelId) => {
@@ -199,6 +205,11 @@ export const PlatformProvider = ({ children }) => {
     });
   };
 
+  const logout = async () => {
+    await authService.logout();
+    setCurrentUser(null);
+  };
+
   const value = {
     activeServerId,
     activeChannelId,
@@ -209,6 +220,8 @@ export const PlatformProvider = ({ children }) => {
     selectDM,
     sendMessage,
     currentUser,
+    loading,
+    logout,
     servers,
     channels,
     dmList,
@@ -248,3 +261,4 @@ export const usePlatform = () => {
   }
   return context;
 };
+

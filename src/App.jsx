@@ -8,14 +8,15 @@ import ChatView from './views/ChatView';
 import DiscoverView from './views/DiscoverView';
 import NotificationsView from './views/NotificationsView';
 import ProfileView from './views/ProfileView';
+import AuthView from './views/AuthView';
 import { 
-  MessageSquare, Bell, Compass, Users, User, Menu
+  MessageSquare, Bell, ShieldCheck
 } from 'lucide-react';
 import Avatar from './components/Avatar';
 import GlobalAtmosphere from './components/GlobalAtmosphere';
 
 const BottomNav = () => {
-  const { view, setView, setIsMobileMenuOpen, currentUser } = usePlatform();
+  const { view, setView, currentUser } = usePlatform();
 
   const tabs = [
     { id: 'servers', label: 'Home', icon: <MessageSquare size={24} />, action: () => { setView('chat'); } },
@@ -89,8 +90,37 @@ const BottomNav = () => {
   );
 };
 
+const LoadingScreen = () => (
+  <div className="h-screen w-full flex flex-col items-center justify-center bg-[#050505] relative overflow-hidden">
+    <GlobalAtmosphere />
+    <motion.div 
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      className="relative z-10 flex flex-col items-center gap-6"
+    >
+      <div className="w-20 h-20 bg-brand-indigo rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(88,101,242,0.3)] animate-pulse">
+        <ShieldCheck className="text-white" size={40} />
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <h2 className="text-xl font-bold text-white font-display tracking-tight">Swastik Platform</h2>
+        <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden">
+          <motion.div 
+            initial={{ x: "-100%" }}
+            animate={{ x: "100%" }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            className="w-1/2 h-full bg-brand-indigo shadow-[0_0_10px_#5865f2]"
+          />
+        </div>
+      </div>
+    </motion.div>
+  </div>
+);
+
 const AppContent = () => {
-  const { view, activeChannelId, activeDMId, isMobileMenuOpen, setIsMobileMenuOpen } = usePlatform();
+  const { view, activeChannelId, activeDMId, isMobileMenuOpen, setIsMobileMenuOpen, currentUser, loading } = usePlatform();
+
+  if (loading) return <LoadingScreen />;
+  if (!currentUser) return <AuthView />;
 
   const renderView = () => {
     const targetId = activeDMId || activeChannelId;
@@ -182,3 +212,4 @@ function App() {
 }
 
 export default App;
+
