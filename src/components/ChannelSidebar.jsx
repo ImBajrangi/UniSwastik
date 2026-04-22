@@ -24,7 +24,7 @@ const ChannelSidebar = () => {
   const [showSettings, setShowSettings] = useState(false);
 
   const activeServer = servers.find(s => s.id === activeServerId);
-  const isHome = activeServer?.isHome;
+  const isHome = activeServerId === 'home';
 
   return (
     <nav className="w-[240px] bg-bg-secondary/80 glass-thin flex flex-col h-full overflow-hidden border-r border-white/10 shrink-0 relative z-[200] transform-gpu" aria-label="Channels">

@@ -85,117 +85,124 @@ const FriendsView = () => {
   const displayedList = activeTab === 'chats' ? recentChats : searchResults;
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#313338] relative overflow-hidden">
-      {/* Header with Premium Tabs */}
-      <header className="h-16 px-6 flex items-center justify-between border-b border-black/20 bg-[#313338]/80 backdrop-blur-md z-20 shrink-0">
-        <div className="flex items-center gap-4 pr-6 border-r border-white/5">
+    <div className="flex-1 flex flex-col min-h-0 bg-[#2B2D31] relative overflow-hidden">
+      {/* High-Fidelity Header */}
+      <header className="h-[72px] px-8 flex items-center justify-between border-b border-black/30 bg-[#2B2D31]/95 backdrop-blur-xl z-20 shrink-0">
+        <div className="flex items-center gap-6 pr-8 border-r border-white/5">
           <button 
             onClick={() => setIsMobileMenuOpen(true)}
-            className="lg:hidden text-[#949BA4] hover:text-white transition-all p-1.5 hover:bg-white/5 rounded-xl mr-1"
+            className="lg:hidden text-[#949BA4] hover:text-white transition-all p-2 hover:bg-white/5 rounded-2xl mr-1"
           >
-            <Menu size={24} />
+            <Menu size={26} />
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-indigo/20 flex items-center justify-center text-brand-indigo">
-              <MessageCircle size={20} />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-brand-indigo flex items-center justify-center text-white shadow-lg shadow-brand-indigo/30">
+              <MessageCircle size={24} />
             </div>
-            <span className="text-white font-black text-lg tracking-tight uppercase font-display">Hub</span>
+            <div className="flex flex-col">
+              <span className="text-white font-black text-xl tracking-tight leading-none">THE HUB</span>
+              <span className="text-brand-indigo text-[9px] font-black tracking-widest uppercase opacity-70 mt-0.5">Community Network</span>
+            </div>
           </div>
         </div>
         
-        <nav className="flex items-center justify-start gap-2 flex-1 px-6 overflow-x-auto no-scrollbar">
-          <HeaderTab label="Chats" icon={<History size={16} />} active={activeTab === 'chats'} onClick={() => setActiveTab('chats')} />
-          <HeaderTab label="Search" icon={<Search size={16} />} active={activeTab === 'search'} onClick={() => setActiveTab('search')} />
-          <HeaderTab label="Requests" icon={<UserPlus size={16} />} active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
+        <nav className="flex items-center justify-start gap-4 flex-1 px-8 overflow-x-auto no-scrollbar">
+          <HeaderTab label="Messages" icon={<History size={18} />} active={activeTab === 'chats'} onClick={() => setActiveTab('chats')} />
+          <HeaderTab label="Student Directory" icon={<Search size={18} />} active={activeTab === 'search'} onClick={() => setActiveTab('search')} />
+          <HeaderTab label="Friend Requests" icon={<UserPlus size={18} />} active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button 
             onClick={() => setShowQR(true)}
-            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-all active:scale-95 border border-white/5"
-            title="Your QR Passport"
+            className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white transition-all active:scale-95 border border-white/5 flex items-center gap-2 group"
           >
-            <QrCode size={20} />
+            <QrCode size={22} className="group-hover:rotate-12 transition-transform" />
           </button>
-          <button className="p-2.5 rounded-xl bg-brand-indigo hover:bg-brand-indigo-hover text-white transition-all active:scale-95 shadow-lg shadow-brand-indigo/20 flex items-center gap-2 px-4 group">
-            <Scan size={20} className="group-hover:rotate-12 transition-transform" />
-            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Scan QR</span>
+          <button className="h-12 rounded-2xl bg-brand-indigo hover:bg-brand-indigo-hover text-white transition-all active:scale-95 shadow-xl shadow-brand-indigo/20 flex items-center gap-3 px-6 group border border-white/10">
+            <Scan size={22} className="group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-black uppercase tracking-widest hidden lg:block">Scan Passport</span>
           </button>
         </div>
       </header>
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 flex flex-col p-6 overflow-y-auto no-scrollbar">
-          {/* Contextual Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-black text-white tracking-tight uppercase mb-1">
-              {activeTab === 'chats' ? 'Your Conversations' : activeTab === 'search' ? 'Campus Directory' : 'Pending Requests'}
+        <div className="flex-1 flex flex-col p-10 overflow-y-auto no-scrollbar">
+          {/* Enhanced Contextual Header */}
+          <div className="mb-10 max-w-4xl">
+            <h1 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">
+              {activeTab === 'chats' ? 'Your Network' : activeTab === 'search' ? 'Campus Directory' : 'Pending Requests'}
             </h1>
-            <p className="text-[#949BA4] text-sm font-medium">
-              {activeTab === 'chats' ? 'People you have talked to recently.' : activeTab === 'search' ? 'Find any student or staff across the hub.' : 'New connection requests from classmates.'}
-            </p>
+            <div className="flex items-center gap-3 text-[#949BA4] font-semibold text-lg">
+               <div className="w-2 h-2 rounded-full bg-brand-indigo shadow-[0_0_8px_rgba(88,101,242,0.8)]" />
+               <p>
+                {activeTab === 'chats' ? 'Access your private encrypted conversations.' : activeTab === 'search' ? 'Discover and connect with verified university members.' : 'Manage your incoming connection requests.'}
+              </p>
+            </div>
           </div>
 
           {/* Search Input for Search Tab */}
           {activeTab === 'search' && (
-            <div className="relative mb-8 group">
+            <div className="relative mb-12 group max-w-4xl">
               <input 
                 type="text" 
-                placeholder="Search by name, @username, or ID..." 
+                placeholder="Search by student name, @handle, or faculty ID..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-black/20 border border-white/5 focus:border-brand-indigo/50 text-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all placeholder:text-[#4E5058] font-bold shadow-inner" 
+                className="w-full bg-black/30 border border-white/5 focus:border-brand-indigo/50 text-white rounded-[24px] py-6 pl-16 pr-6 outline-none transition-all placeholder:text-[#4E5058] text-lg font-bold shadow-2xl" 
               />
-              <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4E5058] group-focus-within:text-brand-indigo transition-colors" />
+              <Search size={28} className="absolute left-6 top-1/2 -translate-y-1/2 text-[#4E5058] group-focus-within:text-brand-indigo transition-colors" />
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-3 max-w-5xl">
             <AnimatePresence mode="popLayout">
               {displayedList.length > 0 ? (
                 displayedList.map((user, index) => (
                   <motion.div
                     key={user.id || user.uid}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 10 }}
-                    transition={{ delay: index * 0.03 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ delay: index * 0.04 }}
                     onClick={() => startDM(user.uid || user.id)}
-                    className="flex items-center gap-4 p-4 hover:bg-white/[0.03] rounded-2xl cursor-pointer group transition-all border border-transparent hover:border-white/5"
+                    className="flex items-center gap-5 p-5 bg-white/[0.02] hover:bg-white/[0.05] rounded-[24px] cursor-pointer group transition-all border border-white/5 hover:border-brand-indigo/30 hover:shadow-2xl"
                   >
                     <div className="relative shrink-0">
-                      <Avatar userId={user.uid || user.id} name={user.name} status={userStatuses[user.uid || user.id] || user.status} size={48} />
+                      <Avatar userId={user.uid || user.id} name={user.name} status={userStatuses[user.uid || user.id] || user.status} size={64} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-white font-bold text-lg tracking-tight group-hover:text-brand-indigo transition-colors">{user.name}</span>
+                    <div className="flex-1 min-w-0 py-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="text-white font-black text-xl tracking-tight group-hover:text-brand-indigo transition-colors">
+                          {user.name?.replace(/[^\w\s@]/gi, '')}
+                        </span>
                         {user.university && (
-                          <span className="text-[10px] font-black text-brand-indigo bg-brand-indigo/10 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                          <span className="text-[10px] font-black text-brand-indigo bg-brand-indigo/10 px-3 py-1 rounded-full uppercase tracking-widest border border-brand-indigo/20">
                             {user.university}
                           </span>
                         )}
                       </div>
-                      <div className="text-[#949BA4] text-xs font-medium truncate flex items-center gap-2">
-                        <span>@{user.username || user.id?.slice(0, 8)}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[#949BA4] text-sm font-bold opacity-80">@{user.username || user.id?.slice(0, 8)}</span>
                         <div className="w-1 h-1 rounded-full bg-[#4E5058]" />
-                        <span>Online</span>
+                        <span className="text-status-online text-[10px] font-black uppercase tracking-widest">Active Now</span>
                       </div>
                     </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity pr-2">
-                      <div className="w-10 h-10 rounded-xl bg-brand-indigo flex items-center justify-center text-white shadow-lg shadow-brand-indigo/30">
-                        <ArrowRight size={20} />
+                    <div className="opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 pr-4">
+                      <div className="w-12 h-12 rounded-2xl bg-brand-indigo flex items-center justify-center text-white shadow-2xl shadow-brand-indigo/40 ring-4 ring-brand-indigo/10">
+                        <ArrowRight size={24} />
                       </div>
                     </div>
                   </motion.div>
                 ))
               ) : (
-                <div className="mt-20 flex flex-col items-center justify-center text-center opacity-40">
-                  <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-6">
-                    <Search size={40} className="text-[#949BA4]" />
+                <div className="mt-32 flex flex-col items-center justify-center text-center">
+                  <div className="w-24 h-24 bg-white/5 rounded-[32px] flex items-center justify-center mb-8 border border-white/5 shadow-inner">
+                    <Search size={48} className="text-[#4E5058]" />
                   </div>
-                  <h3 className="text-white font-black text-xl uppercase tracking-widest mb-1">It's a bit empty here</h3>
-                  <p className="text-[#949BA4] text-sm font-medium">Try searching for a classmate to start a chat.</p>
+                  <h3 className="text-white font-black text-2xl uppercase tracking-tighter mb-2">No Connections Found</h3>
+                  <p className="text-[#949BA4] text-lg font-medium max-w-sm mx-auto opacity-70">Expand your network by searching the directory or scanning a peer's passport.</p>
                 </div>
               )}
             </AnimatePresence>
@@ -203,27 +210,32 @@ const FriendsView = () => {
         </div>
 
         {/* Right Sidebar - Campus Highlights */}
-        <aside className="w-[380px] hidden xl:flex flex-col p-8 border-l border-black/20 bg-black/5 overflow-y-auto no-scrollbar gap-8">
+        <aside className="w-[420px] hidden xl:flex flex-col p-10 border-l border-black/30 bg-black/10 overflow-y-auto no-scrollbar gap-10 shadow-inner">
            <section>
-              <h2 className="text-white font-black text-lg uppercase tracking-widest mb-6 flex items-center gap-3">
-                <Sparkles size={20} className="text-brand-indigo" />
+              <h2 className="text-white font-black text-xl uppercase tracking-tight mb-8 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-brand-indigo" />
                 Campus Trending
               </h2>
-              <div className="space-y-4">
-                 <TrendingCard title="Global Hackathon 2026" category="Events" members="1.2k" />
-                 <TrendingCard title="Advanced AI Ethics" category="Study Groups" members="450" />
-                 <TrendingCard title="Music Production" category="Clubs" members="890" />
+              <div className="space-y-5">
+                 <TrendingCard title="Global Hackathon 2026" category="Events" members="1,248" />
+                 <TrendingCard title="Advanced AI Ethics" category="Study Groups" members="452" />
+                 <TrendingCard title="Electronic Music Lab" category="Clubs" members="893" />
               </div>
            </section>
 
-           <section className="bg-brand-indigo p-6 rounded-3xl shadow-2xl relative overflow-hidden group cursor-pointer">
-              <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:scale-125 transition-transform">
-                <ShieldCheck size={80} />
+           <section className="bg-brand-indigo p-8 rounded-[32px] shadow-2xl relative overflow-hidden group cursor-pointer border border-white/10 hover:scale-[1.02] transition-all">
+              <div className="absolute -top-4 -right-4 p-4 opacity-10 group-hover:scale-125 transition-transform group-hover:opacity-20">
+                <ShieldCheck size={120} />
               </div>
               <div className="relative z-10">
-                <h3 className="text-white font-black text-xl uppercase leading-none mb-2">Verified Campus</h3>
-                <p className="text-white/80 text-xs font-bold leading-relaxed mb-4">Every user on this platform is a verified student or staff at Swastik University.</p>
-                <button className="bg-white text-brand-indigo px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Read Safety Guide</button>
+                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-6 border border-white/10">
+                  <ShieldCheck size={24} className="text-white" />
+                </div>
+                <h3 className="text-white font-black text-2xl uppercase tracking-tighter leading-none mb-3">Verified Safe</h3>
+                <p className="text-white/80 text-sm font-bold leading-relaxed mb-6">You are browsing a secure, encrypted hub limited to verified Swastik University students.</p>
+                <button className="bg-white text-brand-indigo px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl hover:shadow-white/20 transition-all">
+                  Security Hub
+                </button>
               </div>
            </section>
         </aside>
@@ -239,22 +251,27 @@ const FriendsView = () => {
 const HeaderTab = ({ label, icon, active, onClick }) => (
   <button 
     onClick={onClick}
-    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all relative group ${
-      active ? 'bg-brand-indigo text-white shadow-lg shadow-brand-indigo/20' : 'text-[#949BA4] hover:bg-white/5 hover:text-white'
+    className={`flex items-center gap-3 px-6 py-3 rounded-[20px] transition-all relative group ${
+      active ? 'bg-brand-indigo text-white shadow-xl shadow-brand-indigo/30' : 'text-[#949BA4] hover:bg-white/5 hover:text-white'
     }`}
   >
-    {icon}
-    <span className="text-[12px] font-black uppercase tracking-widest font-display whitespace-nowrap">{label}</span>
+    <div className={active ? 'text-white' : 'text-brand-indigo opacity-60 group-hover:opacity-100'}>
+      {icon}
+    </div>
+    <span className="text-xs font-black uppercase tracking-widest font-display whitespace-nowrap">{label}</span>
   </button>
 );
 
 const TrendingCard = ({ title, category, members }) => (
-  <div className="p-4 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/[0.06] transition-all cursor-pointer group">
-    <div className="flex items-center justify-between mb-1">
-      <span className="text-brand-indigo text-[9px] font-black uppercase tracking-widest">{category}</span>
-      <span className="text-[#949BA4] text-[9px] font-black uppercase tracking-widest">{members} students</span>
+  <div className="p-5 bg-white/[0.03] border border-white/5 rounded-[24px] hover:bg-white/[0.06] transition-all cursor-pointer group hover:border-brand-indigo/20">
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-brand-indigo text-[10px] font-black uppercase tracking-[0.2em]">{category}</span>
+      <div className="flex items-center gap-1.5 bg-black/20 px-2.5 py-1 rounded-full border border-white/5">
+        <Users size={10} className="text-status-online" />
+        <span className="text-white text-[9px] font-black uppercase tracking-tighter">{members}</span>
+      </div>
     </div>
-    <h3 className="text-white font-bold text-[15px] group-hover:text-brand-indigo transition-colors">{title}</h3>
+    <h3 className="text-white font-black text-lg tracking-tight group-hover:text-brand-indigo transition-colors leading-tight">{title}</h3>
   </div>
 );
 
