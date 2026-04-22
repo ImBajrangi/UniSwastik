@@ -6,6 +6,7 @@ import { usePlatform } from '../context/PlatformContext';
 
 const CreateModal = ({ type, serverId, onClose }) => {
   const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
   const [channelType, setChannelType] = useState('text');
   const [isPrivate, setIsPrivate] = useState(false);
   const { createChannel, createServer, selectDM } = usePlatform();
@@ -17,7 +18,7 @@ const CreateModal = ({ type, serverId, onClose }) => {
     if (type === 'channel') {
       createChannel(serverId, name, channelType);
     } else if (type === 'server') {
-      createServer(name.trim());
+      createServer(name.trim(), isPrivate ? 'private' : 'public', isPrivate ? password : null);
     } else {
       // Mock for DMs for now
       selectDM({ name: name.trim() });
@@ -112,6 +113,43 @@ const CreateModal = ({ type, serverId, onClose }) => {
                 />
               </div>
             </div>
+
+            {type === 'server' && (
+              <div className="bg-[#2B2D31] p-3 rounded-md mx-2 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/5 rounded-lg text-brand-indigo">
+                    <Lock size={20} />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-bold">Private Server</p>
+                    <p className="text-[#B5BAC1] text-[11px]">Only members can see channels</p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setIsPrivate(!isPrivate)}
+                  className={`w-12 h-6 rounded-full p-1 transition-all duration-200 flex items-center ${isPrivate ? 'bg-status-online' : 'bg-[#4E5058]'}`}
+                >
+                  <motion.div 
+                    animate={{ x: isPrivate ? 24 : 0 }}
+                    className="w-4 h-4 bg-white rounded-full shadow-lg"
+                  />
+                </button>
+              </div>
+            )}
+
+            {type === 'server' && isPrivate && (
+              <div className="space-y-2 px-2 pt-2 animate-in fade-in slide-in-from-top-2">
+                <label className="text-[#B5BAC1] text-[12px] font-bold uppercase tracking-tight">Group Password</label>
+                <input 
+                  type="password"
+                  placeholder="Create an access key for your friends..."
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-[#1E1F22] text-[#DBDEE1] rounded-md h-10 px-3 outline-none border border-white/5 focus:border-brand-indigo/50 transition-all font-medium"
+                />
+              </div>
+            )}
 
             {/* Private Channel Toggle - Only for channels */}
             {type === 'channel' && (

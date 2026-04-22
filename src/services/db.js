@@ -41,17 +41,23 @@ export const dbService = {
     });
   },
 
-  createServer: async (name, ownerId, iconName = 'Hash') => {
+  createServer: async (name, ownerId, privacy = 'public', password = null) => {
     try {
-      const docRef = await addDoc(collection(db, "servers"), {
+      const serverData = {
         name,
         ownerId,
-        iconName,
+        privacy,
         createdAt: serverTimestamp(),
         members: [ownerId],
         memberRoles: { [ownerId]: 'owner' },
         acronym: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-      });
+      };
+
+      if (password && privacy === 'private') {
+        serverData.password = password;
+      }
+
+      const docRef = await addDoc(collection(db, "servers"), serverData);
       // Create a default general channel
       await addDoc(collection(db, "channels"), {
         name: "general",
@@ -268,6 +274,128 @@ export const dbService = {
       });
     } catch (error) {
       console.error("KickMember Error:", error);
+      throw error;
+    }
+  },
+
+  joinServerWithPassword: async (serverId, userId, password) => {
+    try {
+      const serverRef = doc(db, "servers", serverId);
+      const serverSnap = await getDoc(serverRef);
+      
+      if (!serverSnap.exists()) throw new Error("Server not found");
+      
+      const serverData = serverSnap.data();
+      if (serverData.privacy === 'private' || serverData.password) {
+        if (serverData.password !== password) {
+          throw new Error("Invalid group password");
+        }
+      }
+      
+      await updateDoc(serverRef, {
+        members: arrayUnion(userId),
+        [`memberRoles.${userId}`]: 'member'
+      });
+      
+      return serverSnap.id;
+    } catch (error) {
+      console.error("JoinWithPassword Error:", error);
+      throw error;
+    }
+  },
+
+  ensureMemberOfGlobalGroups: async (userId, university, domain) => {
+    try {
+      const serversRef = collection(db, "servers");
+      
+      // 1. Handle Welcome Group
+      const welcomeQuery = query(serversRef, where("name", "==", "Welcome Group"));
+      const welcomeSnap = await getDocs(welcomeQuery);
+      let welcomeId;
+
+      if (welcomeSnap.empty) {
+        // Create Welcome Group if it doesn't exist
+        const newWelcomeRef = await addDoc(serversRef, {
+          name: "Welcome Group",
+          ownerId: "system",
+          privacy: "public",
+          acronym: "WG",
+          members: [userId],
+          memberRoles: { [userId]: 'member' },
+          createdAt: serverTimestamp()
+        });
+        welcomeId = newWelcomeRef.id;
+      } else {
+        welcomeId = welcomeSnap.docs[0].id;
+        const welcomeDoc = welcomeSnap.docs[0].data();
+        if (!welcomeDoc.members?.includes(userId)) {
+          await updateDoc(doc(db, "servers", welcomeId), {
+            members: arrayUnion(userId),
+            [`memberRoles.${userId}`]: 'member'
+          });
+        }
+      }
+
+      // 2. Handle University-Specific Group
+      const uniQuery = query(serversRef, where("name", "==", university));
+      const uniSnap = await getDocs(uniQuery);
+      let uniId;
+
+      if (uniSnap.empty) {
+        // Create University Group
+        const newUniRef = await addDoc(serversRef, {
+          name: university,
+          domain: domain,
+          ownerId: "system",
+          privacy: "semi-public",
+          acronym: university.split(' ').map(w => w[0]).join('').toUpperCase(),
+          members: [userId],
+          memberRoles: { [userId]: 'member' },
+          createdAt: serverTimestamp()
+        });
+        uniId = newUniRef.id;
+      } else {
+        uniId = uniSnap.docs[0].id;
+        const uniDoc = uniSnap.docs[0].data();
+        if (!uniDoc.members?.includes(userId)) {
+          await updateDoc(doc(db, "servers", uniId), {
+            members: arrayUnion(userId),
+            [`memberRoles.${userId}`]: 'member'
+          });
+        }
+      }
+
+      // 3. Handle Anonymous Campus
+      const anonQuery = query(serversRef, where("name", "==", "Anonymous Campus"));
+      const anonSnap = await getDocs(anonQuery);
+      let anonId;
+
+      if (anonSnap.empty) {
+        const newAnonRef = await addDoc(serversRef, {
+          name: "Anonymous Campus",
+          ownerId: "system",
+          privacy: "public",
+          isAnonymous: true,
+          acronym: "AC",
+          members: [userId],
+          memberRoles: { [userId]: 'member' },
+          createdAt: serverTimestamp()
+        });
+        anonId = newAnonRef.id;
+      } else {
+        anonId = anonSnap.docs[0].id;
+        const anonDoc = anonSnap.docs[0].data();
+        if (!anonDoc.members?.includes(userId)) {
+          await updateDoc(doc(db, "servers", anonId), {
+            members: arrayUnion(userId),
+            [`memberRoles.${userId}`]: 'member'
+          });
+        }
+      }
+
+      return { welcomeId, uniId, anonId };
+    } catch (error) {
+      console.error("Enrollment Error:", error);
       throw error;
     }
   }

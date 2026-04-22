@@ -17,7 +17,7 @@ const iconMap = {
 };
 
 const ServerSidebar = () => {
-  const { servers, activeServerId, selectServer, setView } = usePlatform();
+  const { servers, activeServerId, selectServer, view, setView } = usePlatform();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   return (
@@ -63,7 +63,7 @@ const ServerSidebar = () => {
         icon={<Compass size={24} />} 
         label="Explore Communities" 
         color="green" 
-        onClick={() => setView('discover')}
+        onClick={() => setView('discovery')}
       />
       <div className="mt-auto pt-4 flex flex-col gap-2">
         <ServerActionIcon 

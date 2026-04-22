@@ -23,6 +23,7 @@ export const PlatformProvider = ({ children }) => {
   
   // Dynamic State - Driven by Firestore
   const [servers, setServers] = useState(mockServers);
+  const [discoverableServers, setDiscoverableServers] = useState([]);
   const [channels, setChannels] = useState(mockChannels);
   const [dmList, setDmList] = useState(mockDmList);
   const [currentUser, setCurrentUser] = useState(null);
@@ -54,6 +55,11 @@ export const PlatformProvider = ({ children }) => {
         };
         setCurrentUser(newUser);
         dbService.updateUserStatus(user.uid, 'online');
+        
+        // Automatic Campus Enrollment (Step 1 of PDF Roadmap)
+        if (newUser.university && newUser.domain) {
+          dbService.ensureMemberOfGlobalGroups(user.uid, newUser.university, newUser.domain);
+        }
       } else {
         setCurrentUser(null);
       }
@@ -64,7 +70,7 @@ export const PlatformProvider = ({ children }) => {
 
   // 2. Real-time Firestore Subscriptions
   useEffect(() => {
-    if (!currentUser?.id && !currentUser?.uid) return;
+    if (!currentUser) return;
     const uid = currentUser.uid || currentUser.id;
 
     const prepareCloud = async () => {
@@ -79,7 +85,15 @@ export const PlatformProvider = ({ children }) => {
     const unsubServers = dbService.subscribeToServers((data) => {
       try {
         if (data && data.length > 0) {
-          setServers(data);
+          const joined = data.filter(s => Array.isArray(s.members) && s.members.includes(uid));
+          const discoverable = data.filter(s => {
+            if (Array.isArray(s.members) && s.members.includes(uid)) return false;
+            if (s.privacy === 'public') return true;
+            if (s.privacy === 'semi-public' && s.domain === currentUser?.domain) return true;
+            return false; // private groups are NOT discoverable
+          });
+          setServers(joined);
+          setDiscoverableServers(discoverable);
           setIsHydrated(true);
         }
       } catch (err) {
@@ -236,14 +250,24 @@ export const PlatformProvider = ({ children }) => {
     });
   };
 
-  const createServer = async (name) => {
+  const createServer = async (name, privacy = 'public', password = null) => {
     const uid = currentUser?.uid || currentUser?.id;
     if (!uid) return;
     try {
-      const serverId = await dbService.createServer(name, uid);
-      selectServer(serverId);
+      await dbService.createServer(name, uid, privacy, password);
     } catch (err) {
       console.error("Context CreateServer Error:", err);
+    }
+  };
+
+  const joinServer = async (serverId, password = null) => {
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid) return;
+    try {
+      await dbService.joinServerWithPassword(serverId, uid, password);
+    } catch (err) {
+      console.error("Context JoinServer Error:", err);
+      throw err;
     }
   };
 
@@ -344,6 +368,7 @@ export const PlatformProvider = ({ children }) => {
     loading,
     logout,
     servers,
+    discoverableServers,
     channels,
     dmList,
     showMemberList,
@@ -374,7 +399,8 @@ export const PlatformProvider = ({ children }) => {
     updateMemberRole,
     deleteMessage,
     kickMember,
-    updateServer
+    updateServer,
+    joinServer
   };
 
   return (

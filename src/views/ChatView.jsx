@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Hash, Bell, Pin, Users, Search, Inbox,
   HelpCircle, PlusCircle, Gift, Sticker,
-  Smile, LayoutGrid, Menu, Pencil, ChevronRight, X, BellOff
+  Smile, LayoutGrid, Menu, Pencil, ChevronRight, X, BellOff, Sparkles, Ghost
 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import Avatar from '../components/Avatar';
@@ -42,7 +42,7 @@ const ThreadsIcon = ({ size = 20 }) => (
   </svg>
 );
 
-const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, role, onDelete, canDelete }) => (
+const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, role, onDelete, canDelete, isAnonymous }) => (
   <motion.div
     initial={{ opacity: 0, y: 4 }}
     animate={{ opacity: 1, y: 0 }}
@@ -63,7 +63,13 @@ const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, rol
     <div className="w-10 shrink-0">
       {!hideGutter ? (
         <div className="relative cursor-pointer transition-transform hover:scale-105 active:scale-95">
-          <Avatar userId={userId} name={user} size={40} />
+          {isAnonymous ? (
+            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[#B5BAC1]">
+              <Ghost size={20} />
+            </div>
+          ) : (
+            <Avatar userId={userId} name={user} size={40} />
+          )}
         </div>
       ) : (
         <div className="opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-[#949BA4] mt-1 select-none font-bold">
@@ -75,10 +81,10 @@ const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, rol
       {!hideGutter && (
         <div className="flex items-center gap-2 mb-0.5">
           <span className={`font-bold text-[16px] hover:underline cursor-pointer leading-tight font-display tracking-tight ${
-            role === 'owner' ? 'text-brand-indigo' : role === 'admin' ? 'text-status-online' : role === 'moderator' ? 'text-purple-400' : 'text-white'
-          }`}>{user}</span>
+            isAnonymous ? 'text-white' : role === 'owner' ? 'text-brand-indigo' : role === 'admin' ? 'text-status-online' : role === 'moderator' ? 'text-purple-400' : 'text-white'
+          }`}>{isAnonymous ? "Anonymous" : user}</span>
           
-          {role && role !== 'member' && (
+          {role && role !== 'member' && !isAnonymous && (
             <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-sm ${
               role === 'owner' ? 'bg-brand-indigo/20 text-brand-indigo' : 
               role === 'admin' ? 'bg-status-online/20 text-status-online' : 
@@ -88,7 +94,7 @@ const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, rol
             </span>
           )}
 
-          {user.toLowerCase().includes('bot') || user.toLowerCase().includes('ai') ? (
+          {!isAnonymous && (user.toLowerCase().includes('bot') || user.toLowerCase().includes('ai')) ? (
             <span className="bg-[#5865F2] text-white text-[10px] px-1 py-0.5 rounded-[4px] font-black flex items-center gap-0.5 select-none -translate-y-0.5 shadow-[0_0_10px_rgba(88,101,242,0.4)]">
               APP
             </span>
@@ -103,7 +109,7 @@ const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, rol
   </motion.div>
 );
 
-const MemberCategory = ({ label, members }) => {
+const MemberCategory = ({ label, members, isAnonymous }) => {
   const { selectDM } = usePlatform();
   
   return (
@@ -113,17 +119,23 @@ const MemberCategory = ({ label, members }) => {
         {members.map(member => (
           <div
             key={member.id || member.name}
-            onClick={() => { if (member.id) selectDM(member.id); }}
-            className="flex items-center gap-3 px-2 py-1.5 rounded-[8px] hover:bg-white/5 cursor-pointer group transition-all"
+            onClick={() => { if (member.id && !isAnonymous) selectDM(member.id); }}
+            className={`flex items-center gap-3 px-2 py-1.5 rounded-[8px] hover:bg-white/5 cursor-pointer group transition-all ${isAnonymous ? 'cursor-default' : ''}`}
           >
           <div className="relative transition-transform group-hover:scale-105">
-            <Avatar userId={member.id} name={member.name} size={32} status={member.status} />
+            {isAnonymous ? (
+              <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[#B5BAC1]">
+                <Ghost size={16} />
+              </div>
+            ) : (
+              <Avatar userId={member.id} name={member.name} size={32} status={member.status} />
+            )}
           </div>
           <span className={`text-[14px] font-bold truncate transition-colors ${member.status === 'online' ? 'text-[#DBDEE1] group-hover:text-white' : 'text-[#80848E]'
             }`}>
-            {member.name}
+            {isAnonymous ? "Anonymous student" : member.name}
           </span>
-          {member.role && member.role !== 'member' && (
+          {member.role && member.role !== 'member' && !isAnonymous && (
             <span className={`ml-auto text-[8px] px-1 py-0.5 rounded-full font-black uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-opacity ${
               member.role === 'owner' ? 'bg-brand-indigo/20 text-brand-indigo' : 
               member.role === 'admin' ? 'bg-status-online/20 text-status-online' : 
@@ -147,7 +159,7 @@ const ChatView = ({ targetId }) => {
     setIsMobileMenuOpen, showThreadsSidebar, setShowThreadsSidebar,
     mutedChannels, toggleMute, pinnedMessages, togglePinMessage,
     showInbox, setShowInbox, showPins, setShowPins, notifications,
-    userStatuses, selectDM, hasPermission, deleteMessage
+    userStatuses, selectDM, hasPermission, deleteMessage, joinServer
   } = usePlatform();
 
   const [inputText, setInputText] = useState('');
@@ -270,6 +282,8 @@ const ChatView = ({ targetId }) => {
   };
 
   // FORCE SCROLL RECOVERY SYSTEM
+  const isMember = (Array.isArray(activeServer?.members) && activeServer.members.includes(currentUser?.uid || currentUser?.id)) || activeServerId === 'home';
+  
   return (
     <div className="flex-1 flex min-h-0 h-full bg-bg-primary relative overflow-hidden mesh-silk animate-mesh">
       <AnimatePresence>
@@ -461,6 +475,7 @@ const ChatView = ({ targetId }) => {
                   role={userRole}
                   onDelete={deleteMessage}
                   canDelete={canDelete}
+                  isAnonymous={activeServer?.isAnonymous}
                   hideGutter={idx > 0 && filteredMessages[idx - 1].user === msg.user}
                 />
               );
@@ -496,39 +511,73 @@ const ChatView = ({ targetId }) => {
           </AnimatePresence>
 
           <div className="max-w-[1240px] mx-auto flex flex-col items-center">
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="bg-bg-secondary w-full min-h-[44px] rounded-[8px] shadow-lg flex items-center gap-2 relative px-2 border border-white/5 mx-auto"
-            >
-              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors"><PlusCircle size={22} /></button>
-              </div>
+            <AnimatePresence mode="wait">
+              {isMember ? (
+                <motion.div
+                  key="input"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 20, opacity: 0 }}
+                  className="bg-bg-secondary w-full min-h-[44px] rounded-[8px] shadow-lg flex items-center gap-2 relative px-2 border border-white/5 mx-auto"
+                >
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                    <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors"><PlusCircle size={22} /></button>
+                  </div>
 
-              <div className="flex-1 min-w-0 py-2">
-                <input
-                  type="text"
-                  value={inputText}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder={`Message ${dm ? '@' : '#'}${title}`}
-                  className="w-full bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none border-none focus:ring-0 focus:outline-none text-[15px] font-medium"
-                />
-              </div>
+                  <div className="flex-1 min-w-0 py-2">
+                    <input
+                      type="text"
+                      value={inputText}
+                      onChange={handleInputChange}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                      placeholder={`Message ${dm ? '@' : '#'}${title}`}
+                      className="w-full bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none border-none focus:ring-0 focus:outline-none text-[15px] font-medium"
+                    />
+                  </div>
 
-              <div className="flex items-center gap-1 sm:gap-2 pr-1 shrink-0">
-                <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Gift size={20} /></button>
-                <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Sticker size={20} /></button>
-                <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors"><Smile size={20} /></button>
-                <button className="p-1.5 flex items-center justify-center text-[#B5BAC1] hover:text-[#DBDEE1] transition-all">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                    <line x1="12" y1="19" x2="12" y2="23" />
-                  </svg>
-                </button>
-              </div>
-            </motion.div>
+                  <div className="flex items-center gap-1 sm:gap-2 pr-1 shrink-0">
+                    <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Gift size={20} /></button>
+                    <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Sticker size={20} /></button>
+                    <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors"><Smile size={20} /></button>
+                    <button className="p-1.5 flex items-center justify-center text-[#B5BAC1] hover:text-[#DBDEE1] transition-all">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" y1="19" x2="12" y2="23" />
+                      </svg>
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="join-bar"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 20, opacity: 0 }}
+                  className="bg-brand-indigo/10 border border-brand-indigo/30 p-4 rounded-xl flex items-center justify-between shadow-2xl backdrop-blur-md"
+                >
+                  <div className="p-3 bg-[#2B2D31]/80 backdrop-blur-md border border-white/5 rounded-xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                    <div className="w-10 h-10 rounded-full bg-brand-indigo/20 flex items-center justify-center text-brand-indigo">
+                      {activeServer?.isAnonymous ? <Ghost size={20} /> : <Hash size={20} />}
+                    </div>
+                    <div>
+                      <h2 className="text-white font-black text-sm tracking-tight">{activeServer?.isAnonymous ? "Anonymous Campus" : `Welcome to #${title}!`}</h2>
+                      <p className="text-[#B5BAC1] text-xs font-medium">
+                        {activeServer?.isAnonymous 
+                          ? "Your identity is hidden here. Speak your mind freely and respectfully." 
+                          : `This is the start of the #${title} channel.`}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => joinServer(activeServerId)}
+                    className="bg-brand-indigo hover:bg-brand-indigo-hover text-white px-6 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg"
+                  >
+                    Join Server
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -562,6 +611,7 @@ const ChatView = ({ targetId }) => {
                   {currentUser && (
                     <MemberCategory 
                       label="The Founder — 1" 
+                      isAnonymous={activeServer?.isAnonymous}
                       members={[{ 
                         id: currentUser.uid || currentUser.id, 
                         name: currentUser.displayName || currentUser.name, 
@@ -572,6 +622,7 @@ const ChatView = ({ targetId }) => {
                   )}
                   <MemberCategory 
                     label={`Classmates — ${dmList.length}`} 
+                    isAnonymous={activeServer?.isAnonymous}
                     members={dmList.map(u => ({ 
                       ...u, 
                       status: userStatuses[u.id] || u.status,

@@ -5,7 +5,7 @@ import ServerSidebar from './components/ServerSidebar';
 import ChannelSidebar from './components/ChannelSidebar';
 import FriendsView from './views/FriendsView';
 import ChatView from './views/ChatView';
-import DiscoverView from './views/DiscoverView';
+import DiscoveryView from './views/DiscoveryView';
 import NotificationsView from './views/NotificationsView';
 import ProfileView from './views/ProfileView';
 import AuthView from './views/AuthView';
@@ -139,11 +139,11 @@ const AppContent = () => {
         >
           {view === 'friends' && <FriendsView />}
           {view === 'chat' && <ChatView targetId={targetId} />}
-          {view === 'discover' && <DiscoverView />}
+          {view === 'discovery' && <DiscoveryView />}
           {view === 'notifications' && <NotificationsView />}
           {view === 'profile' && <ProfileView />}
-          {(view === 'feed' || view === 'resources' || view === 'quests') && <DiscoverView />}
-          {!['friends', 'chat', 'discover', 'notifications', 'profile', 'feed', 'resources', 'quests'].includes(view) && <FriendsView />}
+          {(view === 'feed' || view === 'resources' || view === 'quests') && <DiscoveryView />}
+          {!['friends', 'chat', 'discovery', 'notifications', 'profile', 'feed', 'resources', 'quests'].includes(view) && <FriendsView />}
         </motion.div>
       </AnimatePresence>
     );

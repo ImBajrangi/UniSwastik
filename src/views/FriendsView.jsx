@@ -5,11 +5,13 @@ import { usePlatform } from '../context/PlatformContext';
 import Avatar from '../components/Avatar';
 import HeaderIcon from '../components/HeaderIcon';
 import { playClick } from '../utils/sounds';
+import CreateModal from '../components/CreateModal';
 
 const FriendsView = () => {
   const { dmList, selectDM, setIsMobileMenuOpen, userStatuses } = usePlatform();
   const [activeTab, setActiveTab] = useState('online');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateServerModal, setShowCreateServerModal] = useState(false);
 
   // Filtering Logic
   const filteredFriends = dmList.filter(user => {
@@ -127,6 +129,30 @@ const FriendsView = () => {
           </header>
 
           <div className="flex flex-col gap-3">
+             {/* Create Community Call to Action */}
+             <motion.div
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               whileHover={{ y: -4 }}
+               onClick={() => setShowCreateServerModal(true)}
+               className="premium-gradient p-[1px] rounded-2xl cursor-pointer group shadow-2xl mb-2"
+             >
+               <div className="bg-[#111214] rounded-[15px] p-5 flex flex-col gap-3">
+                 <div className="flex items-center justify-between">
+                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">
+                     <Plus size={24} strokeWidth={3} />
+                   </div>
+                   <span className="bg-white/10 text-white text-[9px] px-2 py-1 rounded-full font-black uppercase tracking-tighter">New Feature</span>
+                 </div>
+                 <div>
+                   <h3 className="text-white font-black text-lg font-display leading-tight">Start a Community</h3>
+                   <p className="text-white/60 text-xs font-medium mt-1">Create a space for your study group, club, or friends.</p>
+                 </div>
+               </div>
+             </motion.div>
+
+             <div className="h-px bg-white/5 my-2" />
+
              {dmList.filter(u => (userStatuses[u.id] || u.status) !== 'offline').length > 0 ? (
                dmList
                 .filter(u => (userStatuses[u.id] || u.status) !== 'offline')
@@ -162,6 +188,15 @@ const FriendsView = () => {
           </div>
         </aside>
       </div>
+      
+      <AnimatePresence>
+        {showCreateServerModal && (
+          <CreateModal 
+            type="server" 
+            onClose={() => setShowCreateServerModal(false)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

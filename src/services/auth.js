@@ -1,7 +1,7 @@
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
@@ -9,6 +9,28 @@ import {
 } from "firebase/auth";
 import { auth, db } from "../lib/firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+
+const getUniversityFromEmail = (email) => {
+  if (!email) return "Swastik University";
+  const domain = email.split('@')[1];
+  if (!domain) return "Swastik University";
+
+  // Mapping of common domains to University names
+  const domainMap = {
+    'swastik.edu': 'Swastik University',
+    'mit.edu': 'Massachusetts Institute of Technology',
+    'stanford.edu': 'Stanford University',
+    'harvard.edu': 'Harvard University',
+    'ox.ac.uk': 'Oxford University',
+    'cam.ac.uk': 'Cambridge University',
+    'iit.edu': 'IIT Delhi',
+    'bits-pilani.ac.in': 'BITS Pilani',
+    'gla.ac.in': 'GLA University',
+    'dev': 'Developer'
+  };
+
+  return domainMap[domain] || domain.split('.')[0].toUpperCase() + " University";
+};
 
 export const authService = {
   // Login with Email/Password
@@ -32,13 +54,15 @@ export const authService = {
       await updateProfile(user, { displayName: name });
 
       // Create user document in Firestore
+      const university = getUniversityFromEmail(email);
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         name,
         email,
+        domain: email.split('@')[1],
         avatar: "",
         status: "online",
-        university: "Swastik University",
+        university: university,
         createdAt: serverTimestamp(),
         lastLogin: serverTimestamp()
       });
@@ -60,13 +84,15 @@ export const authService = {
       // Check if user exists in Firestore, if not create
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (!userDoc.exists()) {
+        const university = getUniversityFromEmail(user.email);
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,
           name: user.displayName,
           email: user.email,
+          domain: user.email.split('@')[1],
           avatar: user.photoURL || "",
           status: "online",
-          university: "Swastik University",
+          university: university,
           createdAt: serverTimestamp(),
           lastLogin: serverTimestamp()
         });
