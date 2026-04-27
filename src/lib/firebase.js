@@ -4,6 +4,7 @@ import { getAuth } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 import { getDataConnect } from "firebase/data-connect";
 import { getStorage } from "firebase/storage";
+import { connectorConfig } from "../dataconnect-generated";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBml9K74iLN7NRy3qXN9SQcK1GIJTPmYuk",
@@ -21,6 +22,6 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
-const dataconnect = getDataConnect(app);
+const dataconnect = getDataConnect(connectorConfig);
 
 export { app, db, auth, storage, analytics, dataconnect };

@@ -311,4 +311,4 @@ const CategoryChip = ({ label }) => (
   </motion.button>
 );
 
-export default DiscoverView;
+export default DiscoveryView;

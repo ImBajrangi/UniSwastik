@@ -82,8 +82,9 @@ export const PlatformProvider = ({ children }) => {
         if (data) {
           const joined = data.filter(s => Array.isArray(s.members) && s.members.includes(uid));
           const discoverable = data.filter(s => {
+            const memberList = Array.isArray(s.members) ? s.members : [];
             // Already joined - don't show in discover
-            if (s.members?.includes(uid)) return false;
+            if (memberList.includes(uid)) return false;
             
             if (s.privacy === 'public') return true;
             if (s.privacy === 'semi-public' && s.domain === currentUser?.domain) return true;

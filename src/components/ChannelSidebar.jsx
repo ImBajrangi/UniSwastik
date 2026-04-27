@@ -19,7 +19,7 @@ const ChannelSidebar = () => {
     activeServerId, activeChannelId, activeDMId,
     servers, channels, dmList,
     selectServer, selectChannel, selectDM, removeServer, removeChannel,
-    hasPermission, setView, view
+    hasPermission, setView, view, leaveServer
   } = usePlatform();
 
   const [showSettings, setShowSettings] = useState(false);
