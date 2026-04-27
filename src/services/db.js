@@ -15,9 +15,11 @@ import {
   deleteDoc,
   arrayUnion,
   arrayRemove,
-  deleteField
+  deleteField,
+  increment
 } from "firebase/firestore";
-import { db, auth } from "../lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, auth, storage } from "../lib/firebase";
 
 export const dbService = {
   // --- Servers & Channels ---
@@ -153,17 +155,82 @@ export const dbService = {
     }
   },
 
-  sendMessage: async (targetId, userId, userName, content) => {
+  sendMessage: async (targetId, userId, userName, content, attachments = []) => {
     try {
-      await addDoc(collection(db, "messages"), {
+      const msgData = {
         targetId,
         user: userName,
         userId,
         content,
         timestamp: serverTimestamp(),
-      });
+        reactions: {},
+        edited: false,
+      };
+      if (attachments.length > 0) {
+        msgData.attachments = attachments;
+      }
+      await addDoc(collection(db, "messages"), msgData);
     } catch (error) {
       console.error("SendMessage Error:", error);
+      throw error;
+    }
+  },
+
+  // --- Message Editing ---
+  updateMessage: async (messageId, newContent) => {
+    try {
+      const msgRef = doc(db, "messages", messageId);
+      await updateDoc(msgRef, {
+        content: newContent,
+        edited: true,
+        editedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("UpdateMessage Error:", error);
+      throw error;
+    }
+  },
+
+  // --- Reactions ---
+  addReaction: async (messageId, emoji, userId) => {
+    try {
+      const msgRef = doc(db, "messages", messageId);
+      // Store reactions as a map: { "👍": ["uid1", "uid2"], "❤️": ["uid3"] }
+      await updateDoc(msgRef, {
+        [`reactions.${emoji}`]: arrayUnion(userId)
+      });
+    } catch (error) {
+      console.error("AddReaction Error:", error);
+      throw error;
+    }
+  },
+
+  removeReaction: async (messageId, emoji, userId) => {
+    try {
+      const msgRef = doc(db, "messages", messageId);
+      await updateDoc(msgRef, {
+        [`reactions.${emoji}`]: arrayRemove(userId)
+      });
+    } catch (error) {
+      console.error("RemoveReaction Error:", error);
+      throw error;
+    }
+  },
+
+  // --- File Uploads ---
+  uploadFile: async (file, path) => {
+    try {
+      const storageRef = ref(storage, path || `uploads/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      return {
+        url,
+        name: file.name,
+        size: file.size,
+        type: file.type
+      };
+    } catch (error) {
+      console.error("UploadFile Error:", error);
       throw error;
     }
   },
@@ -260,6 +327,42 @@ export const dbService = {
     });
   },
 
+  subscribeToServerMembers: (serverId, callback) => {
+    if (!serverId || serverId === 'home') {
+      callback([]);
+      return () => {};
+    }
+
+    // First get the server to get the list of member IDs
+    const serverRef = doc(db, "servers", serverId);
+    return onSnapshot(serverRef, (serverSnap) => {
+      if (!serverSnap.exists()) {
+        callback([]);
+        return;
+      }
+
+      const memberIds = serverSnap.data().members || [];
+      if (memberIds.length === 0) {
+        callback([]);
+        return;
+      }
+
+      // Then subscribe to the users collection, filtering for these IDs
+      // Note: Firestore 'in' query is limited to 10-30 items, so for large groups we might need a different approach
+      // For now, we'll subscribe to all users and filter locally to keep it simple and reactive for presence
+      return onSnapshot(collection(db, "users"), (userSnap) => {
+        const members = userSnap.docs
+          .filter(doc => memberIds.includes(doc.id))
+          .map(doc => ({
+            id: doc.id,
+            uid: doc.id,
+            ...doc.data()
+          }));
+        callback(members);
+      });
+    });
+  },
+
   subscribeToUserStatus: (callback) => {
     return onSnapshot(collection(db, "users"), (snapshot) => {
       const statuses = {};
@@ -276,6 +379,24 @@ export const dbService = {
       status, 
       lastActive: serverTimestamp() 
     }, { merge: true });
+  },
+
+  // --- Custom Status (Discord-style) ---
+  updateCustomStatus: async (userId, statusText, statusEmoji, clearAfter = null) => {
+    try {
+      const userRef = doc(db, "users", userId);
+      await setDoc(userRef, {
+        customStatus: {
+          text: statusText || '',
+          emoji: statusEmoji || '',
+          clearAfter: clearAfter,
+          updatedAt: serverTimestamp()
+        }
+      }, { merge: true });
+    } catch (error) {
+      console.error("UpdateCustomStatus Error:", error);
+      throw error;
+    }
   },
 
   updateMemberRole: async (serverId, userId, role) => {
@@ -329,94 +450,101 @@ export const dbService = {
     }
   },
 
+  // --- Voice Channel State ---
+  joinVoiceChannel: async (channelId, userId, userName) => {
+    try {
+      const voiceRef = doc(db, "voiceState", `${channelId}_${userId}`);
+      await setDoc(voiceRef, {
+        channelId,
+        userId,
+        userName,
+        joinedAt: serverTimestamp(),
+        muted: false,
+        deafened: false
+      });
+    } catch (error) {
+      console.error("JoinVoiceChannel Error:", error);
+      throw error;
+    }
+  },
+
+  leaveVoiceChannel: async (channelId, userId) => {
+    try {
+      const voiceRef = doc(db, "voiceState", `${channelId}_${userId}`);
+      await deleteDoc(voiceRef);
+    } catch (error) {
+      console.error("LeaveVoiceChannel Error:", error);
+      throw error;
+    }
+  },
+
+  subscribeToVoiceState: (channelId, callback) => {
+    const q = query(collection(db, "voiceState"), where("channelId", "==", channelId));
+    return onSnapshot(q, (snapshot) => {
+      const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(users);
+    });
+  },
+
   ensureMemberOfGlobalGroups: async (userId, university, domain) => {
     try {
       const serversRef = collection(db, "servers");
       
-      // 1. Handle Welcome Group
-      const welcomeQuery = query(serversRef, where("name", "==", "Welcome Group"));
-      const welcomeSnap = await getDocs(welcomeQuery);
-      let welcomeId;
+      const ensureGroup = async (name, extraData = {}) => {
+        const q = query(serversRef, where("name", "==", name));
+        const snap = await getDocs(q);
+        let groupId;
 
-      if (welcomeSnap.empty) {
-        // Create Welcome Group if it doesn't exist
-        const newWelcomeRef = await addDoc(serversRef, {
-          name: "Welcome Group",
-          ownerId: "system",
-          privacy: "public",
-          acronym: "WG",
-          members: [userId],
-          memberRoles: { [userId]: 'member' },
-          createdAt: serverTimestamp()
-        });
-        welcomeId = newWelcomeRef.id;
-      } else {
-        welcomeId = welcomeSnap.docs[0].id;
-        const welcomeDoc = welcomeSnap.docs[0].data();
-        if (!welcomeDoc.members?.includes(userId)) {
-          await updateDoc(doc(db, "servers", welcomeId), {
-            members: arrayUnion(userId),
-            [`memberRoles.${userId}`]: 'member'
+        if (snap.empty) {
+          // Create Group if it doesn't exist
+          const newRef = await addDoc(serversRef, {
+            name,
+            ownerId: "system",
+            privacy: "public",
+            acronym: name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
+            members: [userId],
+            memberRoles: { [userId]: 'member' },
+            createdAt: serverTimestamp(),
+            ...extraData
           });
+          groupId = newRef.id;
+          
+          // Create default channel
+          await addDoc(collection(db, "channels"), {
+            name: "general",
+            serverId: groupId,
+            type: "text",
+            createdAt: serverTimestamp()
+          });
+        } else {
+          groupId = snap.docs[0].id;
+          const groupDoc = snap.docs[0].data();
+          if (!groupDoc.members?.includes(userId)) {
+            await updateDoc(doc(db, "servers", groupId), {
+              members: arrayUnion(userId),
+              [`memberRoles.${userId}`]: 'member'
+            });
+          }
         }
-      }
+        return groupId;
+      };
+
+      // 1. Handle Welcome Group
+      const welcomeId = await ensureGroup("Welcome Group", { acronym: "WG" });
 
       // 2. Handle University-Specific Group
-      const uniQuery = query(serversRef, where("name", "==", university));
-      const uniSnap = await getDocs(uniQuery);
-      let uniId;
-
-      if (uniSnap.empty) {
-        // Create University Group
-        const newUniRef = await addDoc(serversRef, {
-          name: university,
-          domain: domain,
-          ownerId: "system",
-          privacy: "semi-public",
-          acronym: university.split(' ').map(w => w[0]).join('').toUpperCase(),
-          members: [userId],
-          memberRoles: { [userId]: 'member' },
-          createdAt: serverTimestamp()
-        });
-        uniId = newUniRef.id;
-      } else {
-        uniId = uniSnap.docs[0].id;
-        const uniDoc = uniSnap.docs[0].data();
-        if (!uniDoc.members?.includes(userId)) {
-          await updateDoc(doc(db, "servers", uniId), {
-            members: arrayUnion(userId),
-            [`memberRoles.${userId}`]: 'member'
-          });
-        }
-      }
+      const uniId = await ensureGroup(university, { 
+        domain: domain, 
+        privacy: "semi-public",
+        acronym: university.split(' ').map(w => w[0]).join('').toUpperCase()
+      });
 
       // 3. Handle Anonymous Campus
-      const anonQuery = query(serversRef, where("name", "==", "Anonymous Campus"));
-      const anonSnap = await getDocs(anonQuery);
-      let anonId;
-
-      if (anonSnap.empty) {
-        const newAnonRef = await addDoc(serversRef, {
-          name: "Anonymous Campus",
-          ownerId: "system",
-          privacy: "public",
-          isAnonymous: true,
-          acronym: "AC",
-          members: [userId],
-          memberRoles: { [userId]: 'member' },
-          createdAt: serverTimestamp()
-        });
-        anonId = newAnonRef.id;
-      } else {
-        anonId = anonSnap.docs[0].id;
-        const anonDoc = anonSnap.docs[0].data();
-        if (!anonDoc.members?.includes(userId)) {
-          await updateDoc(doc(db, "servers", anonId), {
-            members: arrayUnion(userId),
-            [`memberRoles.${userId}`]: 'member'
-          });
-        }
-      }
+      const anonId = await ensureGroup("Anonymous Campus", { 
+        isAnonymous: true, 
+        acronym: "AC",
+        description: "Interact freely without sharing your profile details."
+      });
 
       return { welcomeId, uniId, anonId };
     } catch (error) {

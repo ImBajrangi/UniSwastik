@@ -1,0 +1,87 @@
+# Swastik Platform Data Connect Operations
+
+# --- User Operations ---
+mutation CreateUser($id: String!, $name: String!, $email: String!, $university: String, $domain: String) @auth(level: USER) {
+  user_insert(data: {
+    id: $id,
+    name: $name,
+    email: $email,
+    university: $university,
+    domain: $domain
+  })
+}
+
+query GetUser($id: String!) @auth(level: USER) {
+  user(id: $id) {
+    id
+    name
+    avatar
+    status
+    university
+    domain
+  }
+}
+
+# --- Server Operations ---
+query ListJoinedServers($userId: String!) @auth(level: USER) {
+  members(where: { userId: { eq: $userId } }) {
+    server {
+      id
+      name
+      acronym
+      privacy
+      isAnonymous
+    }
+    role
+  }
+}
+
+query ListDiscoverableServers($domain: String) @auth(level: USER) {
+  servers(where: {
+    _or: [
+      { privacy: { eq: "public" } },
+      { _and: [ { privacy: { eq: "semi-public" } }, { domain: { eq: $domain } } ] }
+    ]
+  }) {
+    id
+    name
+    acronym
+    description: name # Fallback
+  }
+}
+
+mutation JoinServer($userId: String!, $serverId: UUID!) @auth(level: USER) {
+  member_insert(data: {
+    userId: $userId,
+    serverId: $serverId,
+    role: "member"
+  })
+}
+
+# --- Messaging ---
+query ListMessages($targetId: UUID!) @auth(level: USER) {
+  messages(where: { 
+    _or: [
+      { channelId: { eq: $targetId } },
+      { dmId: { eq: $targetId } }
+    ]
+  }, orderBy: { timestamp: ASC }) {
+    id
+    content
+    author {
+      id
+      name
+      avatar
+    }
+    timestamp
+  }
+}
+
+mutation SendMessage($authorId: String!, $content: String!, $channelId: UUID, $dmId: UUID) @auth(level: USER) {
+  message_insert(data: {
+    authorId: $authorId,
+    content: $content,
+    channelId: $channelId,
+    dmId: $dmId
+  })
+}

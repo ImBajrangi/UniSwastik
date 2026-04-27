@@ -7,8 +7,9 @@ import {
   signInWithPopup,
   updateProfile
 } from "firebase/auth";
-import { auth, db } from "../lib/firebase";
+import { auth, db, dataconnect } from "../lib/firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { createUser } from "../dataconnect-generated";
 
 const getUniversityFromEmail = (email) => {
   if (!email) return "Swastik University";
@@ -63,9 +64,20 @@ export const authService = {
         avatar: "",
         status: "online",
         university: university,
-        createdAt: serverTimestamp(),
-        lastLogin: serverTimestamp()
       });
+      
+      // Sync to Data Connect (SQL)
+      try {
+        await createUser(dataconnect, {
+          id: user.uid,
+          name: name,
+          email: email,
+          university: university,
+          domain: email.split('@')[1]
+        });
+      } catch (dcErr) {
+        console.warn("Data Connect Sync Warning (Ignored for now):", dcErr);
+      }
 
       return user;
     } catch (error) {

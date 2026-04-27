@@ -12,6 +12,7 @@ import { playClick } from '../utils/sounds';
 import CreateModal from './CreateModal';
 import ServerSettingsModal from './ServerSettingsModal';
 import Tooltip from './Tooltip';
+import { dbService } from '../services/db';
 
 const ChannelSidebar = () => {
   const {
@@ -218,15 +219,34 @@ const HomeNavigation = ({ dmList, activeDMId, selectDM }) => {
 };
 
 const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingColor }) => {
-  const { channels, removeChannel, hasPermission } = usePlatform();
+  const { channels, removeChannel, hasPermission, joinVoiceChannel, leaveVoiceChannel, activeVoiceChannel, currentUser, voiceChannelUsers, setVoiceChannelUsers } = usePlatform();
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const serverChannels = channels[serverId] || [];
+
+  // Subscribe to voice state for all voice channels
+  useEffect(() => {
+    const voiceChannels = serverChannels.filter(c => c.type === 'voice');
+    const unsubs = voiceChannels.map(vc => 
+      dbService.subscribeToVoiceState(vc.id, (users) => {
+        setVoiceChannelUsers(prev => ({ ...prev, [vc.id]: users }));
+      })
+    );
+    return () => unsubs.forEach(u => u && u());
+  }, [serverId, serverChannels.length]);
 
   const getIcon = (type, name) => {
     if (type === 'voice') return <Volume2 size={18} />;
     if (name.includes('announce')) return <Megaphone size={18} />;
     if (name.includes('rules') || name.includes('academic')) return <BookOpen size={18} />;
     return <Hash size={18} />;
+  };
+
+  const handleVoiceClick = (channelId) => {
+    if (activeVoiceChannel === channelId) {
+      leaveVoiceChannel();
+    } else {
+      joinVoiceChannel(channelId);
+    }
   };
 
   return (
@@ -251,16 +271,28 @@ const ServerNavigation = ({ serverId, activeChannelId, selectChannel, brandingCo
       <CollapsibleSection label="Voice Channels" spacing="mt-4">
         <AnimatePresence mode="popLayout">
           {serverChannels.filter(c => c.type === 'voice').map((channel, index) => (
-            <ChannelItem
-              key={channel.id}
-              index={index}
-              icon={getIcon(channel.type, channel.name)}
-              label={channel.name}
-              active={activeChannelId === channel.id}
-              onClick={() => selectChannel(channel.id)}
-              onRemove={hasPermission('manage_channels') ? () => removeChannel(serverId, channel.id) : null}
-              accentColor={brandingColor}
-            />
+            <div key={channel.id}>
+              <ChannelItem
+                index={index}
+                icon={getIcon(channel.type, channel.name)}
+                label={channel.name}
+                active={activeVoiceChannel === channel.id}
+                onClick={() => handleVoiceClick(channel.id)}
+                onRemove={hasPermission('manage_channels') ? () => removeChannel(serverId, channel.id) : null}
+                accentColor={brandingColor}
+              />
+              {/* Voice users in channel */}
+              {voiceChannelUsers[channel.id]?.length > 0 && (
+                <div className="ml-8 mt-0.5 mb-1 space-y-0.5">
+                  {voiceChannelUsers[channel.id].map(vu => (
+                    <div key={vu.userId} className="flex items-center gap-2 px-2 py-1 rounded-md text-[13px] text-[#949BA4] font-medium">
+                      <Avatar name={vu.userName} size={20} />
+                      <span className="truncate">{vu.userName}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </AnimatePresence>
       </CollapsibleSection>

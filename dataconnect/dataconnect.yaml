@@ -1,0 +1,12 @@
+specVersion: "v1alpha"
+serviceId: "swastik-platform"
+location: "us-central1"
+schema:
+  source: "schema"
+  datasource:
+    postgresql:
+      database: "fdc"
+      cloudSql:
+        instanceId: "swastik-platform-fdc"
+connectorDirs:
+  - "connector"

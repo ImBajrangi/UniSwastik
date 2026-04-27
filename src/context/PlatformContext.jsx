@@ -37,6 +37,9 @@ export const PlatformProvider = ({ children }) => {
   const [typingUsers, setTypingUsers] = useState({}); // { targetId: [userNames] }
   const [userStatuses, setUserStatuses] = useState({});
   const [allUsers, setAllUsers] = useState([]);
+  const [activeServerMembers, setActiveServerMembers] = useState([]);
+  const [activeVoiceChannel, setActiveVoiceChannel] = useState(null);
+  const [voiceChannelUsers, setVoiceChannelUsers] = useState({});
 
   // 1. Firebase Auth Initialization
   useEffect(() => {
@@ -76,12 +79,15 @@ export const PlatformProvider = ({ children }) => {
 
     const unsubServers = dbService.subscribeToServers((data) => {
       try {
-        if (data && data.length > 0) {
+        if (data) {
           const joined = data.filter(s => Array.isArray(s.members) && s.members.includes(uid));
           const discoverable = data.filter(s => {
+            // Already joined - don't show in discover
+            if (s.members?.includes(uid)) return false;
+            
             if (s.privacy === 'public') return true;
             if (s.privacy === 'semi-public' && s.domain === currentUser?.domain) return true;
-            return false; // private groups are NOT discoverable
+            return false;
           });
           setServers(joined);
           setDiscoverableServers(discoverable);
@@ -94,7 +100,7 @@ export const PlatformProvider = ({ children }) => {
 
     const unsubUsers = dbService.subscribeToAllUsers((data) => {
       try {
-          if (data && data.length > 0) {
+          if (data) {
             setAllUsers(data);
             const otherUsers = data
               .filter(u => u.uid !== uid)
@@ -165,6 +171,20 @@ export const PlatformProvider = ({ children }) => {
     return unsubTyping;
   }, [activeDMId, activeChannelId, currentUser]);
 
+  // Member Subscription for active server
+  useEffect(() => {
+    if (activeServerId === 'home' || !currentUser) {
+      setActiveServerMembers([]);
+      return;
+    }
+    
+    const unsubMembers = dbService.subscribeToServerMembers(activeServerId, (members) => {
+      setActiveServerMembers(members);
+    });
+    
+    return unsubMembers;
+  }, [activeServerId, currentUser]);
+
   // Resilient Channel Syncing
   useEffect(() => {
     if (activeServerId === 'home' || !currentUser) return;
@@ -216,11 +236,11 @@ export const PlatformProvider = ({ children }) => {
     setActiveChannelId(null);
   };
 
-  const sendMessage = async (targetId, content) => {
+  const sendMessage = async (targetId, content, attachments = []) => {
     const uid = currentUser?.uid || currentUser?.id;
     if (!uid) return;
     try {
-      await dbService.sendMessage(targetId, uid, currentUser.name, content);
+      await dbService.sendMessage(targetId, uid, currentUser.name, content, attachments);
       setTyping(targetId, false);
     } catch (err) {
       console.error("Send Message Error:", err);
@@ -268,9 +288,11 @@ export const PlatformProvider = ({ children }) => {
     const uid = currentUser?.uid || currentUser?.id;
     if (!uid) return;
     try {
+      selectServer(serverId); // Optimistic select
       await dbService.joinServerWithPassword(serverId, uid, password);
     } catch (err) {
       console.error("Context JoinServer Error:", err);
+      selectServer('home'); // Revert on failure
       throw err;
     }
   };
@@ -296,8 +318,8 @@ export const PlatformProvider = ({ children }) => {
     const uid = currentUser?.uid || currentUser?.id;
     if (!uid) return;
     try {
+      if (activeServerId === serverId) selectServer('home'); // Optimistic redirect
       await dbService.leaveServer(serverId, uid);
-      if (activeServerId === serverId) selectServer('home');
     } catch (err) {
       console.error("Context LeaveServer Error:", err);
     }
@@ -365,6 +387,79 @@ export const PlatformProvider = ({ children }) => {
     }
   };
 
+  const updateMessage = async (messageId, newContent) => {
+    try {
+      await dbService.updateMessage(messageId, newContent);
+    } catch (err) {
+      console.error("Context UpdateMessage Error:", err);
+    }
+  };
+
+  const addReaction = async (messageId, emoji) => {
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid) return;
+    try {
+      await dbService.addReaction(messageId, emoji, uid);
+    } catch (err) {
+      console.error("Context AddReaction Error:", err);
+    }
+  };
+
+  const removeReaction = async (messageId, emoji) => {
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid) return;
+    try {
+      await dbService.removeReaction(messageId, emoji, uid);
+    } catch (err) {
+      console.error("Context RemoveReaction Error:", err);
+    }
+  };
+
+  const uploadFile = async (file) => {
+    try {
+      return await dbService.uploadFile(file);
+    } catch (err) {
+      console.error("Context UploadFile Error:", err);
+      throw err;
+    }
+  };
+
+  const updateCustomStatus = async (statusText, statusEmoji) => {
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid) return;
+    try {
+      await dbService.updateCustomStatus(uid, statusText, statusEmoji);
+    } catch (err) {
+      console.error("Context UpdateCustomStatus Error:", err);
+    }
+  };
+
+  const joinVoiceChannel = async (channelId) => {
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid) return;
+    try {
+      // Leave previous channel if any
+      if (activeVoiceChannel) {
+        await dbService.leaveVoiceChannel(activeVoiceChannel, uid);
+      }
+      await dbService.joinVoiceChannel(channelId, uid, currentUser.name);
+      setActiveVoiceChannel(channelId);
+    } catch (err) {
+      console.error("Context JoinVoice Error:", err);
+    }
+  };
+
+  const leaveVoiceChannel = async () => {
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid || !activeVoiceChannel) return;
+    try {
+      await dbService.leaveVoiceChannel(activeVoiceChannel, uid);
+      setActiveVoiceChannel(null);
+    } catch (err) {
+      console.error("Context LeaveVoice Error:", err);
+    }
+  };
+
   const logout = async () => {
     await authService.logout();
     setCurrentUser(null);
@@ -421,6 +516,7 @@ export const PlatformProvider = ({ children }) => {
     setTyping,
     userStatuses,
     allUsers,
+    activeServerMembers,
     createServer,
     createChannel,
     removeServer,
@@ -428,10 +524,20 @@ export const PlatformProvider = ({ children }) => {
     hasPermission,
     updateMemberRole,
     deleteMessage,
+    updateMessage,
+    addReaction,
+    removeReaction,
+    uploadFile,
+    updateCustomStatus,
     kickMember,
     updateServer,
     joinServer,
-    leaveServer
+    leaveServer,
+    activeVoiceChannel,
+    voiceChannelUsers,
+    setVoiceChannelUsers,
+    joinVoiceChannel,
+    leaveVoiceChannel
   };
 
   return (

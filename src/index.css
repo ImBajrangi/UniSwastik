@@ -62,10 +62,13 @@ body,
   background-color: var(--color-bg-tertiary);
   color: var(--color-text-normal);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.022em;
   /* Elite-tier precision tracking */
   transform: translateZ(0);
   will-change: transform, opacity;
+  /* Safari Smooth Scroll Fix */
+  -webkit-overflow-scrolling: touch;
 }
 
 h1,
@@ -112,9 +115,9 @@ h3,
 /* Masterpiece Utility Extensions */
 @utility glass {
   background: rgba(15, 15, 17, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: var(--shadow-glass);
 }
 
@@ -126,7 +129,7 @@ h3,
 }
 
 @utility mesh-silk {
-  background: radial-gradient(circle at 10% 10%, rgba(88, 101, 242, 0.05) 0%, transparent 40%);
+  background: radial-gradient(circle at 10% 10%, rgba(88, 101, 242, 0.05) 0%, rgba(0, 0, 0, 0) 40%);
 }
 
 @utility glow-brand {
@@ -197,4 +200,9 @@ h3,
 ::selection {
   background-color: rgba(88, 101, 242, 0.3);
   color: white;
+}
+
+/* Global Safari Backdrop Support */
+[class*="backdrop-blur"] {
+  -webkit-backdrop-filter: blur(var(--tw-backdrop-blur, 8px));
 }

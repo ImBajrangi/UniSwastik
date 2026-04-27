@@ -1,0 +1,12 @@
+connectorId: default
+generate:
+  javascriptSdk:
+    - package: "@swastik/dataconnect"
+      outputDir: ../src/lib/dataconnect-sdk
+      react: true
+    - outputDir: ../../src/dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ../..
+      react: true
+      angular: false
+      clientCache: {}

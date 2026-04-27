@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Hash, Bell, Pin, Users, Search, Inbox,
   HelpCircle, PlusCircle, Gift, Sticker,
-  Smile, LayoutGrid, Menu, Pencil, ChevronRight, X, BellOff, Sparkles, Ghost
+  Smile, LayoutGrid, Menu, Pencil, ChevronRight, X, BellOff, Sparkles, Ghost,
+  Paperclip, Image as ImageIcon, Check, SmilePlus, Reply, FileText, Download
 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import Avatar from '../components/Avatar';
@@ -13,6 +14,7 @@ import PinsPopover from '../components/PinsPopover';
 import InboxPopover from '../components/InboxPopover';
 import HelpModal from '../components/HelpModal';
 import ThreadsSidebar from '../components/ThreadsSidebar';
+import EmojiPicker from '../components/EmojiPicker';
 import { dbService } from '../services/db';
 
 const HeroActionCard = ({ icon, label, onClick, index }) => (
@@ -42,72 +44,144 @@ const ThreadsIcon = ({ size = 20 }) => (
   </svg>
 );
 
-const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, role, onDelete, canDelete, isAnonymous }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 4 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ type: "spring", stiffness: 300, damping: 26, delay: (index % 10) * 0.02 }}
-    className={`flex gap-4 group hover:bg-white/[0.03] -mx-4 px-4 ${hideGutter ? 'py-0.5' : 'py-2 mt-4'} transition-colors relative border-l-2 border-transparent hover:border-brand-indigo/30`}
-  >
-    {canDelete && (
-      <div className="absolute top-1 right-8 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-        <button 
-          onClick={() => onDelete(id)}
-          className="p-1.5 bg-bg-secondary hover:bg-brand-crimson text-text-muted hover:text-white rounded-lg shadow-xl border border-white/10 transition-all active:scale-90"
-          title="Delete Message"
-        >
-          <X size={14} />
-        </button>
-      </div>
-    )}
-    <div className="w-10 shrink-0">
-      {!hideGutter ? (
-        <div className="relative cursor-pointer transition-transform hover:scale-105 active:scale-95">
-          {isAnonymous ? (
-            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[#B5BAC1]">
-              <Ghost size={20} />
-            </div>
-          ) : (
-            <Avatar userId={userId} name={user} size={40} />
-          )}
-        </div>
-      ) : (
-        <div className="opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-[#949BA4] mt-1 select-none font-bold">
-          {time}
-        </div>
-      )}
+// --- Reaction Bar Component ---
+const ReactionBar = ({ reactions = {}, messageId, currentUserId, onAddReaction, onRemoveReaction }) => {
+  if (!reactions || Object.keys(reactions).length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {Object.entries(reactions).map(([emoji, userIds]) => {
+        if (!Array.isArray(userIds) || userIds.length === 0) return null;
+        const hasReacted = userIds.includes(currentUserId);
+        return (
+          <motion.button
+            key={emoji}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => hasReacted ? onRemoveReaction(messageId, emoji) : onAddReaction(messageId, emoji)}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border transition-all ${
+              hasReacted 
+                ? 'bg-brand-indigo/20 border-brand-indigo/40 text-brand-indigo' 
+                : 'bg-white/5 border-white/10 text-text-muted hover:bg-white/10'
+            }`}
+          >
+            <span className="text-sm">{emoji}</span>
+            <span>{userIds.length}</span>
+          </motion.button>
+        );
+      })}
     </div>
-    <div className="flex flex-col min-w-0 flex-1">
-      {!hideGutter && (
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className={`font-bold text-[16px] hover:underline cursor-pointer leading-tight font-display tracking-tight ${
-            isAnonymous ? 'text-white' : role === 'owner' ? 'text-brand-indigo' : role === 'admin' ? 'text-status-online' : role === 'moderator' ? 'text-purple-400' : 'text-white'
-          }`}>{isAnonymous ? "Anonymous" : user}</span>
-          
-          {role && role !== 'member' && !isAnonymous && (
-            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-sm ${
-              role === 'owner' ? 'bg-brand-indigo/20 text-brand-indigo' : 
-              role === 'admin' ? 'bg-status-online/20 text-status-online' : 
-              'bg-purple-400/20 text-purple-400'
-            }`}>
-              {role}
-            </span>
-          )}
+  );
+};
 
-          {!isAnonymous && (user.toLowerCase().includes('bot') || user.toLowerCase().includes('ai')) ? (
-            <span className="bg-[#5865F2] text-white text-[10px] px-1 py-0.5 rounded-[4px] font-black flex items-center gap-0.5 select-none -translate-y-0.5 shadow-[0_0_10px_rgba(88,101,242,0.4)]">
-              APP
-            </span>
-          ) : null}
-          <span className="text-[#949BA4] text-[11px] font-bold select-none opacity-50">{time}</span>
-        </div>
-      )}
-      <p className="text-[#DBDEE1] text-[15px] whitespace-pre-wrap leading-[22px] tracking-tight font-medium">
-        {content}
-      </p>
-    </div>
-  </motion.div>
-);
+// --- File Attachment Component ---
+const FileAttachment = ({ attachment }) => {
+  const isImage = attachment.type?.startsWith('image/');
+  if (isImage) {
+    return (
+      <a href={attachment.url} target="_blank" rel="noopener noreferrer" className="block mt-2 max-w-[400px] rounded-xl overflow-hidden border border-white/10 hover:border-brand-indigo/30 transition-colors group">
+        <img src={attachment.url} alt={attachment.name} className="max-h-[300px] w-auto object-contain bg-black/20" loading="lazy" />
+      </a>
+    );
+  }
+  return (
+    <a href={attachment.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 mt-2 p-3 bg-[#2B2D31] border border-white/10 rounded-xl max-w-[400px] hover:bg-white/5 transition-all group">
+      <div className="w-10 h-10 rounded-lg bg-brand-indigo/20 flex items-center justify-center shrink-0"><FileText size={20} className="text-brand-indigo" /></div>
+      <div className="flex-1 min-w-0">
+        <p className="text-brand-indigo text-sm font-bold truncate group-hover:underline">{attachment.name}</p>
+        <p className="text-text-muted text-[11px]">{(attachment.size / 1024).toFixed(1)} KB</p>
+      </div>
+      <Download size={16} className="text-text-muted group-hover:text-white shrink-0" />
+    </a>
+  );
+};
+
+const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, role, onDelete, canDelete, isAnonymous, reactions, attachments, edited, onAddReaction, onRemoveReaction, onEdit, currentUserId }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(content);
+  const [showQuickReact, setShowQuickReact] = useState(false);
+  const quickReactions = ['👍', '❤️', '😂', '🔥', '👀'];
+
+  const handleEditSave = () => {
+    if (editText.trim() && editText !== content) {
+      onEdit(id, editText);
+    }
+    setIsEditing(false);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 26, delay: (index % 10) * 0.02 }}
+      className={`flex gap-4 group hover:bg-white/[0.03] -mx-4 px-4 ${hideGutter ? 'py-0.5' : 'py-2 mt-4'} transition-colors relative border-l-2 border-transparent hover:border-brand-indigo/30`}
+    >
+      {/* Hover Action Toolbar - Discord style */}
+      <div className="absolute -top-4 right-8 opacity-0 group-hover:opacity-100 transition-all z-10 flex items-center gap-0.5 bg-[#1E1F22] border border-white/10 rounded-lg shadow-xl p-0.5">
+        {quickReactions.map(emoji => (
+          <button key={emoji} onClick={() => onAddReaction(id, emoji)} className="w-7 h-7 flex items-center justify-center text-sm rounded hover:bg-white/10 transition-colors">{emoji}</button>
+        ))}
+        <div className="w-px h-5 bg-white/10 mx-0.5" />
+        {userId === currentUserId && (
+          <button onClick={() => { setIsEditing(true); setEditText(content); }} className="p-1.5 text-text-muted hover:text-white rounded hover:bg-white/10 transition-colors" title="Edit"><Pencil size={14} /></button>
+        )}
+        {canDelete && (
+          <button onClick={() => onDelete(id)} className="p-1.5 text-text-muted hover:text-brand-crimson rounded hover:bg-white/10 transition-colors" title="Delete"><X size={14} /></button>
+        )}
+      </div>
+
+      <div className="w-10 shrink-0">
+        {!hideGutter ? (
+          <div className="relative cursor-pointer transition-transform hover:scale-105 active:scale-95">
+            {isAnonymous ? (
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[#B5BAC1]"><Ghost size={20} /></div>
+            ) : (
+              <Avatar userId={userId} name={user} size={40} />
+            )}
+          </div>
+        ) : (
+          <div className="opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-[#949BA4] mt-1 select-none font-bold">{time}</div>
+        )}
+      </div>
+      <div className="flex flex-col min-w-0 flex-1">
+        {!hideGutter && (
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className={`font-bold text-[16px] hover:underline cursor-pointer leading-tight font-display tracking-tight ${
+              isAnonymous ? 'text-white' : role === 'owner' ? 'text-brand-indigo' : role === 'admin' ? 'text-status-online' : role === 'moderator' ? 'text-purple-400' : 'text-white'
+            }`}>{isAnonymous ? "Anonymous" : user}</span>
+            {role && role !== 'member' && !isAnonymous && (
+              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-sm ${
+                role === 'owner' ? 'bg-brand-indigo/20 text-brand-indigo' : role === 'admin' ? 'bg-status-online/20 text-status-online' : 'bg-purple-400/20 text-purple-400'
+              }`}>{role}</span>
+            )}
+            {!isAnonymous && (user.toLowerCase().includes('bot') || user.toLowerCase().includes('ai')) && (
+              <span className="bg-[#5865F2] text-white text-[10px] px-1 py-0.5 rounded-[4px] font-black flex items-center gap-0.5 select-none -translate-y-0.5 shadow-[0_0_10px_rgba(88,101,242,0.4)]">APP</span>
+            )}
+            <span className="text-[#949BA4] text-[11px] font-bold select-none opacity-50">{time}</span>
+          </div>
+        )}
+        {isEditing ? (
+          <div className="bg-[#383A40] rounded-lg p-2 border border-white/10">
+            <input
+              type="text" value={editText} onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleEditSave(); if (e.key === 'Escape') setIsEditing(false); }}
+              className="w-full bg-transparent text-white text-[15px] outline-none font-medium" autoFocus
+            />
+            <p className="text-[11px] text-text-muted mt-1">escape to <span className="text-brand-indigo cursor-pointer" onClick={() => setIsEditing(false)}>cancel</span> • enter to <span className="text-brand-indigo cursor-pointer" onClick={handleEditSave}>save</span></p>
+          </div>
+        ) : (
+          <p className="text-[#DBDEE1] text-[15px] whitespace-pre-wrap leading-[22px] tracking-tight font-medium">
+            {content}
+            {edited && <span className="text-[10px] text-text-muted ml-1.5 opacity-50">(edited)</span>}
+          </p>
+        )}
+        {/* Attachments */}
+        {attachments && attachments.map((att, i) => <FileAttachment key={i} attachment={att} />)}
+        {/* Reactions */}
+        <ReactionBar reactions={reactions} messageId={id} currentUserId={currentUserId} onAddReaction={onAddReaction} onRemoveReaction={onRemoveReaction} />
+      </div>
+    </motion.div>
+  );
+};
+
 
 const MemberCategory = ({ label, members, isAnonymous }) => {
   const { selectDM } = usePlatform();
@@ -159,7 +233,8 @@ const ChatView = ({ targetId }) => {
     setIsMobileMenuOpen, showThreadsSidebar, setShowThreadsSidebar,
     mutedChannels, toggleMute, pinnedMessages, togglePinMessage,
     showInbox, setShowInbox, showPins, setShowPins, notifications,
-    userStatuses, selectDM, hasPermission, deleteMessage, joinServer
+    userStatuses, selectDM, hasPermission, deleteMessage, joinServer,
+    activeServerMembers, addReaction, removeReaction, updateMessage, uploadFile
   } = usePlatform();
 
   const [inputText, setInputText] = useState('');
@@ -168,8 +243,11 @@ const ChatView = ({ targetId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [showHelp, setShowHelp] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const activeServer = servers.find(s => s.id === activeServerId);
   const channel = channels[activeServerId]?.find(c => c.id === targetId);
@@ -209,8 +287,23 @@ const ChatView = ({ targetId }) => {
     msg.user.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSend = () => {
-    if (inputText.trim()) {
+  const handleSend = async () => {
+    if (inputText.trim() || pendingFiles.length > 0) {
+      // Upload files first
+      let attachments = [];
+      if (pendingFiles.length > 0) {
+        setIsUploading(true);
+        try {
+          attachments = await Promise.all(
+            pendingFiles.map(f => uploadFile(f))
+          );
+        } catch (err) {
+          console.error("File upload failed:", err);
+        }
+        setIsUploading(false);
+        setPendingFiles([]);
+      }
+
       // Optimistic Update
       const optimisticMsg = {
         id: 'optimistic-' + Date.now(),
@@ -218,15 +311,25 @@ const ChatView = ({ targetId }) => {
         userId: currentUser.id,
         content: inputText,
         time: 'sending...',
-        timestamp: { seconds: Date.now() / 1000 }
+        timestamp: { seconds: Date.now() / 1000 },
+        reactions: {},
+        attachments
       };
       setMessages(prev => [...prev, optimisticMsg]);
       
-      sendMessage(targetId, inputText);
+      sendMessage(targetId, inputText, attachments);
       setInputText('');
       setTyping(targetId, false);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     }
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      setPendingFiles(prev => [...prev, ...files]);
+    }
+    e.target.value = '';
   };
 
   const handleInputChange = (e) => {
@@ -477,6 +580,10 @@ const ChatView = ({ targetId }) => {
                   canDelete={canDelete}
                   isAnonymous={activeServer?.isAnonymous}
                   hideGutter={idx > 0 && filteredMessages[idx - 1].user === msg.user}
+                  onAddReaction={addReaction}
+                  onRemoveReaction={removeReaction}
+                  onEdit={updateMessage}
+                  currentUserId={currentUser?.uid || currentUser?.id}
                 />
               );
             })}
@@ -518,34 +625,60 @@ const ChatView = ({ targetId }) => {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: 20, opacity: 0 }}
-                  className="bg-bg-secondary w-full min-h-[44px] rounded-[8px] shadow-lg flex items-center gap-2 relative px-2 border border-white/5 mx-auto"
+                  className="bg-bg-secondary w-full rounded-[8px] shadow-lg flex flex-col relative border border-white/5 mx-auto"
                 >
-                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                    <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors"><PlusCircle size={22} /></button>
-                  </div>
+                  {/* Hidden file input */}
+                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} multiple className="hidden" />
+                  
+                  {/* Pending Files Preview */}
+                  {pendingFiles.length > 0 && (
+                    <div className="flex gap-2 px-3 pt-3 pb-1 overflow-x-auto no-scrollbar">
+                      {pendingFiles.map((file, i) => (
+                        <div key={i} className="relative shrink-0 w-[120px] h-[100px] rounded-lg bg-[#2B2D31] border border-white/10 overflow-hidden group">
+                          {file.type?.startsWith('image/') ? (
+                            <img src={URL.createObjectURL(file)} alt={file.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2">
+                              <FileText size={24} className="text-brand-indigo" />
+                              <span className="text-[10px] text-text-muted truncate w-full text-center">{file.name}</span>
+                            </div>
+                          )}
+                          <button onClick={() => setPendingFiles(prev => prev.filter((_, j) => j !== i))} className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                  <div className="flex-1 min-w-0 py-2">
-                    <input
-                      type="text"
-                      value={inputText}
-                      onChange={handleInputChange}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                      placeholder={`Message ${dm ? '@' : '#'}${title}`}
-                      className="w-full bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none border-none focus:ring-0 focus:outline-none text-[15px] font-medium"
-                    />
-                  </div>
+                  <div className="flex items-center gap-2 px-2 min-h-[44px]">
+                    <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                      <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors"><PlusCircle size={22} /></button>
+                    </div>
 
-                  <div className="flex items-center gap-1 sm:gap-2 pr-1 shrink-0">
-                    <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Gift size={20} /></button>
-                    <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Sticker size={20} /></button>
-                    <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors"><Smile size={20} /></button>
-                    <button className="p-1.5 flex items-center justify-center text-[#B5BAC1] hover:text-[#DBDEE1] transition-all">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="flex-1 min-w-0 py-2">
+                      <input
+                        type="text"
+                        value={inputText}
+                        onChange={handleInputChange}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        placeholder={isUploading ? 'Uploading...' : `Message ${dm ? '@' : '#'}${title}`}
+                        disabled={isUploading}
+                        className="w-full bg-transparent text-[#DBDEE1] placeholder:text-[#949BA4] outline-none border-none focus:ring-0 focus:outline-none text-[15px] font-medium disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1 sm:gap-2 pr-1 shrink-0">
+                      <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Paperclip size={20} /></button>
+                      <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Gift size={20} /></button>
+                      <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors hidden sm:block"><Sticker size={20} /></button>
+                      <button className="p-1.5 text-[#B5BAC1] hover:text-white transition-colors"><Smile size={20} /></button>
+                      <button className="p-1.5 flex items-center justify-center text-[#B5BAC1] hover:text-[#DBDEE1] transition-all">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
                         <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                         <line x1="12" y1="19" x2="12" y2="23" />
                       </svg>
                     </button>
+                    </div>
                   </div>
                 </motion.div>
               ) : (
@@ -608,22 +741,20 @@ const ChatView = ({ targetId }) => {
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-[100px] lg:pb-6 bg-black/5">
-                  {currentUser && (
+                  {currentUser && !activeServer?.isAnonymous && (
                     <MemberCategory 
                       label="The Founder — 1" 
-                      isAnonymous={activeServer?.isAnonymous}
-                      members={[{ 
-                        id: currentUser.uid || currentUser.id, 
-                        name: currentUser.displayName || currentUser.name, 
-                        status: 'online',
-                        role: activeServer?.memberRoles?.[currentUser.uid || currentUser.id] || 'owner'
-                      }]} 
+                      isAnonymous={false}
+                      members={activeServerMembers.filter(m => m.role === 'owner' || activeServer?.ownerId === m.id).map(m => ({
+                        ...m,
+                        status: userStatuses[m.id] || m.status
+                      }))}
                     />
                   )}
                   <MemberCategory 
-                    label={`Classmates — ${dmList.length}`} 
+                    label={activeServer?.isAnonymous ? "Anonymous Students" : `Classmates — ${activeServerMembers.length}`} 
                     isAnonymous={activeServer?.isAnonymous}
-                    members={dmList.map(u => ({ 
+                    members={activeServerMembers.filter(m => activeServer?.isAnonymous || (m.role !== 'owner' && activeServer?.ownerId !== m.id)).map(u => ({ 
                       ...u, 
                       status: userStatuses[u.id] || u.status,
                       role: activeServer?.memberRoles?.[u.id] || 'member'

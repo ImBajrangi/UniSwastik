@@ -1,0 +1,64 @@
+# Swastik Platform Data Connect Schema
+# Defines the relational structure for the university social platform
+
+type User @table(key: "id") {
+  id: String!
+  name: String!
+  email: String! @unique
+  avatar: String
+  status: String @default(value: "offline")
+  university: String
+  domain: String
+  discriminator: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type Server @table(key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  name: String!
+  acronym: String!
+  owner: User!
+  privacy: String! @default(value: "public")
+  domain: String
+  isAnonymous: Boolean! @default(value: false)
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type Member @table(key: ["user", "server"]) {
+  user: User!
+  server: Server!
+  role: String! @default(value: "member")
+  joinedAt: Timestamp! @default(expr: "request.time")
+}
+
+type Channel @table(key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  name: String!
+  server: Server!
+  type: String! @default(value: "text")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type Message @table(key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  content: String!
+  author: User!
+  channel: Channel
+  dm: DM
+  timestamp: Timestamp! @default(expr: "request.time")
+}
+
+type DM @table(key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  user1: User!
+  user2: User!
+  createdAt: Timestamp! @default(expr: "request.time")
+  lastMessageAt: Timestamp! @default(expr: "request.time")
+}
+
+type TypingIndicator @table(key: ["user", "targetId"]) {
+  user: User!
+  targetId: String!
+  isTyping: Boolean!
+  lastUpdated: Timestamp! @default(expr: "request.time")
+}

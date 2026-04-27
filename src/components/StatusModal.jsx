@@ -107,12 +107,15 @@ const StatusModal = ({ user, onClose, onSave }) => {
                 <span className="text-white text-sm font-bold opacity-80 group-hover:opacity-100 transition-opacity">Clear tomorrow at 9:53 PM</span>
                 <ChevronDown size={16} className="text-text-muted" />
              </div>
-             <button 
-               onClick={() => { onSave && onSave(statusText, selectedEmoji); onClose(); }}
-               className="bg-[#5865f2] hover:bg-[#4752c4] text-white px-8 py-2 rounded-lg font-bold transition-all shadow-lg shadow-brand-indigo/20 active:scale-95"
-             >
-               Save
-             </button>
+              <button 
+                onClick={() => { 
+                  if (onSave) onSave(statusText, selectedEmoji); 
+                  onClose(); 
+                }}
+                className="bg-[#5865f2] hover:bg-[#4752c4] text-white px-8 py-2 rounded-lg font-bold transition-all shadow-lg shadow-brand-indigo/20 active:scale-95"
+              >
+                Save
+              </button>
           </div>
         </div>
       </motion.div>
