@@ -1,8 +1,8 @@
 import { dataconnect } from '../lib/firebase';
-import { 
-  useCreateUser, 
-  useGetUser, 
-  useJoinServer, 
+import {
+  useCreateUser,
+  useGetUser,
+  useJoinServer,
   useListJoinedServers,
   useSendMessage,
   useListMessages

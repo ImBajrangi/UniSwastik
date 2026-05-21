@@ -48,23 +48,26 @@ const ThreadsIcon = ({ size = 20 }) => (
 const ReactionBar = ({ reactions = {}, messageId, currentUserId, onAddReaction, onRemoveReaction }) => {
   if (!reactions || Object.keys(reactions).length === 0) return null;
   return (
-    <div className="flex flex-wrap gap-1 mt-1">
+    <div className="flex flex-wrap gap-1.5 mt-2">
       {Object.entries(reactions).map(([emoji, userIds]) => {
         if (!Array.isArray(userIds) || userIds.length === 0) return null;
         const hasReacted = userIds.includes(currentUserId);
         return (
           <motion.button
             key={emoji}
+            whileHover={{ scale: 1.05, y: -1 }}
             whileTap={{ scale: 0.9 }}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             onClick={() => hasReacted ? onRemoveReaction(messageId, emoji) : onAddReaction(messageId, emoji)}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition-all duration-300 ${
               hasReacted 
-                ? 'bg-brand-indigo/20 border-brand-indigo/40 text-brand-indigo' 
-                : 'bg-white/5 border-white/10 text-text-muted hover:bg-white/10'
+                ? 'bg-brand-indigo/20 border-brand-indigo/40 text-brand-indigo shadow-[0_0_12px_rgba(88,101,242,0.2)]' 
+                : 'bg-white/5 border-white/10 text-text-muted hover:bg-white/10 hover:border-white/20'
             }`}
           >
-            <span className="text-sm">{emoji}</span>
-            <span>{userIds.length}</span>
+            <span className="text-sm drop-shadow-sm">{emoji}</span>
+            <span className="tracking-tighter">{userIds.length}</span>
           </motion.button>
         );
       })}
@@ -77,31 +80,47 @@ const FileAttachment = ({ attachment }) => {
   const isImage = attachment.type?.startsWith('image/');
   if (isImage) {
     return (
-      <a href={attachment.url} target="_blank" rel="noopener noreferrer" className="block mt-2 max-w-[400px] rounded-xl overflow-hidden border border-white/10 hover:border-brand-indigo/30 transition-colors group">
-        <img src={attachment.url} alt={attachment.name} className="max-h-[300px] w-auto object-contain bg-black/20" loading="lazy" />
-      </a>
+      <motion.a 
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        href={attachment.url} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className="block mt-3 max-w-[400px] rounded-2xl overflow-hidden border border-white/10 hover:border-brand-indigo/40 transition-all group shadow-2xl"
+      >
+        <img src={attachment.url} alt={attachment.name} className="max-h-[350px] w-auto object-contain bg-black/40 group-hover:scale-[1.02] transition-transform duration-500" loading="lazy" />
+      </motion.a>
     );
   }
   return (
-    <a href={attachment.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 mt-2 p-3 bg-[#2B2D31] border border-white/10 rounded-xl max-w-[400px] hover:bg-white/5 transition-all group">
-      <div className="w-10 h-10 rounded-lg bg-brand-indigo/20 flex items-center justify-center shrink-0"><FileText size={20} className="text-brand-indigo" /></div>
+    <motion.a 
+      initial={{ opacity: 0, x: -10 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      href={attachment.url} 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="flex items-center gap-4 mt-3 p-4 bg-[#2B2D31]/60 backdrop-blur-md border border-white/5 rounded-2xl max-w-[400px] hover:bg-white/5 hover:border-brand-indigo/30 transition-all group shadow-xl"
+    >
+      <div className="w-12 h-12 rounded-xl bg-brand-indigo/20 flex items-center justify-center shrink-0 shadow-inner"><FileText size={24} className="text-brand-indigo" /></div>
       <div className="flex-1 min-w-0">
-        <p className="text-brand-indigo text-sm font-bold truncate group-hover:underline">{attachment.name}</p>
-        <p className="text-text-muted text-[11px]">{(attachment.size / 1024).toFixed(1)} KB</p>
+        <p className="text-white text-[15px] font-bold truncate group-hover:text-brand-indigo transition-colors">{attachment.name}</p>
+        <p className="text-text-muted text-[11px] font-black uppercase tracking-widest opacity-60 mt-0.5">{(attachment.size / 1024).toFixed(1)} KB • File</p>
       </div>
-      <Download size={16} className="text-text-muted group-hover:text-white shrink-0" />
-    </a>
+      <Download size={18} className="text-text-muted group-hover:text-white transition-colors shrink-0" />
+    </motion.a>
   );
 };
 
 const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, role, onDelete, canDelete, isAnonymous, reactions, attachments, edited, onAddReaction, onRemoveReaction, onEdit, currentUserId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(content);
-  const [showQuickReact, setShowQuickReact] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const quickReactions = ['👍', '❤️', '😂', '🔥', '👀'];
 
   const handleEditSave = () => {
-    if (editText.trim() && editText !== content) {
+    if (editText.trim() && (editText !== content)) {
       onEdit(id, editText);
     }
     setIsEditing(false);
@@ -109,75 +128,121 @@ const Message = ({ id, user, userId, time, content, isMe, hideGutter, index, rol
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 4 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 26, delay: (index % 10) * 0.02 }}
-      className={`flex gap-4 group hover:bg-white/[0.03] -mx-4 px-4 ${hideGutter ? 'py-0.5' : 'py-2 mt-4'} transition-colors relative border-l-2 border-transparent hover:border-brand-indigo/30`}
+      transition={{ type: "spring", stiffness: 400, damping: 30, delay: (index % 10) * 0.03 }}
+      className={`flex gap-4 group hover:bg-white/[0.03] -mx-4 px-4 ${hideGutter ? 'py-0.5' : 'py-2 mt-4'} transition-all duration-200 relative border-l-2 border-transparent hover:border-brand-indigo/40`}
     >
-      {/* Hover Action Toolbar - Discord style */}
-      <div className="absolute -top-4 right-8 opacity-0 group-hover:opacity-100 transition-all z-10 flex items-center gap-0.5 bg-[#1E1F22] border border-white/10 rounded-lg shadow-xl p-0.5">
-        {quickReactions.map(emoji => (
-          <button key={emoji} onClick={() => onAddReaction(id, emoji)} className="w-7 h-7 flex items-center justify-center text-sm rounded hover:bg-white/10 transition-colors">{emoji}</button>
-        ))}
-        <div className="w-px h-5 bg-white/10 mx-0.5" />
+      {/* Hover Action Toolbar - Elite Glassmorphism */}
+      <div className="absolute -top-4 right-8 opacity-0 group-hover:opacity-100 transition-all duration-300 z-40 flex items-center gap-0.5 glass p-1 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/10 translate-y-1 group-hover:translate-y-0">
+        <div className="flex items-center gap-0.5 px-1 border-r border-white/10 mr-1">
+          {quickReactions.map(emoji => (
+            <button key={emoji} onClick={() => onAddReaction(id, emoji)} className="w-8 h-8 flex items-center justify-center text-base rounded-lg hover:bg-white/10 transition-all hover:scale-125 active:scale-90">{emoji}</button>
+          ))}
+        </div>
+        <button 
+          onClick={() => setShowEmojiPicker(true)} 
+          className="p-2 text-text-muted hover:text-white rounded-lg hover:bg-white/10 transition-all" 
+          title="Add Reaction"
+        >
+          <SmilePlus size={16} />
+        </button>
         {userId === currentUserId && (
-          <button onClick={() => { setIsEditing(true); setEditText(content); }} className="p-1.5 text-text-muted hover:text-white rounded hover:bg-white/10 transition-colors" title="Edit"><Pencil size={14} /></button>
+          <button 
+            onClick={() => { setIsEditing(true); setEditText(content); }} 
+            className="p-2 text-text-muted hover:text-white rounded-lg hover:bg-white/10 transition-all" 
+            title="Edit"
+          >
+            <Pencil size={16} />
+          </button>
         )}
         {canDelete && (
-          <button onClick={() => onDelete(id)} className="p-1.5 text-text-muted hover:text-brand-crimson rounded hover:bg-white/10 transition-colors" title="Delete"><X size={14} /></button>
+          <button 
+            onClick={() => onDelete(id)} 
+            className="p-2 text-text-muted hover:text-brand-crimson rounded-lg hover:bg-white/10 transition-all" 
+            title="Delete"
+          >
+            <X size={16} />
+          </button>
         )}
       </div>
 
       <div className="w-10 shrink-0">
         {!hideGutter ? (
-          <div className="relative cursor-pointer transition-transform hover:scale-105 active:scale-95">
+          <div className="relative cursor-pointer transition-all hover:scale-110 active:scale-95 shadow-xl rounded-full">
             {isAnonymous ? (
-              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[#B5BAC1]"><Ghost size={20} /></div>
+              <div className="w-10 h-10 rounded-full bg-[#313338] border border-white/5 flex items-center justify-center text-[#B5BAC1] shadow-inner">
+                <Ghost size={20} />
+              </div>
             ) : (
               <Avatar userId={userId} name={user} size={40} />
             )}
           </div>
         ) : (
-          <div className="opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-[#949BA4] mt-1 select-none font-bold">{time}</div>
+          <div className="opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-[#949BA4] mt-1 select-none font-black tracking-tighter transition-opacity">{time}</div>
         )}
       </div>
+
       <div className="flex flex-col min-w-0 flex-1">
         {!hideGutter && (
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className={`font-bold text-[16px] hover:underline cursor-pointer leading-tight font-display tracking-tight ${
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`font-bold text-[16px] hover:underline cursor-pointer leading-tight font-display tracking-tight transition-colors ${
               isAnonymous ? 'text-white' : role === 'owner' ? 'text-brand-indigo' : role === 'admin' ? 'text-status-online' : role === 'moderator' ? 'text-purple-400' : 'text-white'
             }`}>{isAnonymous ? "Anonymous" : user}</span>
             {role && role !== 'member' && !isAnonymous && (
-              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-sm ${
+              <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm ${
                 role === 'owner' ? 'bg-brand-indigo/20 text-brand-indigo' : role === 'admin' ? 'bg-status-online/20 text-status-online' : 'bg-purple-400/20 text-purple-400'
               }`}>{role}</span>
             )}
-            {!isAnonymous && (user.toLowerCase().includes('bot') || user.toLowerCase().includes('ai')) && (
-              <span className="bg-[#5865F2] text-white text-[10px] px-1 py-0.5 rounded-[4px] font-black flex items-center gap-0.5 select-none -translate-y-0.5 shadow-[0_0_10px_rgba(88,101,242,0.4)]">APP</span>
-            )}
-            <span className="text-[#949BA4] text-[11px] font-bold select-none opacity-50">{time}</span>
+            <span className="text-[#949BA4] text-[11px] font-bold select-none opacity-40 hover:opacity-100 transition-opacity">{time}</span>
           </div>
         )}
+        
         {isEditing ? (
-          <div className="bg-[#383A40] rounded-lg p-2 border border-white/10">
+          <div className="bg-[#383A40] rounded-xl p-3 border border-brand-indigo/30 shadow-inner mt-1">
             <input
-              type="text" value={editText} onChange={(e) => setEditText(e.target.value)}
+              type="text" 
+              value={editText} 
+              onChange={(e) => setEditText(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleEditSave(); if (e.key === 'Escape') setIsEditing(false); }}
-              className="w-full bg-transparent text-white text-[15px] outline-none font-medium" autoFocus
+              className="w-full bg-transparent text-white text-[15px] outline-none font-medium selection:bg-brand-indigo/40" 
+              autoFocus
             />
-            <p className="text-[11px] text-text-muted mt-1">escape to <span className="text-brand-indigo cursor-pointer" onClick={() => setIsEditing(false)}>cancel</span> • enter to <span className="text-brand-indigo cursor-pointer" onClick={handleEditSave}>save</span></p>
+            <div className="text-[10px] text-text-muted mt-2 font-bold uppercase tracking-widest flex gap-2">
+              <span>escape to <button onClick={() => setIsEditing(false)} className="text-brand-crimson hover:underline">cancel</button></span>
+              <span className="opacity-30">•</span>
+              <span>enter to <button onClick={handleEditSave} className="text-brand-indigo hover:underline">save</button></span>
+            </div>
           </div>
         ) : (
-          <p className="text-[#DBDEE1] text-[15px] whitespace-pre-wrap leading-[22px] tracking-tight font-medium">
+          <div className="text-[#DBDEE1] text-[15px] whitespace-pre-wrap leading-[22px] tracking-tight font-medium selection:bg-brand-indigo/30">
             {content}
-            {edited && <span className="text-[10px] text-text-muted ml-1.5 opacity-50">(edited)</span>}
-          </p>
+            {edited && <span className="text-[10px] text-text-muted ml-2 font-black opacity-30 select-none">(edited)</span>}
+          </div>
         )}
-        {/* Attachments */}
-        {attachments && attachments.map((att, i) => <FileAttachment key={i} attachment={att} />)}
-        {/* Reactions */}
+
+        {/* Attachments Rendering */}
+        {attachments && attachments.length > 0 && (
+          <div className="flex flex-col gap-1">
+            {attachments.map((att, i) => <FileAttachment key={i} attachment={att} />)}
+          </div>
+        )}
+
+        {/* Reactions Rendering */}
         <ReactionBar reactions={reactions} messageId={id} currentUserId={currentUserId} onAddReaction={onAddReaction} onRemoveReaction={onRemoveReaction} />
       </div>
+
+      <AnimatePresence>
+        {showEmojiPicker && (
+          <EmojiPicker 
+            onSelect={(emoji) => {
+              onAddReaction(id, emoji);
+              setShowEmojiPicker(false);
+            }} 
+            onClose={() => setShowEmojiPicker(false)} 
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

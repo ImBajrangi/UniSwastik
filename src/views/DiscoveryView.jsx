@@ -63,7 +63,7 @@ const DiscoveryView = () => {
     <div className="flex-1 bg-bg-primary overflow-y-auto no-scrollbar relative pb-12">
       {/* Mobile Sticky Header - Premium Polish */}
       <header className="lg:hidden sticky top-0 left-0 right-0 h-14 px-4 flex items-center glass-dark z-[100] shadow-2xl">
-        <button 
+        <button
           onClick={() => setIsMobileMenuOpen(true)}
           className="text-[#B5BAC1] hover:text-white mr-auto transition-all p-2 rounded-xl hover:bg-white/5 active:scale-90"
         >
@@ -76,28 +76,28 @@ const DiscoveryView = () => {
       <div className="h-[480px] w-full relative flex flex-col items-center justify-center overflow-hidden perspective-[1500px]">
         {/* Multilayered Atmospheric Backdrop */}
         <div className="absolute inset-0 bg-[#050505]">
-          <motion.div 
-            animate={{ 
+          <motion.div
+            animate={{
               scale: [1, 1.1, 1],
               rotate: [0, 2, -2, 0]
             }}
             transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
             className="absolute inset-0 opacity-40 mix-blend-screen"
           >
-            <img 
-              src="/Users/sakhi/.gemini/antigravity/brain/3a9d93cf-aa3a-4ea4-96cb-65c6ed86c6ad/campus_discover_hero_1776747519333.png" 
-              alt="Campus Network" 
+            <img
+              src="/Users/sakhi/.gemini/antigravity/brain/3a9d93cf-aa3a-4ea4-96cb-65c6ed86c6ad/campus_discover_hero_1776747519333.png"
+              alt="Campus Network"
               className="w-full h-full object-cover blur-[2px]"
             />
           </motion.div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-black/60" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-transparent to-[#050505]" />
-          
+
           {/* Bioluminescent Glows */}
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-indigo/20 blur-[150px] rounded-full animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-crimson/10 blur-[150px] rounded-full animate-pulse" />
         </div>
-        
+
         <div className="relative z-10 text-center max-w-[900px] px-6">
           <motion.div
             initial={{ scale: 0.8, opacity: 0, rotateX: 20 }}
@@ -106,15 +106,15 @@ const DiscoveryView = () => {
             className="mb-10"
           >
             <h1 className="text-white text-6xl md:text-8xl font-black mb-4 uppercase tracking-tighter drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] font-display leading-[0.85] text-glow select-none">
-              The Student <br/> <span className="text-brand-indigo opacity-90">Universe</span>
+              The Student <br /> <span className="text-brand-indigo opacity-90">Universe</span>
             </h1>
             <p className="text-text-muted text-lg sm:text-xl font-bold tracking-wide opacity-60 uppercase mt-4 max-w-[600px] mx-auto leading-relaxed">
               Experience the next generation of campus life and global community.
             </p>
           </motion.div>
-          
+
           {/* Elite Magnetic Search HUD */}
-          <motion.div 
+          <motion.div
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
@@ -123,10 +123,10 @@ const DiscoveryView = () => {
             <div className="glass p-1.5 rounded-[24px] shadow-[0_30px_60px_rgba(0,0,0,0.5)] border-white/10 group-focus-within:border-brand-indigo/50 transition-all duration-500 scale-100 group-focus-within:scale-[1.02]">
               <div className="flex items-center h-14 px-6 gap-4">
                 <Search size={24} className="text-brand-indigo group-focus-within:scale-110 transition-transform" />
-                <input 
-                  type="text" 
-                  placeholder="Seach through the student network..." 
-                  className="bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-[17px] text-white w-full placeholder:text-text-muted/50 font-bold" 
+                <input
+                  type="text"
+                  placeholder="Seach through the student network..."
+                  className="bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-[17px] text-white w-full placeholder:text-text-muted/50 font-bold"
                 />
                 <div className="bg-white/5 px-3 py-1 rounded-lg text-[10px] font-black text-white/30 uppercase tracking-widest hidden sm:block border border-white/5">
                   Press Enter
@@ -138,7 +138,7 @@ const DiscoveryView = () => {
       </div>
 
       <div className="p-8 max-w-[1300px] mx-auto flex flex-col gap-16 relative -mt-10 z-20">
-        
+
         {/* Section 1: Featured Communities */}
         <section>
           <header className="flex items-center justify-between mb-8">
@@ -151,7 +151,7 @@ const DiscoveryView = () => {
             <CategoryChip label="View Catalog" />
           </header>
 
-          <motion.div 
+          <motion.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="show"
@@ -165,8 +165,8 @@ const DiscoveryView = () => {
                     <div className="h-28 premium-gradient relative flex items-center justify-center p-6">
                       <div className="absolute inset-0 bg-black/20 mix-blend-overlay" />
                       <span className="text-5xl font-black text-white/20 select-none tracking-tighter uppercase font-display">{server.acronym}</span>
-                      
-                      <button 
+
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           joinServer(server.id);
@@ -176,26 +176,26 @@ const DiscoveryView = () => {
                         Join Community
                       </button>
                     </div>
-                    
+
                     <div className="p-6 relative">
                       <div className="absolute -top-10 left-6">
                         <div className="w-16 h-16 rounded-2xl bg-bg-tertiary flex items-center justify-center font-black text-white text-xl shadow-2xl border-4 border-bg-secondary group-hover:scale-105 transition-transform duration-300">
                           {server.acronym}
                         </div>
                       </div>
-                      
+
                       <div className="mt-8">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-white font-bold text-lg leading-tight flex items-center gap-1.5 font-display">
-                            {server.name} 
+                            {server.name}
                             <ShieldCheck size={18} className="text-brand-indigo" />
                           </h3>
                         </div>
                         <p className="text-text-muted text-[13px] leading-relaxed line-clamp-2 mb-4 font-medium opacity-80">{server.description || 'A growing community of students sharing interests and resources.'}</p>
-                        
+
                         <div className="flex items-center gap-4 text-[11px] font-black text-text-muted uppercase tracking-wider">
                           <span className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-status-online shadow-[0_0_8px_rgba(35,165,89,0.5)]" /> 
+                            <div className="w-2 h-2 rounded-full bg-status-online shadow-[0_0_8px_rgba(35,165,89,0.5)]" />
                             {server.onlineCount || 0} Online
                           </span>
                           <span className="opacity-50">•</span>
@@ -220,11 +220,11 @@ const DiscoveryView = () => {
               <span className="text-text-muted text-xs font-bold opacity-60 mt-1 uppercase tracking-widest pl-10">Real-time alerts & news</span>
             </div>
           </header>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {news.map((item, idx) => (
-              <motion.div 
-                key={item.id} 
+              <motion.div
+                key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -261,10 +261,10 @@ const DiscoveryView = () => {
               <Calendar className="text-brand-indigo" size={28} /> Campus Timeline
             </h2>
           </header>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {events.map((event, idx) => (
-              <motion.div 
+              <motion.div
                 key={event.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -279,7 +279,7 @@ const DiscoveryView = () => {
                     <span className="text-brand-indigo text-[9px] font-black uppercase tracking-tighter">{event.month}</span>
                   </div>
                   <div className="flex -space-x-2">
-                    {[1,2,3].map(i => <div key={i} className="w-6 h-6 rounded-full border-2 border-bg-secondary bg-bg-tertiary flex items-center justify-center text-[8px] font-bold text-white">+{i}</div>)}
+                    {[1, 2, 3].map(i => <div key={i} className="w-6 h-6 rounded-full border-2 border-bg-secondary bg-bg-tertiary flex items-center justify-center text-[8px] font-bold text-white">+{i}</div>)}
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -302,7 +302,7 @@ const DiscoveryView = () => {
 };
 
 const CategoryChip = ({ label }) => (
-  <motion.button 
+  <motion.button
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
     className="px-3 py-1 bg-bg-tertiary rounded-md text-[11px] font-bold text-text-muted uppercase tracking-widest hover:text-white transition-colors border border-white/5"
